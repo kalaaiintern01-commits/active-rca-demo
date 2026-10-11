@@ -144,7 +144,24 @@
     else if (leaf === "alert") onAlert(m);
     else if (leaf === "bridge") chip("chipBridge", m.online, m.online ? `bridge · ${m.engine}` : "bridge offline");
   });
-  setInterval(() => { if (nodeSeen && Date.now() - nodeSeen > 15000) chip("chipNode", false, "node silent"); }, 5000);
+  // The public broker delivers with jitter (gaps of 13-15 s between 5 s windows are normal), so the
+  // node only counts as silent after 4x its usual interval (at least 25 s).
+  const arrivals = [];
+  let silentShown = false;
+  function silenceLimit() {
+    if (arrivals.length < 4) return 25000;
+    const d = arrivals.slice(1).map((t, i) => t - arrivals[i]).sort((a, b) => a - b);
+    return Math.min(90000, Math.max(25000, 4 * d[Math.floor(d.length / 2)]));
+  }
+  setInterval(() => {
+    if (!nodeSeen) return;
+    const quiet = Date.now() - nodeSeen;
+    if (quiet > silenceLimit()) {
+      chip("chipNode", "wait", `node silent ${Math.round(quiet / 1000)} s`);
+      empty(`No telemetry for ${Math.round(quiet / 1000)} s. Wokwi for VS Code pauses the simulation while its tab is hidden - keep the simulator visible (split editor, or right-click its tab → Move into New Window).`);
+      silentShown = true;
+    }
+  }, 2000);
 
   // ------------------------------------------------------------------ handlers
   function srcInfo(src) { return MAN?.sources?.[src]; }
@@ -162,7 +179,8 @@
 
   function onTel(t) {
     nodeSeen = Date.now();
-    if (!gotTel) { gotTel = true; empty(""); }
+    arrivals.push(nodeSeen); if (arrivals.length > 20) arrivals.shift();
+    if (!gotTel || silentShown) { gotTel = true; silentShown = false; empty(""); }
     if (!t.test) syncControls(t);
     chip("chipNode", true, `node · ${t.fw || ""}`);
     if (t.scn !== scn) { scn = t.scn; clearCharts(); }
