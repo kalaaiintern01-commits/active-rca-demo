@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active-RCA Live Demo</title>
+<meta name="description" content="Live dashboard for the IoT and LLM-based predictive maintenance demo with active root-cause analysis (PCCoE MDM IoT capstone).">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="logo">⚙</span>
+    <div>
+      <h1>Active Root-Cause Analysis <span class="dim">· <span id="devName">MOTOR-01</span></span></h1>
+      <p class="sub">ESP32 edge (Wokwi) → MQTT/TLS → drift gate → Claude orders its own diagnostic tests</p>
+    </div>
+  </div>
+  <div class="chips">
+    <span class="chip" id="chipBroker"><i></i>broker</span>
+    <span class="chip" id="chipNode"><i></i>node</span>
+    <span class="chip" id="chipBridge"><i></i>bridge</span>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- ============ left: inject + node ============ -->
+  <section class="col">
+    <div class="card">
+      <h2>Inject a condition</h2>
+      <label>Machine <select id="selSrc"></select></label>
+      <p class="machine" id="machineDesc"></p>
+      <label>Condition <select id="selCond"></select></label>
+      <label>Operating point <select id="selOp"></select></label>
+      <button class="btn primary" id="btnDeploy">Deploy to node</button>
+      <div class="row">
+        <button class="btn" id="btnDiagnose" title="Start an episode now, even if the gate has not fired">Diagnose now</button>
+        <button class="btn ghost" id="btnReset">Reset episode</button>
+      </div>
+      <p class="hint" id="cmdHint">Commands reach the node on its next 2 s window.</p>
+    </div>
+
+    <div class="card">
+      <h2>Node</h2>
+      <dl class="kv" id="nodeKv">
+        <dt>Machine</dt><dd id="kvSrc">—</dd>
+        <dt>Injected</dt><dd id="kvCond">—</dd>
+        <dt>Operating pt</dt><dd id="kvOp">—</dd>
+        <dt>Active test</dt><dd id="kvTest">—</dd>
+        <dt>Replay</dt><dd id="kvReplay">—</dd>
+        <dt>Last command</dt><dd id="kvAck">—</dd>
+        <dt>Firmware</dt><dd id="kvFw">—</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ centre: signals + gate ============ -->
+  <section class="col wide">
+    <div class="card">
+      <div class="cardhead">
+        <h2>Vibration RMS <span class="dim" id="rmsUnit"></span></h2>
+        <span class="pill" id="statePill">waiting</span>
+      </div>
+      <div class="chart"><canvas id="cRms"></canvas></div>
+      <p class="legend"><span class="sw line"></span>this window <span class="sw band"></span>healthy band (μ ± 3σ) at the current operating point <span class="sw test"></span>active-test window</p>
+    </div>
+    <div class="two">
+      <div class="card">
+        <h2 id="hfTitle">High-frequency energy</h2>
+        <div class="chart sm"><canvas id="cHf"></canvas></div>
+      </div>
+      <div class="card">
+        <h2 id="auxTitle">Temperature</h2>
+        <div class="chart sm"><canvas id="cAux"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cardhead">
+        <h2>Drift gate <span class="dim">z-score per feature, latest window</span></h2>
+        <span class="streak" id="streak">streak 0 / 3</span>
+      </div>
+      <div id="zbars" class="zbars"></div>
+    </div>
+  </section>
+
+  <!-- ============ right: diagnosis ============ -->
+  <section class="col">
+    <div class="card verdict" id="verdict">
+      <h2>Current diagnosis</h2>
+      <div class="vbody" id="verdictBody"><p class="dim">No episode yet. Inject a fault, or press “Diagnose now”.</p></div>
+    </div>
+    <div class="card">
+      <h2>Reasoning log</h2>
+      <div id="feed" class="feed"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Replay data: Paderborn KAt bearing dataset (Lessmeier et al., PHM 2016), Zenodo 22039010 (CubeMars PMSM faults),
+  Zenodo 4314249 (CARTIF open DC motor). PCCoE E&amp;TC · MDM IoT capstone · Mehul Rawat, Atharva Palande · Guide Prof. Kalpana Patil.
+  <span class="dim" id="topicRoot"></span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

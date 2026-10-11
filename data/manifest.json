@@ -1,0 +1,339 @@
+{
+ "schema": "pdm.manifest.v1",
+ "window_s": 2,
+ "sources": {
+  "S1": {
+   "name": "Paderborn KAt bearing test rig",
+   "motor": "425 W PMSM, 4 pole pairs, test bearing on the drive shaft",
+   "sensors": "vibration (accelerometer on bearing housing), phase current, shaft speed, torque, bearing temperature",
+   "fs": 10000,
+   "pole_pairs": 4,
+   "channels": [
+    "vib",
+    "cur"
+   ],
+   "vib_unit": "m/s2",
+   "conds": {
+    "K001": "healthy bearing",
+    "KA01": "outer-race damage (EDM)"
+   },
+   "truth": {
+    "K001": "healthy",
+    "KA01": "bearing_outer_race"
+   },
+   "ops": {
+    "N09_M07_F10": {
+     "rpm": 900,
+     "desc": "900 rpm, 0.7 N.m load, 1000 N radial"
+    },
+    "N15_M01_F10": {
+     "rpm": 1500,
+     "desc": "1500 rpm, 0.1 N.m load, 1000 N radial"
+    },
+    "N15_M07_F04": {
+     "rpm": 1500,
+     "desc": "1500 rpm, 0.7 N.m load, 400 N radial"
+    },
+    "N15_M07_F10": {
+     "rpm": 1500,
+     "desc": "1500 rpm, 0.7 N.m load, 1000 N radial"
+    }
+   },
+   "default_op": "N09_M07_F10",
+   "healthy": "K001",
+   "causes": [
+    "healthy",
+    "bearing_outer_race",
+    "bearing_inner_race",
+    "bearing_rolling_element",
+    "misalignment",
+    "unbalance",
+    "load_change",
+    "sensor_mounting",
+    "unknown"
+   ],
+   "files": {
+    "K001_N09_M07_F10": {
+     "path": "data/S1/K001_N09_M07_F10.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "K001",
+     "op": "N09_M07_F10"
+    },
+    "K001_N15_M01_F10": {
+     "path": "data/S1/K001_N15_M01_F10.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "K001",
+     "op": "N15_M01_F10"
+    },
+    "K001_N15_M07_F04": {
+     "path": "data/S1/K001_N15_M07_F04.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "K001",
+     "op": "N15_M07_F04"
+    },
+    "K001_N15_M07_F10": {
+     "path": "data/S1/K001_N15_M07_F10.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "K001",
+     "op": "N15_M07_F10"
+    },
+    "KA01_N09_M07_F10": {
+     "path": "data/S1/KA01_N09_M07_F10.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "KA01",
+     "op": "N09_M07_F10"
+    },
+    "KA01_N15_M01_F10": {
+     "path": "data/S1/KA01_N15_M01_F10.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "KA01",
+     "op": "N15_M01_F10"
+    },
+    "KA01_N15_M07_F04": {
+     "path": "data/S1/KA01_N15_M07_F04.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "KA01",
+     "op": "N15_M07_F04"
+    },
+    "KA01_N15_M07_F10": {
+     "path": "data/S1/KA01_N15_M07_F10.bin",
+     "windows": 12,
+     "bytes": 960576,
+     "cond": "KA01",
+     "op": "N15_M07_F10"
+    }
+   }
+  },
+  "S2": {
+   "name": "CubeMars RI60 PMSM fault rig (Zenodo 22039010)",
+   "motor": "CubeMars RI60 KV120 PMSM, 14 pole pairs",
+   "sensors": "tri-axial accelerometer only (no current, no temperature)",
+   "fs": 5000,
+   "pole_pairs": 14,
+   "channels": [
+    "ax",
+    "ay",
+    "az"
+   ],
+   "vib_unit": "m/s2",
+   "conds": {
+    "NR": "normal",
+    "BF": "bearing fault",
+    "EF": "rotor eccentricity",
+    "MF": "magnet fault (demagnetisation)",
+    "SF": "stator winding fault"
+   },
+   "truth": {
+    "NR": "healthy",
+    "BF": "bearing",
+    "EF": "eccentricity",
+    "MF": "magnet_demagnetisation",
+    "SF": "stator_winding"
+   },
+   "ops": {
+    "500": {
+     "rpm": 500,
+     "desc": "500 rpm"
+    },
+    "750": {
+     "rpm": 750,
+     "desc": "750 rpm"
+    },
+    "1000": {
+     "rpm": 1000,
+     "desc": "1000 rpm"
+    }
+   },
+   "default_op": "500",
+   "healthy": "NR",
+   "causes": [
+    "healthy",
+    "bearing",
+    "eccentricity",
+    "magnet_demagnetisation",
+    "stator_winding",
+    "unbalance",
+    "sensor_mounting",
+    "unknown"
+   ],
+   "files": {
+    "BF_500": {
+     "path": "data/S2/BF_500.bin",
+     "windows": 25,
+     "bytes": 1501200,
+     "cond": "BF",
+     "op": "500"
+    },
+    "EF_500": {
+     "path": "data/S2/EF_500.bin",
+     "windows": 25,
+     "bytes": 1501200,
+     "cond": "EF",
+     "op": "500"
+    },
+    "MF_500": {
+     "path": "data/S2/MF_500.bin",
+     "windows": 25,
+     "bytes": 1501200,
+     "cond": "MF",
+     "op": "500"
+    },
+    "NR_500": {
+     "path": "data/S2/NR_500.bin",
+     "windows": 25,
+     "bytes": 1501200,
+     "cond": "NR",
+     "op": "500"
+    },
+    "SF_500": {
+     "path": "data/S2/SF_500.bin",
+     "windows": 25,
+     "bytes": 1501200,
+     "cond": "SF",
+     "op": "500"
+    },
+    "BF_750": {
+     "path": "data/S2/BF_750.bin",
+     "windows": 24,
+     "bytes": 1441152,
+     "cond": "BF",
+     "op": "750"
+    },
+    "EF_750": {
+     "path": "data/S2/EF_750.bin",
+     "windows": 22,
+     "bytes": 1321056,
+     "cond": "EF",
+     "op": "750"
+    },
+    "MF_750": {
+     "path": "data/S2/MF_750.bin",
+     "windows": 23,
+     "bytes": 1381104,
+     "cond": "MF",
+     "op": "750"
+    },
+    "NR_750": {
+     "path": "data/S2/NR_750.bin",
+     "windows": 23,
+     "bytes": 1381104,
+     "cond": "NR",
+     "op": "750"
+    },
+    "SF_750": {
+     "path": "data/S2/SF_750.bin",
+     "windows": 25,
+     "bytes": 1501200,
+     "cond": "SF",
+     "op": "750"
+    },
+    "BF_1000": {
+     "path": "data/S2/BF_1000.bin",
+     "windows": 23,
+     "bytes": 1381104,
+     "cond": "BF",
+     "op": "1000"
+    },
+    "EF_1000": {
+     "path": "data/S2/EF_1000.bin",
+     "windows": 23,
+     "bytes": 1381104,
+     "cond": "EF",
+     "op": "1000"
+    },
+    "MF_1000": {
+     "path": "data/S2/MF_1000.bin",
+     "windows": 22,
+     "bytes": 1321056,
+     "cond": "MF",
+     "op": "1000"
+    },
+    "NR_1000": {
+     "path": "data/S2/NR_1000.bin",
+     "windows": 23,
+     "bytes": 1381104,
+     "cond": "NR",
+     "op": "1000"
+    },
+    "SF_1000": {
+     "path": "data/S2/SF_1000.bin",
+     "windows": 23,
+     "bytes": 1381104,
+     "cond": "SF",
+     "op": "1000"
+    }
+   }
+  },
+  "S3": {
+   "name": "CARTIF open DC-motor stress run (Zenodo 4314249)",
+   "motor": "small brushed DC motor, new at start of run",
+   "sensors": "vibration (uncalibrated units), armature current, supply voltage, motor and ambient temperature, speed",
+   "fs": 5000,
+   "pole_pairs": 1,
+   "channels": [
+    "vib",
+    "cur"
+   ],
+   "vib_unit": "au",
+   "conds": {
+    "NEW": "new motor, commissioning period",
+    "RUN": "continuous stress run (warming / wear)"
+   },
+   "truth": {
+    "NEW": "healthy",
+    "RUN": "thermal_drift_wear"
+   },
+   "ops": {
+    "3V": {
+     "rpm": 7900,
+     "desc": "3 V supply (~7900 rpm)"
+    },
+    "5V": {
+     "rpm": 10000,
+     "desc": "5 V supply (~9500-13000 rpm)"
+    }
+   },
+   "default_op": "3V",
+   "healthy": "NEW",
+   "causes": [
+    "healthy",
+    "thermal_drift_wear",
+    "bearing_or_brush_wear",
+    "electrical_overload",
+    "cooling_failure",
+    "sensor_mounting",
+    "unknown"
+   ],
+   "files": {
+    "RUN_3V": {
+     "path": "data/S3/RUN_3V.bin",
+     "windows": 161,
+     "bytes": 6447728,
+     "cond": "RUN",
+     "op": "3V"
+    },
+    "NEW_3V": {
+     "path": "data/S3/NEW_3V.bin",
+     "windows": 30,
+     "bytes": 1201440,
+     "cond": "NEW",
+     "op": "3V"
+    },
+    "RUN_5V": {
+     "path": "data/S3/RUN_5V.bin",
+     "windows": 90,
+     "bytes": 3604320,
+     "cond": "RUN",
+     "op": "5V"
+    }
+   }
+  }
+ }
+}
