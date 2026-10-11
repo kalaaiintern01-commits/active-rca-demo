@@ -110,10 +110,30 @@
   $("btnReset").onclick = () => { client.publish(`${ROOT}/ctl`, JSON.stringify({ cmd: "reset" }), { qos: 1 }); hint("Episode reset requested."); };
 
   // ------------------------------------------------------------------ mqtt
-  const client = mqtt.connect(CFG.broker, { clientId: "arca-ui-" + Math.random().toString(16).slice(2, 8), clean: true, reconnectPeriod: 3000, connectTimeout: 10000 });
-  const chip = (id, on, text) => { const c = $(id); c.className = "chip " + (on ? "on" : "off"); c.lastChild.textContent = text; };
-  client.on("connect", () => { chip("chipBroker", true, "broker"); client.subscribe(`${ROOT}/#`, { qos: 0 }); });
-  client.on("close", () => chip("chipBroker", false, "broker offline"));
+  // The secure WebSocket to the public broker can take 10-20 s to open on some networks, so give
+  // each attempt 45 s and say what is happening instead of showing empty charts.
+  const client = mqtt.connect(CFG.broker, { clientId: "arca-ui-" + Math.random().toString(16).slice(2, 8), clean: true, reconnectPeriod: 2000, connectTimeout: 45000, keepalive: 30 });
+  const chip = (id, state, text) => { const c = $(id); c.className = "chip " + (state === true ? "on" : state === false ? "off" : state); c.lastChild.textContent = text; };
+  let connected = false, connectStart = Date.now(), connectedAt = 0, gotTel = false;
+  const empty = (text) => { const e = $("emptyMsg"); e.textContent = text; e.hidden = !text; };
+  client.on("connect", () => {
+    connected = true; connectedAt = Date.now();
+    chip("chipBroker", true, "broker");
+    client.subscribe(`${ROOT}/#`, { qos: 0 });
+    if (!gotTel) empty("Connected. Waiting for the node's next 2 s window…");
+  });
+  client.on("reconnect", () => { connectStart = Date.now(); });
+  client.on("close", () => { if (connected) chip("chipBroker", false, "broker offline - reconnecting"); connected = false; });
+  client.on("error", (e) => console.warn("mqtt", e && e.message));
+  setInterval(() => {
+    if (!connected) {
+      const s = Math.round((Date.now() - connectStart) / 1000);
+      chip("chipBroker", "wait", `connecting… ${s} s`);
+      if (!gotTel) empty(`Connecting to the broker (${CFG.broker.replace(/^wss:\/\//, "").split("/")[0]})… ${s} s - this can take up to ~20 s on some networks.`);
+    } else if (!gotTel && Date.now() - connectedAt > 20000) {
+      empty("Connected, but no telemetry yet. Is the Wokwi simulator running, with its tab visible, and is the node past boot (serial shows [pub] lines)?");
+    }
+  }, 1000);
   client.on("message", (topic, buf) => {
     let m; try { m = JSON.parse(buf.toString()); } catch { return; }
     const leaf = topic.slice(ROOT.length + 1);
@@ -141,6 +161,7 @@
 
   function onTel(t) {
     nodeSeen = Date.now();
+    if (!gotTel) { gotTel = true; empty(""); }
     if (!t.test) syncControls(t);
     chip("chipNode", true, `node · ${t.fw || ""}`);
     if (t.scn !== scn) { scn = t.scn; clearCharts(); }
