@@ -141,6 +141,7 @@
     else if (leaf === "gate") onGate(m);
     else if (leaf === "rca") onRca(m);
     else if (leaf === "status") onStatus(m);
+    else if (leaf === "alert") onAlert(m);
     else if (leaf === "bridge") chip("chipBridge", m.online, m.online ? `bridge · ${m.engine}` : "bridge offline");
   });
   setInterval(() => { if (nodeSeen && Date.now() - nodeSeen > 15000) chip("chipNode", false, "node silent"); }, 5000);
@@ -221,6 +222,15 @@
     if (s.ack && s.ack.id && s.ack.id.startsWith("ui-")) hint(`${s.ack.ok ? "Node accepted" : "Node rejected"}: ${s.ack.msg}`, s.ack.ok ? "ok" : "err");
     $("kvAck").textContent = s.ack?.id ? `${s.ack.id} · ${s.ack.ok ? "ok" : "rejected"} · ${s.ack.msg}` : "—";
     if (s.test) $("kvTest").textContent = `${s.test.id} → ${s.test.op} · ${s.test.done}/${s.test.hold}`;
+  }
+
+  // retained summary of the last finished episode - keeps the verdict on screen after a page refresh
+  function onAlert(a) {
+    if (lastEp || !a || a.state !== "done" || !a.cause) return;
+    $("verdictBody").innerHTML = `
+      <div class="vhead"><span class="vcause">${esc(pretty(a.cause))}</span><span class="vp">${Math.round((a.p || 0) * 100)}%</span></div>
+      <p style="margin:6px 0"><span class="sev ${esc(a.severity)}">${esc(a.severity)}</span>
+        <span class="dim"> last result · ${esc(a.ep)} · full reasoning appears in the log when the next episode runs</span></p>`;
   }
 
   function causesHtml(causes) {
