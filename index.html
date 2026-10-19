@@ -5,104 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Active-RCA Live Demo</title>
 <meta name="description" content="Live dashboard for the IoT and LLM-based predictive maintenance demo with active root-cause analysis (PCCoE MDM IoT capstone).">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+<meta name="theme-color" content="#0b1a2e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1a2e'/%3E%3Cpath d='M5 19c4-9 18-9 22 0' fill='none' stroke='%2396c8f0' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M9 22c3-5 11-5 14 0' fill='none' stroke='%2396c8f0' stroke-opacity='.55' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='14' r='3.2' fill='%233fd0a4'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
 </head>
 <body>
 <header class="top">
-  <div class="brand">
-    <span class="logo">⚙</span>
-    <div>
-      <h1>Active Root-Cause Analysis <span class="dim">· <span id="devName">MOTOR-01</span></span></h1>
-      <p class="sub">ESP32 edge (Wokwi) → MQTT/TLS → drift gate → Claude orders its own diagnostic tests</p>
-    </div>
-  </div>
+  <a class="brand" href="./" aria-label="Active-RCA, live dashboard">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19c4-9 18-9 22 0" /><path class="far" d="M9 22c3-5 11-5 14 0" /><circle cx="16" cy="14" r="3.2" /></svg>
+    <span>Active<b>·</b>RCA</span>
+  </a>
+  <p class="where"><span id="devName">MOTOR-01</span><span class="dim" id="topMachine"></span><span id="topOp"></span><span class="ep" id="topEp"></span></p>
+  <span class="replay-badge" id="replayBadge" hidden>Replay</span>
   <div class="chips">
-    <span class="chip" id="chipBroker"><i></i>broker</span>
-    <span class="chip" id="chipNode"><i></i>node</span>
-    <span class="chip" id="chipBridge"><i></i>bridge</span>
+    <span class="chip" id="chipBroker" title="MQTT broker"><i></i>broker</span>
+    <span class="chip" id="chipNode" title="ESP32 edge node"><i></i>node</span>
+    <span class="chip" id="chipBridge" title="Gate and AI bridge"><i></i>AI</span>
   </div>
 </header>
 
 <main class="grid">
-  <!-- ============ left: inject + node ============ -->
-  <section class="col">
-    <div class="card">
-      <h2>Inject a condition</h2>
-      <label>Machine <select id="selSrc"></select></label>
-      <p class="machine" id="machineDesc"></p>
-      <label>Condition <select id="selCond"></select></label>
-      <label>Operating point <select id="selOp"></select></label>
-      <button class="btn primary" id="btnDeploy">Deploy to node</button>
-      <div class="row">
-        <button class="btn" id="btnDiagnose" title="Start an episode now, even if the gate has not fired">Diagnose now</button>
-        <button class="btn ghost" id="btnReset">Reset episode</button>
+  <!-- ============ left rail: controls only ============ -->
+  <aside class="rail">
+    <section class="block">
+      <h2>Inject</h2>
+      <select id="selSrc" aria-label="Machine"></select>
+      <p class="machine" id="machineDesc" hidden></p>
+      <select id="selCond" aria-label="Condition"></select>
+      <select id="selOp" aria-label="Operating point"></select>
+      <button class="btn primary" id="btnDeploy">Deploy</button>
+      <div class="btnrow">
+        <button class="btn" id="btnDiagnose" title="Start an episode now, even if the gate has not fired">Diagnose</button>
+        <button class="btn quiet" id="btnReset" title="Reset the episode">Reset</button>
       </div>
-      <p class="hint" id="cmdHint">Commands reach the node on its next 2 s window.</p>
-    </div>
+      <p class="hint" id="cmdHint"></p>
+    </section>
 
-    <div class="card">
-      <h2>Node</h2>
+    <section class="block" id="replayBox" hidden>
+      <h2>Replay</h2>
+      <select id="repEp" aria-label="Recorded episode"></select>
+      <div class="rp-track" aria-hidden="true"><i id="repBar"></i></div>
+      <div class="rp-row">
+        <button class="btn" id="repPlay">Pause</button>
+        <button class="btn quiet" id="repRestart">Restart</button>
+        <div class="seg" role="group" aria-label="Playback speed">
+          <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
+        </div>
+      </div>
+      <p class="hint" id="repTime"></p>
+    </section>
+
+    <section class="block">
+      <h2>Ground truth</h2>
+      <p class="truthline" id="kvCond">—</p>
+    </section>
+
+    <details class="more">
+      <summary>Node details</summary>
       <dl class="kv" id="nodeKv">
         <dt>Machine</dt><dd id="kvSrc">—</dd>
-        <dt>Injected</dt><dd id="kvCond">—</dd>
-        <dt>Operating pt</dt><dd id="kvOp">—</dd>
-        <dt>Active test</dt><dd id="kvTest">—</dd>
+        <dt>Op point</dt><dd id="kvOp">—</dd>
+        <dt>Test</dt><dd id="kvTest">—</dd>
         <dt>Replay</dt><dd id="kvReplay">—</dd>
-        <dt>Last command</dt><dd id="kvAck">—</dd>
+        <dt>Command</dt><dd id="kvAck">—</dd>
         <dt>Firmware</dt><dd id="kvFw">—</dd>
       </dl>
-    </div>
-  </section>
+    </details>
+    <a class="swap-link" id="modeLink" href="?replay">Watch a recording</a>
+  </aside>
 
-  <!-- ============ centre: signals + gate ============ -->
-  <section class="col wide">
-    <div class="card">
-      <div class="cardhead">
-        <h2>Vibration RMS <span class="dim" id="rmsUnit"></span></h2>
+  <!-- ============ centre: the episode story and the live signal ============ -->
+  <section class="main">
+    <ol class="story" id="story">
+      <li class="stage" id="stDrift"><span class="k">Drift caught</span><b class="v">Watching</b><span class="s" id="streak"></span></li>
+      <li class="stage" id="stStep"><span class="k">AI step 1</span><b class="v">—</b><span class="s"></span></li>
+      <li class="stage test" id="stTest"><span class="k">Test ordered</span><b class="v">—</b><span class="s"></span></li>
+      <li class="stage" id="stDiag"><span class="k">Diagnosis</span><b class="v">—</b><span class="s"></span></li>
+    </ol>
+
+    <div class="trace">
+      <div class="head">
+        <h2>Vibration <span class="dim" id="rmsUnit"></span></h2>
         <span class="pill" id="statePill">waiting</span>
       </div>
-      <div class="chart"><canvas id="cRms"></canvas><div class="empty" id="emptyMsg">Connecting to the broker…</div></div>
-      <p class="legend"><span class="sw line"></span>this window <span class="sw band"></span>healthy band (μ ± 3σ) at the current operating point <span class="sw test"></span>active-test window</p>
+      <div class="chart"><canvas id="cRms"></canvas><div class="empty" id="emptyMsg">Connecting…</div></div>
+      <p class="legend">
+        <span><i class="sw line"></i>live</span>
+        <span><i class="sw band"></i>healthy band</span>
+        <span><i class="sw test"></i>AI test</span>
+        <span><i class="sw fire"></i>drift caught</span>
+      </p>
     </div>
-    <div class="two">
-      <div class="card">
-        <h2 id="hfTitle">High-frequency energy</h2>
-        <div class="chart sm"><canvas id="cHf"></canvas></div>
-      </div>
-      <div class="card">
-        <h2 id="auxTitle">Temperature</h2>
-        <div class="chart sm"><canvas id="cAux"></canvas></div>
-      </div>
+
+    <div class="minis">
+      <div><h2 id="hfTitle">Bearing band</h2><div class="chart sm"><canvas id="cHf"></canvas></div></div>
+      <div><h2 id="auxTitle">Temperature</h2><div class="chart sm"><canvas id="cAux"></canvas></div></div>
     </div>
-    <div class="card">
-      <div class="cardhead">
-        <h2>Drift gate <span class="dim">z-score per feature, latest window</span></h2>
-        <span class="streak" id="streak">streak 0 / 3</span>
-      </div>
+
+    <details class="more">
+      <summary>Gate scores</summary>
       <div id="zbars" class="zbars"></div>
-    </div>
+    </details>
   </section>
 
-  <!-- ============ right: diagnosis ============ -->
-  <section class="col">
-    <div class="card verdict" id="verdict">
-      <h2>Current diagnosis</h2>
-      <div class="vbody" id="verdictBody"><p class="dim">No episode yet. Inject a fault, or press “Diagnose now”.</p></div>
+  <!-- ============ right: machine, verdict, forecast ============ -->
+  <aside class="side">
+    <div class="motor" id="motor">
+      <span class="m3-test" id="motorTest" hidden>Test</span>
+      <div class="gauges">
+        <div class="g" id="gSpeed"><svg viewBox="0 0 64 36" aria-hidden="true"><path class="tr" d="M6 32a26 26 0 0 1 52 0"/><path class="fl" d="M6 32a26 26 0 0 1 52 0" pathLength="100"/></svg><b>—</b><span>rpm</span></div>
+        <div class="g" id="gVib"><svg viewBox="0 0 64 36" aria-hidden="true"><path class="tr" d="M6 32a26 26 0 0 1 52 0"/><path class="fl" d="M6 32a26 26 0 0 1 52 0" pathLength="100"/></svg><b>—</b><span>vibration</span></div>
+        <div class="g" id="gLoad"><svg viewBox="0 0 64 36" aria-hidden="true"><path class="tr" d="M6 32a26 26 0 0 1 52 0"/><path class="fl" d="M6 32a26 26 0 0 1 52 0" pathLength="100"/></svg><b>—</b><span>load</span></div>
+      </div>
+      <p class="m3-fallback">3D view needs WebGL.</p>
     </div>
-    <div class="card">
-      <h2>Reasoning log</h2>
+
+    <div class="verdict" id="verdict">
+      <div class="vbody" id="verdictBody"><p class="idle">No diagnosis yet.</p></div>
+    </div>
+
+    <div class="fc-wrap">
+      <h2>Forecast</h2>
+      <div class="forecast" id="forecast" hidden></div>
+      <p class="idle" id="forecastEmpty">Cause odds appear when the AI starts.</p>
+    </div>
+
+    <details class="more">
+      <summary>AI reasoning</summary>
       <div id="feed" class="feed"></div>
-    </div>
-  </section>
+    </details>
+  </aside>
 </main>
 
 <footer>
-  Replay data: Paderborn KAt bearing dataset (Lessmeier et al., PHM 2016), Zenodo 22039010 (CubeMars PMSM faults),
-  Zenodo 4314249 (CARTIF open DC motor). PCCoE E&amp;TC · MDM IoT capstone · Mehul Rawat, Atharva Palande · Guide Prof. Kalpana Patil.
+  Data: Paderborn KAt (Lessmeier et al. 2016) · Zenodo 22039010 · Zenodo 4314249. PCCoE MDM IoT capstone · Mehul Rawat, Atharva Palande · Guide Prof. Kalpana Patil
   <span class="dim" id="topicRoot"></span>
 </footer>
 
