@@ -112,8 +112,7 @@
       }
       meta.forEach((m, k) => {
         if (!m?.mark) return;
-        const px = x.getPixelForValue(k) - step / 2;
-        if (px < a.left - 1) return;
+        const px = Math.max(a.left + 1, x.getPixelForValue(k));
         ctx.strokeStyle = m.mark.color;
         ctx.lineWidth = 1.25;
         ctx.setLineDash([4, 4]);
@@ -232,9 +231,16 @@
     client.publish(`${ROOT}/${leaf}`, JSON.stringify(obj), { qos: 1 });
     return true;
   }
+  let deployTimer = 0;
+  function deployDone() { clearTimeout(deployTimer); const b = $("btnDeploy"); b.disabled = !client; b.textContent = "Deploy"; }
   $("btnDeploy").onclick = () => {
     const cmd = { v: 1, cmd: "scenario", id: "ui-" + Date.now().toString(36), src: $("selSrc").value, cond: $("selCond").value, op: $("selOp").value };
-    if (send("cmd", cmd)) hint(`Sent ${cmd.src} ${cmd.cond}…`);
+    if (!send("cmd", cmd)) return;
+    hint(`Sent ${cmd.src} ${cmd.cond}… waiting for the node`);
+    const b = $("btnDeploy");
+    b.disabled = true; b.textContent = "Sending…";
+    clearTimeout(deployTimer);
+    deployTimer = setTimeout(deployDone, 20000);
   };
   $("btnDiagnose").onclick = () => { if (send("ctl", { cmd: "diagnose" })) hint("Diagnosis requested."); };
   $("btnReset").onclick = () => { if (send("ctl", { cmd: "reset" })) hint("Reset requested."); };
@@ -542,6 +548,7 @@
   function onStatus(s) {
     if (s.online === false) { chip("chipNode", false, "node"); return; }
     nodeSeen = Date.now();
+    if (s.ack && s.ack.id && s.ack.id.startsWith("ui-")) deployDone();
     if (s.ack && s.ack.id && s.ack.id.startsWith("ui-")) hint(`${s.ack.ok ? "Accepted" : "Rejected"}: ${s.ack.msg}`, s.ack.ok ? "ok" : "err");
     $("kvAck").textContent = s.ack?.id ? `${s.ack.id} · ${s.ack.ok ? "ok" : "rejected"} · ${s.ack.msg}` : "—";
     if (s.test) $("kvTest").textContent = `${s.test.id} → ${s.test.op} · ${s.test.done}/${s.test.hold}`;
@@ -715,6 +722,9 @@
     }
     renderStrip(E);
     renderVerdict(r, E);
+    const pill = $("statePill");
+    const ps = dec.final ? "latched" : dec.test ? "testing" : "diagnosing";
+    pill.textContent = STATE_TEXT[ps]; pill.className = "pill " + ps;
 
     // story
     if (storyEp !== r.episode) { storyEp = r.episode; stage("stDrift", "done hot", "Episode " + r.episode, r.trigger === "gate" ? "" : "manual start"); }
