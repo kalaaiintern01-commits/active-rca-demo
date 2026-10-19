@@ -142,7 +142,12 @@
       type: "line",
       data: { labels: [], datasets: sets },
       options: {
-        animation: false, responsive: true, maintainAspectRatio: false, spanGaps: true,
+        // new windows glide in instead of snapping, so a spike or a slow climb reads as motion
+        // only the horizontal slide is animated: values never tween, so nothing on screen is a fake spike
+        animation: reduceMotion ? false : { duration: 650, easing: "easeOutQuart" },
+        animations: { y: { duration: 0 }, colors: false, numbers: { properties: ["x"] } },
+        transitions: { active: { animation: { duration: 0 } } },
+        responsive: true, maintainAspectRatio: false, spanGaps: true,
         interaction: { mode: "index", intersect: false },
         plugins: {
           legend: { display: false },
@@ -193,7 +198,7 @@
     for (const c of charts) {
       const k = c.data.labels.indexOf(seq);
       if (k >= 0) c.$meta[k] = { ...(c.$meta[k] || {}), mark };
-      c.update("none");
+      c.update();
     }
   }
 
@@ -400,8 +405,9 @@
     if (!gotTel || silentShown) { gotTel = true; silentShown = false; empty(""); }
     if (!t.test) syncControls(t);
     chip("chipNode", true, `node · ${t.fw || ""}`);
-    // a new machine or a new base operating point gets a fresh plot; test windows (temporary op) do not
-    if (t.src !== curSrc || (!t.test && curOp !== null && t.op !== curOp)) clearCharts();
+    // only a different machine gets a fresh plot: a new condition or speed on the same motor continues
+    // the same trace, so the change (a jump, or a slow climb) stays visible against what came before
+    if (curSrc !== null && t.src !== curSrc) clearCharts();
     curSrc = t.src;
     if (!t.test) curOp = t.op;
     if (scn !== null && t.scn !== scn) { markNext = { color: COL.mute, text: "NEW SCENARIO", row: 1 }; clearEpisode(); }
@@ -430,7 +436,7 @@
       cAux.data.datasets[0].label = "x"; cAux.data.datasets[1].label = "y"; cAux.data.datasets[2].label = "z";
     }
     push(cAux, t.seq, aux, { test: meta.test });
-    charts.forEach((c) => c.update("none"));
+    charts.forEach((c) => c.update());
     node.lastTel = t;
 
     $("topMachine").textContent = t.src;
@@ -480,7 +486,7 @@
     const hfKey = b.bhf ? "bhf" : "b3";
     const [hu, hl] = band(hfKey);
     setAt(cHf, g.seq, 0, hu); setAt(cHf, g.seq, 1, hl);
-    cRms.update("none"); cHf.update("none");
+    cRms.update(); cHf.update();
 
     const fired = g.state !== "monitor" && gateState === "monitor" && g.episode;
     if (fired) {
