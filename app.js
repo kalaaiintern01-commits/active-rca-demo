@@ -214,9 +214,11 @@
     $("selCond").innerHTML = Object.entries(src.conds).map(([k, v]) => `<option value="${k}">${k} · ${esc(v)}</option>`).join("");
     const fillOps = () => {
       const cond = $("selCond").value;
+      const healthy = Object.keys(src.truth || {}).find((c) => src.truth[c] === "healthy");
       $("selOp").innerHTML = Object.entries(src.ops).map(([k, v]) => {
         const has = files[`${cond}_${k}`];
-        return `<option value="${k}" ${has ? "" : "disabled"}>${esc(v.desc)}${has ? "" : " (no recording)"}</option>`;
+        const scored = !healthy || files[`${healthy}_${k}`];
+        return `<option value="${k}" ${has ? "" : "disabled"}>${esc(v.desc)}${has ? (scored ? "" : " (no baseline - manual diagnose)") : " (no recording)"}</option>`;
       }).join("");
       $("selOp").value = files[`${cond}_${src.default_op}`] ? src.default_op : Object.keys(src.ops).find((k) => files[`${cond}_${k}`]);
     };
@@ -402,7 +404,7 @@
     if (t.src !== curSrc || (!t.test && curOp !== null && t.op !== curOp)) clearCharts();
     curSrc = t.src;
     if (!t.test) curOp = t.op;
-    if (scn !== null && t.scn !== scn) markNext = { color: COL.mute, text: "NEW SCENARIO", row: 1 };
+    if (scn !== null && t.scn !== scn) { markNext = { color: COL.mute, text: "NEW SCENARIO", row: 1 }; clearEpisode(); }
     scn = t.scn;
     if (t.test) { testPhase.set(t.seq, t.test); if (testPhase.size > 60) testPhase.delete(testPhase.keys().next().value); }
     const s = srcInfo(t.src);
@@ -494,8 +496,9 @@
 
     if (!storyEp && g.state === "monitor") {
       const n = Math.min(3, g.streak || 0);
-      stage("stDrift", n ? "warm" : "", n ? "Rising" : "Watching", null);
-      $("streak").innerHTML = `<i class="pip ${n > 0 ? "on" : ""}"></i><i class="pip ${n > 1 ? "on" : ""}"></i><i class="pip ${n > 2 ? "on" : ""}"></i>`;
+      if (!b.rms) stage("stDrift", "warm", "No baseline", "use Diagnose");
+      else stage("stDrift", n ? "warm" : "", n ? "Rising" : "Watching", null);
+      if (b.rms) $("streak").innerHTML = `<i class="pip ${n > 0 ? "on" : ""}"></i><i class="pip ${n > 1 ? "on" : ""}"></i><i class="pip ${n > 2 ? "on" : ""}"></i>`;
     }
 
     const z = g.z || {};
@@ -555,11 +558,19 @@
   }
 
   // retained summary of the last finished episode - keeps the verdict on screen after a page refresh
+  // drop the previous episode's result from the story line, verdict, forecast and 3D highlight (the log keeps it)
+  function clearEpisode() {
+    lastEp = null; lastPct = null;
+    EPS.clear();
+    storyReset();
+    verdictIdle("No diagnosis yet.");
+    $("forecast").hidden = true; $("forecast").innerHTML = ""; $("forecastEmpty").hidden = false;
+    setMotor({ diag: null });
+  }
   function onAlert(a) {
     if (!a) return;
     if (a.state === "monitor" && !a.cause) {
-      if (mstate.diag) setMotor({ diag: null });
-      if (lastEp && !REPLAY) verdictIdle("Re-armed. Watching for drift.");
+      if (lastEp || mstate.diag || $("verdict").className !== "verdict") clearEpisode();
       return;
     }
     if (lastEp || !a.cause) return;
