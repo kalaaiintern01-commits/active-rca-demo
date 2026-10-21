@@ -16,6 +16,6 @@ the root cause. Live dashboard: https://kalaaiintern01-commits.github.io/active-
 | `active-rca-demo/site/` | Dashboard and replay slices, published to GitHub Pages by `.github/workflows/pages.yml` |
 | `active-rca-demo/tools/`, `docs/` | Serial tap, demo replay builder, presentation figures |
 | `active-rca-demo/runs/` | Recorded episodes (`episodes.jsonl`) and logs from real runs |
-| `data/` | The three source datasets as CSV (4.7 GB) - sources and licences in [data/README.md](data/README.md) |
+| `data/` | Dataset index files only; the per-recording CSVs (4.7 GB) are not in the repo - sources, licences and download links in [data/README.md](data/README.md). The replay slices the node uses are in `active-rca-demo/site/data/` |
 | `objective-1-telemetry/` | Objective 1: telemetry node and schema work |
 | `paper/` | Research paper |

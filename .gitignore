@@ -1,5 +1,12 @@
 # Whole capstone project: firmware, bridge, training, dashboard (active-rca-demo/site, published
-# to GitHub Pages by .github/workflows/pages.yml), the paper, and the datasets in data/.
+# to GitHub Pages by .github/workflows/pages.yml) and the paper.
+
+# Per-recording dataset CSVs (4.7 GB) stay local - sources and how to rebuild them in data/README.md
+data/S1_paderborn_pmsm/
+data/S2_cubemars_pmsm/
+data/S3_cartif_dc_motor/
+data/raw/
+data/extracted/
 
 # Python
 __pycache__/
