@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "pdm.cmd.v1",
+  "title": "Commands to the replay node (topic .../cmd)",
+  "oneOf": [
+    {
+      "type": "object", "additionalProperties": false, "required": ["v", "cmd", "src"],
+      "properties": {
+        "v": { "const": 1 }, "cmd": { "const": "scenario" }, "id": { "type": "string", "maxLength": 31 },
+        "src": { "enum": ["S1", "S2", "S3"] }, "cond": { "type": "string" }, "op": { "type": "string" }
+      }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["v", "cmd", "id", "op"],
+      "properties": {
+        "v": { "const": 1 }, "cmd": { "const": "test" }, "id": { "type": "string", "maxLength": 31 },
+        "op": { "type": "string" }, "hold_s": { "type": "integer", "minimum": 4, "maximum": 60 }
+      }
+    },
+    {
+      "type": "object", "additionalProperties": false, "required": ["v", "cmd"],
+      "properties": { "v": { "const": 1 }, "cmd": { "const": "abort" }, "id": { "type": "string" } }
+    }
+  ]
+}

@@ -1,2 +1,28 @@
-.impeccable/
-PRODUCT.md
+# Whole capstone project: firmware, bridge, training, dashboard (active-rca-demo/site, published
+# to GitHub Pages by .github/workflows/pages.yml), the paper, and the datasets in data/.
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets
+.env
+*secrets*
+config.local.h
+
+# PlatformIO build tree: keep only the built firmware that wokwi.toml points at
+**/.pio/*
+!**/.pio/build/
+**/.pio/build/*
+!**/.pio/build/esp32dev/
+**/.pio/build/esp32dev/*
+!**/.pio/build/esp32dev/firmware.bin
+!**/.pio/build/esp32dev/firmware.elf
+
+# Tool scratch output
+.playwright-mcp/
+
+# npm dependencies (rebuilt from package-lock.json)
+node_modules/

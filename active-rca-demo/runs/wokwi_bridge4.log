@@ -1,0 +1,62 @@
+22:34:43 [bridge] engine = mock-rule-based (not an LLM)
+22:34:54 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+23:45:03 [win] #1 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:06:23 [win] #1 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:06:25 [win] #2 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:06:32 [win] #3 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:06:35 [win] #4 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:06:41 [win] #5 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:06:46 [win] #6 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:06:51 [win] #7 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:06:56 [win] #8 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:07:00 [win] #9 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:07:08 [win] #10 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:07:11 [win] #11 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:07:16 [win] #12 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:07:20 [win] #13 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:07:29 [win] #14 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:07:35 [win] #15 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:07:40 [win] #16 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:07:44 [win] #17 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:07:49 [win] #18 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:07:53 [win] #19 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:07:59 [win] #20 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:08:03 [win] #21 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:08:10 [win] #22 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:08:15 [win] #23 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:08:19 [win] #24 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:08:23 [win] #25 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:08:28 [win] #26 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:08:38 [win] #27 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:08:43 [win] #28 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:08:45 [win] #29 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:08:49 [win] #30 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:08:53 [win] #31 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:08:59 [win] #32 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:09:03 [win] #33 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:09:13 [win] #34 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:09:15 [win] #35 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:09:19 [win] #36 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:09:26 [win] #37 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:09:29 [win] #38 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:09:45 [win] #39 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:09:47 [scn] new scenario #2 on S1 op=N09_M07_F10
+00:09:47 [win] #40 S1 KA01 op=N09_M07_F10 rms=1.212  streak=1 flagged=b0,b1,temp,rms state=monitor
+00:09:50 [win] #41 S1 KA01 op=N09_M07_F10 rms=1.212  streak=2 flagged=b0,temp,b1,rms state=monitor
+00:09:53 [episode] E1 started by gate on S1 op=N09_M07_F10 flagged=['b0', 'b1', 'temp', 'rms', 'kurt']
+00:09:53 [llm] E1 step 1 -> mock-rule-based (not an LLM) (3793 chars, 3 tests allowed)
+00:09:53 [win] #42 S1 KA01 op=N09_M07_F10 rms=1.209  streak=3 flagged=b0,b1,temp,rms state=diagnosing
+00:09:53 [llm] E1 step 1 (0.0 s, mock-rule-based (not an LLM)): bearing_outer_race 100%, healthy 0% | next=none
+00:09:53 [episode] E1 DONE (confident) -> bearing_outer_race 100% | truth=bearing_outer_race correct=True | 0 tests, 0.0 s
+00:09:57 [win] #43 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:00 [win] #44 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:06 [win] #45 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:11 [win] #46 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:26 [win] #47 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:27 [win] #48 S1 KA01 op=N15_M07_F10 rms=4.506 test=MAN-T1:settle streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:32 [win] #49 S1 KA01 op=N15_M07_F10 rms=4.535 test=MAN-T1:run streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:34 [win] #50 S1 KA01 op=N15_M07_F10 rms=4.513 test=MAN-T1:run streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:41 [win] #51 S1 KA01 op=N15_M07_F10 rms=4.515 test=MAN-T1:run streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:51 [win] #52 S1 KA01 op=N15_M07_F10 rms=4.509 test=MAN-T1:run streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:10:55 [win] #53 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:11:00 [win] #54 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched

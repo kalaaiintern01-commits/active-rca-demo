@@ -1,0 +1,5 @@
+13:57:29 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+13:57:32 [feeder] relaying windows from https://kalaaiintern01-commits.github.io/active-rca-demo/data/ on pccoe/arca/add1f2/MOTOR-01/feed
+13:57:32 [bridge] engine = mock-rule-based (not an LLM)
+14:00:03 [feeder] served 1 windows (last S1/K001_N09_M07_F10.bin #0, 20 chunks)
+22:32:41 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01

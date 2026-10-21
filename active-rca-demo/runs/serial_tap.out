@@ -1,0 +1,843 @@
+waiting for the simulator on rfc2217://localhost:4000 ...
+--- connected rfc2217://localhost:4000
+15:21:03 ets Jul 29 2019 12:21:46
+15:21:03 
+15:21:03 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+15:21:03 configsip: 0, SPIWP:0xee
+15:21:03 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+15:21:03 mode:DIO, clock div:2
+15:21:03 load:0x3fff0030,len:1156
+15:21:03 load:0x40078000,len:11456
+15:21:03 ho 0 tail 12 room 4
+15:21:03 load:0x40080400,len:2972
+15:21:03 entry 0x400805dc
+15:21:05 
+15:21:05 =============================================
+15:21:05  Active-RCA replay node  arca-1.1.0
+15:21:05  device=MOTOR-01  schema=pdm.telemetry.v1.1
+15:21:05  topics pccoe/arca/add1f2/MOTOR-01/{telemetry,status,cmd,alert}
+15:21:05 =============================================
+15:21:05 [oled] ok
+15:21:05 [wifi] joining Wokwi-GUEST. up ip=10.13.37.2
+15:21:08 [ntp] synced
+15:21:08 [tls] offering curve P-256 only
+15:21:08 [mqtt] connecting broker.hivemq.com:1883 plain ... connected
+15:21:15 [http] connected to kalaaiintern01-commits.github.io, keep-alive range requests
+15:21:19 [pub] #1 S1 K001 N09_M07_F10 rms=1.467m/s2  len=954 heap=147k
+15:21:24 [pub] #2 S1 K001 N09_M07_F10 rms=1.453m/s2  len=956 heap=147k
+15:21:29 [pub] #3 S1 K001 N09_M07_F10 rms=1.467m/s2  len=952 heap=147k
+15:21:34 [pub] #4 S1 K001 N09_M07_F10 rms=1.432m/s2  len=953 heap=147k
+15:21:40 [pub] #5 S1 K001 N09_M07_F10 rms=1.464m/s2  len=951 heap=147k
+15:21:41 [cmd] ui-mvf2rkeq ok scenario queued
+15:21:45 [pub] #6 S1 K001 N09_M07_F10 rms=1.456m/s2  len=955 heap=147k
+15:21:45 [scn] #2 S2 EF 750
+15:21:49 [pub] #7 S2 EF 750 rms=0.670m/s2  len=908 heap=146k
+15:21:54 [pub] #8 S2 EF 750 rms=0.657m/s2  len=908 heap=146k
+15:21:59 [pub] #9 S2 EF 750 rms=0.644m/s2  len=903 heap=146k
+15:22:04 [pub] #10 S2 EF 750 rms=0.656m/s2  len=910 heap=146k
+15:22:08 [pub] #11 S2 EF 750 rms=0.667m/s2  len=907 heap=146k
+15:22:14 [pub] #12 S2 EF 750 rms=0.706m/s2  len=909 heap=146k
+15:22:18 [pub] #13 S2 EF 750 rms=0.656m/s2  len=908 heap=146k
+15:22:19 [cmd] E1-T1 ok test queued
+15:22:23 [pub] #14 S2 EF 750 rms=0.674m/s2  len=911 heap=146k
+15:22:23 [test] E1-T1 -> 1000 for 10 windows
+15:22:28 [pub] #15 S2 EF 1000 rms=1.175m/s2 settle len=963 heap=145k
+15:22:33 [pub] #16 S2 EF 1000 rms=1.121m/s2 run len=955 heap=145k
+15:22:37 [pub] #17 S2 EF 1000 rms=1.143m/s2 run len=957 heap=145k
+15:22:41 [pub] #18 S2 EF 1000 rms=1.085m/s2 run len=958 heap=145k
+15:22:45 [pub] #19 S2 EF 1000 rms=1.119m/s2 run len=957 heap=145k
+15:22:50 [pub] #20 S2 EF 1000 rms=1.094m/s2 run len=959 heap=145k
+15:22:55 [pub] #21 S2 EF 1000 rms=1.108m/s2 run len=960 heap=145k
+15:23:01 [pub] #22 S2 EF 1000 rms=1.329m/s2 run len=960 heap=145k
+15:23:05 [pub] #23 S2 EF 1000 rms=1.114m/s2 run len=958 heap=145k
+15:23:10 [pub] #24 S2 EF 1000 rms=1.081m/s2 run len=959 heap=145k
+15:23:15 [pub] #25 S2 EF 1000 rms=1.046m/s2 run len=959 heap=145k
+15:23:15 [test] E1-T1 done
+15:23:19 [pub] #26 S2 EF 750 rms=0.682m/s2  len=911 heap=146k
+15:23:24 [pub] #27 S2 EF 750 rms=0.777m/s2  len=908 heap=146k
+15:23:29 [pub] #28 S2 EF 750 rms=0.713m/s2  len=913 heap=146k
+15:23:33 [pub] #29 S2 EF 750 rms=0.699m/s2  len=912 heap=146k
+15:23:38 [pub] #30 S2 EF 750 rms=0.697m/s2  len=913 heap=146k
+15:23:42 [pub] #31 S2 EF 750 rms=0.711m/s2  len=912 heap=146k
+15:23:46 [pub] #32 S2 EF 750 rms=0.700m/s2  len=910 heap=146k
+15:23:51 [pub] #33 S2 EF 750 rms=0.745m/s2  len=911 heap=146k
+15:23:56 [pub] #34 S2 EF 750 rms=0.692m/s2  len=913 heap=146k
+15:24:00 [pub] #35 S2 EF 750 rms=0.728m/s2  len=911 heap=146k
+15:24:04 [pub] #36 S2 EF 750 rms=0.719m/s2  len=912 heap=146k
+15:24:09 [pub] #37 S2 EF 750 rms=0.716m/s2  len=911 heap=146k
+15:24:14 [pub] #38 S2 EF 750 rms=0.725m/s2  len=908 heap=146k
+15:24:18 [pub] #39 S2 EF 750 rms=0.821m/s2  len=908 heap=146k
+15:24:21 [cmd] ui-mvf2v047 ok scenario queued
+15:24:23 [pub] #40 S2 EF 750 rms=0.670m/s2  len=910 heap=146k
+15:24:23 [scn] #3 S1 KA01 N15_M01_F10
+15:24:28 [pub] #41 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=957 heap=147k
+15:24:30 [cmd] ui-mvf2v6wc ok scenario queued
+15:24:34 [pub] #42 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=953 heap=147k
+15:24:34 [scn] #4 S1 KA01 N15_M01_F10
+15:24:39 [pub] #43 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=957 heap=147k
+15:24:45 [pub] #44 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=953 heap=147k
+15:24:49 [pub] #45 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=957 heap=147k
+15:24:55 [pub] #46 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=954 heap=147k
+15:24:59 [pub] #47 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=957 heap=147k
+15:25:05 [pub] #48 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=960 heap=147k
+15:25:10 [pub] #49 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=960 heap=147k
+15:25:15 [pub] #50 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=956 heap=147k
+15:25:20 [pub] #51 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=959 heap=147k
+15:25:25 [pub] #52 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=956 heap=147k
+15:25:30 [pub] #53 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=961 heap=147k
+15:25:35 [pub] #54 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=958 heap=147k
+15:25:40 [pub] #55 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=957 heap=147k
+15:25:46 [pub] #56 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=953 heap=147k
+15:25:52 [pub] #57 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=957 heap=147k
+15:25:57 [pub] #58 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=954 heap=147k
+15:26:02 [pub] #59 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=957 heap=147k
+15:26:08 [pub] #60 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=960 heap=147k
+15:26:15 [pub] #61 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=960 heap=147k
+15:26:20 [pub] #62 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=956 heap=147k
+15:26:25 [pub] #63 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=959 heap=147k
+15:26:31 [pub] #64 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=956 heap=147k
+15:26:36 [pub] #65 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=961 heap=147k
+15:26:41 [pub] #66 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=958 heap=147k
+15:26:46 [pub] #67 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=957 heap=147k
+15:26:51 [pub] #68 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=953 heap=147k
+15:26:57 [pub] #69 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=957 heap=147k
+15:27:02 [pub] #70 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=954 heap=147k
+15:27:08 [pub] #71 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=957 heap=147k
+15:27:13 [pub] #72 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=960 heap=146k
+15:27:19 [pub] #73 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=960 heap=147k
+15:27:24 [pub] #74 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=956 heap=147k
+15:27:29 [pub] #75 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=959 heap=147k
+15:27:34 [pub] #76 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=956 heap=147k
+15:27:39 [pub] #77 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=961 heap=147k
+15:27:44 [pub] #78 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=958 heap=147k
+15:27:49 [pub] #79 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=957 heap=147k
+15:27:56 [pub] #80 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=953 heap=147k
+15:28:01 [pub] #81 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=957 heap=147k
+15:28:07 [pub] #82 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=954 heap=147k
+15:28:12 [pub] #83 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=957 heap=146k
+15:28:18 [pub] #84 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=960 heap=147k
+15:28:23 [pub] #85 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=960 heap=147k
+15:28:29 [pub] #86 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=956 heap=147k
+15:28:34 [pub] #87 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=959 heap=147k
+15:28:40 [pub] #88 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=956 heap=147k
+15:28:45 [pub] #89 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=961 heap=147k
+15:28:51 [pub] #90 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=958 heap=147k
+15:28:56 [pub] #91 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=957 heap=147k
+15:29:01 [pub] #92 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=953 heap=147k
+15:29:06 [pub] #93 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=957 heap=147k
+15:29:11 [pub] #94 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=954 heap=147k
+15:29:17 [pub] #95 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=957 heap=147k
+15:29:22 [pub] #96 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=960 heap=147k
+15:29:28 [pub] #97 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=960 heap=147k
+15:29:33 [pub] #98 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=956 heap=147k
+15:29:39 [pub] #99 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=959 heap=147k
+15:29:44 [pub] #100 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:29:49 [pub] #101 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:29:54 [pub] #102 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:30:00 [pub] #103 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:30:05 [pub] #104 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:30:11 [pub] #105 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:30:15 [pub] #106 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:30:20 [pub] #107 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:30:26 [pub] #108 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:30:31 [pub] #109 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:30:36 [pub] #110 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:30:41 [pub] #111 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:30:46 [pub] #112 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:30:52 [pub] #113 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:30:57 [pub] #114 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:31:02 [pub] #115 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:31:08 [pub] #116 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:31:14 [pub] #117 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:31:19 [pub] #118 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:31:24 [pub] #119 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:31:29 [pub] #120 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:31:34 [pub] #121 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:31:39 [pub] #122 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:31:45 [pub] #123 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:31:50 [pub] #124 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:31:59 [pub] #125 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:32:06 [pub] #126 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:32:15 [pub] #127 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:32:20 [pub] #128 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:32:25 [pub] #129 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:32:31 [pub] #130 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:32:37 [pub] #131 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:32:42 [pub] #132 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:32:47 [pub] #133 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:32:53 [pub] #134 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:32:58 [pub] #135 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:33:03 [pub] #136 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:33:09 [pub] #137 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:33:15 [pub] #138 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:33:20 [pub] #139 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:33:26 [pub] #140 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:33:33 [pub] #141 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:33:39 [pub] #142 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:33:45 [pub] #143 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:33:51 [pub] #144 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:33:57 [pub] #145 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:34:02 [pub] #146 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:34:07 [pub] #147 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:34:13 [pub] #148 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:34:18 [pub] #149 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:34:23 [pub] #150 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:34:28 [pub] #151 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:34:34 [pub] #152 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:34:40 [pub] #153 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:34:45 [pub] #154 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:34:50 [pub] #155 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:34:56 [pub] #156 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:35:01 [pub] #157 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:35:06 [pub] #158 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:35:11 [pub] #159 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:35:16 [pub] #160 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=146k
+15:35:21 [pub] #161 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:35:27 [pub] #162 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:35:32 [pub] #163 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:35:37 [pub] #164 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:35:41 [pub] #165 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:35:47 [pub] #166 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:35:52 [pub] #167 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:35:56 [pub] #168 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:36:01 [pub] #169 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:36:05 [pub] #170 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:36:10 [pub] #171 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:36:15 [pub] #172 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:36:20 [pub] #173 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:36:25 [pub] #174 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:36:30 [pub] #175 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:36:35 [pub] #176 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:36:40 [pub] #177 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:36:45 [pub] #178 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:36:50 [pub] #179 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:36:56 [pub] #180 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:37:02 [pub] #181 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:37:07 [pub] #182 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:37:12 [pub] #183 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:37:18 [pub] #184 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:37:23 [pub] #185 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:37:29 [pub] #186 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=146k
+15:37:35 [pub] #187 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:37:40 [pub] #188 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:37:45 [pub] #189 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:37:51 [pub] #190 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:37:56 [pub] #191 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=958 heap=147k
+15:38:02 [pub] #192 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=961 heap=147k
+15:38:07 [pub] #193 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=961 heap=147k
+15:38:13 [pub] #194 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=957 heap=147k
+15:38:19 [pub] #195 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=960 heap=147k
+15:38:24 [pub] #196 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=957 heap=147k
+15:38:29 [pub] #197 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=962 heap=147k
+15:38:35 [pub] #198 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=959 heap=147k
+15:38:40 [pub] #199 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=958 heap=147k
+15:38:45 [pub] #200 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=954 heap=147k
+15:38:51 [pub] #201 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=958 heap=147k
+15:38:57 [pub] #202 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=955 heap=147k
+15:39:02 [pub] #203 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=959 heap=147k
+15:39:08 [pub] #204 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=962 heap=147k
+15:39:14 [pub] #205 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=962 heap=147k
+15:39:19 [pub] #206 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=958 heap=147k
+15:39:26 [pub] #207 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=961 heap=147k
+15:39:32 [pub] #208 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=958 heap=147k
+15:39:38 [pub] #209 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=963 heap=147k
+15:39:43 [pub] #210 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=960 heap=147k
+15:39:48 [pub] #211 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=959 heap=147k
+15:39:54 [pub] #212 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=955 heap=147k
+15:40:00 [pub] #213 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=959 heap=147k
+15:40:05 [pub] #214 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=956 heap=147k
+15:40:10 [pub] #215 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=959 heap=147k
+15:40:16 [pub] #216 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=962 heap=147k
+15:40:21 [pub] #217 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=962 heap=146k
+15:40:27 [pub] #218 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=958 heap=147k
+15:40:27 [cmd] ui-mvf3fpjr ok scenario queued
+15:40:32 [pub] #219 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=961 heap=147k
+15:40:32 [scn] #5 S3 RUN 5V
+15:40:36 [pub] #220 S3 RUN 5V rms=0.633au  len=932 heap=147k
+15:40:39 [pub] #221 S3 RUN 5V rms=2.378au  len=929 heap=147k
+15:40:42 [pub] #222 S3 RUN 5V rms=2.987au  len=932 heap=147k
+15:40:44 [pub] #223 S3 RUN 5V rms=2.877au  len=930 heap=147k
+15:40:47 [pub] #224 S3 RUN 5V rms=2.699au  len=930 heap=147k
+15:40:49 [pub] #225 S3 RUN 5V rms=3.083au  len=931 heap=147k
+15:40:52 [pub] #226 S3 RUN 5V rms=3.036au  len=931 heap=147k
+15:40:55 [pub] #227 S3 RUN 5V rms=2.735au  len=933 heap=147k
+15:40:57 [pub] #228 S3 RUN 5V rms=2.418au  len=929 heap=147k
+15:41:00 [pub] #229 S3 RUN 5V rms=2.153au  len=931 heap=147k
+15:41:02 [pub] #230 S3 RUN 5V rms=2.265au  len=934 heap=147k
+15:41:05 [pub] #231 S3 RUN 5V rms=2.373au  len=935 heap=147k
+15:41:07 [pub] #232 S3 RUN 5V rms=3.012au  len=933 heap=147k
+15:41:12 [pub] #233 S3 RUN 5V rms=2.853au  len=935 heap=147k
+15:41:15 [pub] #234 S3 RUN 5V rms=2.756au  len=935 heap=147k
+15:41:18 [pub] #235 S3 RUN 5V rms=2.926au  len=935 heap=147k
+15:41:21 [pub] #236 S3 RUN 5V rms=2.851au  len=932 heap=147k
+15:41:24 [pub] #237 S3 RUN 5V rms=2.708au  len=928 heap=147k
+15:41:27 [pub] #238 S3 RUN 5V rms=2.900au  len=932 heap=147k
+15:41:30 [pub] #239 S3 RUN 5V rms=2.993au  len=932 heap=147k
+15:41:33 [pub] #240 S3 RUN 5V rms=2.932au  len=935 heap=147k
+15:41:35 [pub] #241 S3 RUN 5V rms=2.858au  len=932 heap=147k
+15:41:38 [pub] #242 S3 RUN 5V rms=2.855au  len=935 heap=147k
+15:41:41 [pub] #243 S3 RUN 5V rms=2.913au  len=935 heap=147k
+15:41:43 [pub] #244 S3 RUN 5V rms=2.788au  len=934 heap=146k
+15:41:46 [pub] #245 S3 RUN 5V rms=2.870au  len=934 heap=147k
+15:41:49 [pub] #246 S3 RUN 5V rms=2.909au  len=935 heap=147k
+15:41:51 [pub] #247 S3 RUN 5V rms=2.754au  len=931 heap=147k
+15:41:54 [pub] #248 S3 RUN 5V rms=2.770au  len=932 heap=147k
+15:41:56 [pub] #249 S3 RUN 5V rms=2.957au  len=927 heap=147k
+15:41:59 [pub] #250 S3 RUN 5V rms=2.597au  len=934 heap=147k
+15:42:02 [pub] #251 S3 RUN 5V rms=2.640au  len=933 heap=147k
+15:42:05 [pub] #252 S3 RUN 5V rms=2.776au  len=935 heap=147k
+15:42:07 [pub] #253 S3 RUN 5V rms=2.733au  len=934 heap=147k
+15:42:10 [pub] #254 S3 RUN 5V rms=2.806au  len=934 heap=147k
+15:42:13 [pub] #255 S3 RUN 5V rms=2.647au  len=933 heap=146k
+15:42:15 [pub] #256 S3 RUN 5V rms=2.661au  len=933 heap=147k
+15:42:18 [pub] #257 S3 RUN 5V rms=2.623au  len=934 heap=147k
+15:42:21 [pub] #258 S3 RUN 5V rms=2.587au  len=933 heap=147k
+15:42:24 [pub] #259 S3 RUN 5V rms=2.612au  len=934 heap=147k
+15:42:27 [pub] #260 S3 RUN 5V rms=2.655au  len=934 heap=147k
+15:42:29 [pub] #261 S3 RUN 5V rms=2.468au  len=931 heap=147k
+15:42:32 [pub] #262 S3 RUN 5V rms=2.563au  len=933 heap=147k
+15:42:35 [pub] #263 S3 RUN 5V rms=2.621au  len=932 heap=147k
+15:42:37 [pub] #264 S3 RUN 5V rms=5.241au  len=931 heap=147k
+15:42:40 [pub] #265 S3 RUN 5V rms=3.669au  len=931 heap=146k
+15:42:43 [pub] #266 S3 RUN 5V rms=4.916au  len=933 heap=147k
+15:42:45 [pub] #267 S3 RUN 5V rms=5.736au  len=931 heap=147k
+15:42:48 [pub] #268 S3 RUN 5V rms=8.468au  len=933 heap=147k
+15:42:49 [cmd] E3-T1 ok test queued
+15:42:51 [pub] #269 S3 RUN 5V rms=7.358au  len=935 heap=147k
+15:42:51 [test] E3-T1 -> 3V for 10 windows
+15:42:54 [pub] #270 S3 RUN 3V rms=0.409au settle len=986 heap=146k
+15:42:57 [pub] #271 S3 RUN 3V rms=0.434au run len=977 heap=146k
+15:43:00 [pub] #272 S3 RUN 3V rms=0.449au run len=980 heap=145k
+15:43:03 [pub] #273 S3 RUN 3V rms=0.471au run len=981 heap=146k
+15:43:06 [pub] #274 S3 RUN 3V rms=0.494au run len=983 heap=146k
+15:43:09 [pub] #275 S3 RUN 3V rms=0.506au run len=984 heap=146k
+15:43:12 [pub] #276 S3 RUN 3V rms=0.518au run len=979 heap=146k
+15:43:15 [pub] #277 S3 RUN 3V rms=0.527au run len=982 heap=146k
+15:43:18 [pub] #278 S3 RUN 3V rms=0.527au run len=980 heap=146k
+15:43:20 [pub] #279 S3 RUN 3V rms=0.437au run len=979 heap=146k
+15:43:23 [pub] #280 S3 RUN 3V rms=0.413au run len=982 heap=146k
+15:43:23 [test] E3-T1 done
+15:43:26 [pub] #281 S3 RUN 5V rms=8.847au  len=930 heap=147k
+15:43:29 [pub] #282 S3 RUN 5V rms=8.095au  len=934 heap=147k
+15:43:31 [pub] #283 S3 RUN 5V rms=8.451au  len=934 heap=147k
+15:43:35 [pub] #284 S3 RUN 5V rms=7.786au  len=935 heap=147k
+15:43:38 [pub] #285 S3 RUN 5V rms=7.934au  len=931 heap=147k
+15:43:41 [pub] #286 S3 RUN 5V rms=7.233au  len=933 heap=147k
+15:43:43 [pub] #287 S3 RUN 5V rms=7.296au  len=934 heap=147k
+15:43:46 [pub] #288 S3 RUN 5V rms=6.531au  len=934 heap=147k
+15:43:48 [pub] #289 S3 RUN 5V rms=6.983au  len=935 heap=147k
+15:43:51 [pub] #290 S3 RUN 5V rms=7.269au  len=933 heap=147k
+15:43:54 [pub] #291 S3 RUN 5V rms=7.321au  len=933 heap=147k
+15:43:57 [pub] #292 S3 RUN 5V rms=6.356au  len=934 heap=147k
+15:44:00 [pub] #293 S3 RUN 5V rms=7.483au  len=935 heap=147k
+15:44:03 [pub] #294 S3 RUN 5V rms=7.434au  len=934 heap=147k
+15:44:06 [pub] #295 S3 RUN 5V rms=5.947au  len=934 heap=147k
+15:44:08 [pub] #296 S3 RUN 5V rms=4.987au  len=934 heap=147k
+15:44:11 [pub] #297 S3 RUN 5V rms=3.362au  len=934 heap=147k
+15:44:14 [pub] #298 S3 RUN 5V rms=3.072au  len=934 heap=147k
+15:44:17 [pub] #299 S3 RUN 5V rms=2.885au  len=928 heap=147k
+15:44:19 [pub] #300 S3 RUN 5V rms=2.834au  len=929 heap=147k
+15:44:22 [pub] #301 S3 RUN 5V rms=3.265au  len=932 heap=147k
+15:44:25 [pub] #302 S3 RUN 5V rms=3.135au  len=931 heap=147k
+15:44:27 [pub] #303 S3 RUN 5V rms=2.922au  len=929 heap=147k
+15:44:30 [pub] #304 S3 RUN 5V rms=2.978au  len=933 heap=147k
+15:44:32 [pub] #305 S3 RUN 5V rms=2.922au  len=934 heap=147k
+15:44:35 [pub] #306 S3 RUN 5V rms=2.847au  len=936 heap=147k
+15:44:37 [pub] #307 S3 RUN 5V rms=2.811au  len=934 heap=147k
+15:44:40 [pub] #308 S3 RUN 5V rms=2.841au  len=935 heap=147k
+15:44:43 [pub] #309 S3 RUN 5V rms=2.855au  len=935 heap=147k
+15:44:45 [pub] #310 S3 RUN 5V rms=2.777au  len=931 heap=147k
+15:44:49 [pub] #311 S3 RUN 5V rms=2.744au  len=933 heap=147k
+15:44:51 [pub] #312 S3 RUN 5V rms=2.736au  len=933 heap=147k
+15:44:54 [pub] #313 S3 RUN 5V rms=2.674au  len=932 heap=147k
+15:44:57 [pub] #314 S3 RUN 5V rms=2.645au  len=929 heap=147k
+15:45:01 [pub] #315 S3 RUN 5V rms=2.553au  len=936 heap=147k
+15:45:04 [pub] #316 S3 RUN 5V rms=2.486au  len=934 heap=147k
+15:45:06 [pub] #317 S3 RUN 5V rms=2.508au  len=936 heap=147k
+15:45:09 [pub] #318 S3 RUN 5V rms=2.182au  len=934 heap=147k
+15:45:11 [pub] #319 S3 RUN 5V rms=0.966au  len=936 heap=147k
+15:45:14 [pub] #320 S3 RUN 5V rms=0.154au  len=936 heap=147k
+15:45:16 [pub] #321 S3 RUN 5V rms=0.633au  len=932 heap=147k
+15:45:19 [pub] #322 S3 RUN 5V rms=2.378au  len=929 heap=147k
+15:45:22 [pub] #323 S3 RUN 5V rms=2.987au  len=932 heap=147k
+15:45:24 [pub] #324 S3 RUN 5V rms=2.877au  len=930 heap=147k
+15:45:27 [pub] #325 S3 RUN 5V rms=2.699au  len=930 heap=147k
+15:45:29 [pub] #326 S3 RUN 5V rms=3.083au  len=931 heap=147k
+15:45:32 [pub] #327 S3 RUN 5V rms=3.036au  len=931 heap=147k
+15:45:35 [pub] #328 S3 RUN 5V rms=2.735au  len=933 heap=147k
+15:45:37 [pub] #329 S3 RUN 5V rms=2.418au  len=929 heap=147k
+15:45:40 [pub] #330 S3 RUN 5V rms=2.153au  len=931 heap=147k
+15:45:43 [pub] #331 S3 RUN 5V rms=2.265au  len=934 heap=147k
+15:45:46 [pub] #332 S3 RUN 5V rms=2.373au  len=935 heap=147k
+15:45:48 [pub] #333 S3 RUN 5V rms=3.012au  len=933 heap=147k
+15:45:51 [pub] #334 S3 RUN 5V rms=2.853au  len=935 heap=147k
+15:45:54 [pub] #335 S3 RUN 5V rms=2.756au  len=935 heap=147k
+15:45:56 [pub] #336 S3 RUN 5V rms=2.926au  len=935 heap=147k
+15:45:59 [pub] #337 S3 RUN 5V rms=2.851au  len=932 heap=147k
+15:46:02 [pub] #338 S3 RUN 5V rms=2.708au  len=928 heap=147k
+15:46:05 [pub] #339 S3 RUN 5V rms=2.900au  len=932 heap=147k
+15:46:07 [pub] #340 S3 RUN 5V rms=2.993au  len=932 heap=147k
+15:46:10 [pub] #341 S3 RUN 5V rms=2.932au  len=935 heap=147k
+15:46:13 [pub] #342 S3 RUN 5V rms=2.858au  len=932 heap=147k
+15:46:16 [pub] #343 S3 RUN 5V rms=2.855au  len=935 heap=146k
+15:46:18 [pub] #344 S3 RUN 5V rms=2.913au  len=935 heap=147k
+15:46:21 [pub] #345 S3 RUN 5V rms=2.788au  len=934 heap=147k
+15:46:23 [pub] #346 S3 RUN 5V rms=2.870au  len=934 heap=147k
+15:46:26 [pub] #347 S3 RUN 5V rms=2.909au  len=935 heap=147k
+15:46:28 [pub] #348 S3 RUN 5V rms=2.754au  len=931 heap=147k
+15:46:31 [pub] #349 S3 RUN 5V rms=2.770au  len=932 heap=147k
+15:46:34 [pub] #350 S3 RUN 5V rms=2.957au  len=927 heap=147k
+15:46:37 [pub] #351 S3 RUN 5V rms=2.597au  len=934 heap=147k
+15:46:39 [pub] #352 S3 RUN 5V rms=2.640au  len=933 heap=147k
+15:46:42 [pub] #353 S3 RUN 5V rms=2.776au  len=935 heap=147k
+15:46:45 [pub] #354 S3 RUN 5V rms=2.733au  len=934 heap=147k
+15:46:47 [pub] #355 S3 RUN 5V rms=2.806au  len=934 heap=147k
+15:46:50 [pub] #356 S3 RUN 5V rms=2.647au  len=933 heap=147k
+15:46:52 [pub] #357 S3 RUN 5V rms=2.661au  len=933 heap=147k
+15:46:56 [pub] #358 S3 RUN 5V rms=2.623au  len=934 heap=147k
+15:46:59 [pub] #359 S3 RUN 5V rms=2.587au  len=933 heap=147k
+15:47:02 [pub] #360 S3 RUN 5V rms=2.612au  len=934 heap=147k
+15:47:05 [pub] #361 S3 RUN 5V rms=2.655au  len=934 heap=147k
+15:47:08 [pub] #362 S3 RUN 5V rms=2.468au  len=931 heap=147k
+15:47:11 [pub] #363 S3 RUN 5V rms=2.563au  len=933 heap=147k
+15:47:13 [pub] #364 S3 RUN 5V rms=2.621au  len=932 heap=147k
+15:47:16 [pub] #365 S3 RUN 5V rms=5.241au  len=931 heap=147k
+15:47:19 [pub] #366 S3 RUN 5V rms=3.669au  len=931 heap=147k
+15:47:21 [pub] #367 S3 RUN 5V rms=4.916au  len=933 heap=147k
+15:47:24 [pub] #368 S3 RUN 5V rms=5.736au  len=931 heap=147k
+15:47:27 [pub] #369 S3 RUN 5V rms=8.468au  len=933 heap=147k
+15:47:30 [pub] #370 S3 RUN 5V rms=7.358au  len=935 heap=147k
+15:47:32 [pub] #371 S3 RUN 5V rms=8.847au  len=930 heap=147k
+15:47:35 [pub] #372 S3 RUN 5V rms=8.095au  len=934 heap=147k
+15:47:38 [pub] #373 S3 RUN 5V rms=8.451au  len=934 heap=147k
+15:47:40 [pub] #374 S3 RUN 5V rms=7.786au  len=935 heap=147k
+15:47:43 [pub] #375 S3 RUN 5V rms=7.934au  len=931 heap=147k
+15:47:45 [pub] #376 S3 RUN 5V rms=7.233au  len=933 heap=147k
+15:47:48 [pub] #377 S3 RUN 5V rms=7.296au  len=934 heap=147k
+15:47:50 [pub] #378 S3 RUN 5V rms=6.531au  len=934 heap=147k
+15:47:53 [pub] #379 S3 RUN 5V rms=6.983au  len=935 heap=147k
+15:47:56 [pub] #380 S3 RUN 5V rms=7.269au  len=933 heap=147k
+15:47:58 [pub] #381 S3 RUN 5V rms=7.321au  len=933 heap=147k
+15:48:01 [pub] #382 S3 RUN 5V rms=6.356au  len=934 heap=147k
+15:48:04 [pub] #383 S3 RUN 5V rms=7.483au  len=935 heap=147k
+15:48:07 [pub] #384 S3 RUN 5V rms=7.434au  len=934 heap=147k
+15:48:09 [pub] #385 S3 RUN 5V rms=5.947au  len=934 heap=147k
+15:48:12 [pub] #386 S3 RUN 5V rms=4.987au  len=934 heap=147k
+15:48:15 [pub] #387 S3 RUN 5V rms=3.362au  len=934 heap=147k
+15:48:17 [pub] #388 S3 RUN 5V rms=3.072au  len=934 heap=147k
+15:48:20 [pub] #389 S3 RUN 5V rms=2.885au  len=928 heap=147k
+15:48:23 [pub] #390 S3 RUN 5V rms=2.834au  len=929 heap=147k
+15:48:26 [pub] #391 S3 RUN 5V rms=3.265au  len=932 heap=147k
+15:48:29 [pub] #392 S3 RUN 5V rms=3.135au  len=931 heap=147k
+15:48:32 [pub] #393 S3 RUN 5V rms=2.922au  len=929 heap=147k
+15:48:34 [pub] #394 S3 RUN 5V rms=2.978au  len=933 heap=147k
+15:48:37 [pub] #395 S3 RUN 5V rms=2.922au  len=934 heap=147k
+15:48:38 [cmd] ui-mvf3q7l6 ok scenario queued
+15:48:40 [pub] #396 S3 RUN 5V rms=2.847au  len=936 heap=147k
+15:48:40 [scn] #6 S2 NR 500
+15:48:45 [pub] #397 S2 NR 500 rms=0.136m/s2  len=913 heap=146k
+15:48:49 [pub] #398 S2 NR 500 rms=0.135m/s2  len=912 heap=146k
+15:48:54 [pub] #399 S2 NR 500 rms=0.131m/s2  len=913 heap=146k
+15:48:59 [pub] #400 S2 NR 500 rms=0.134m/s2  len=912 heap=146k
+15:49:04 [pub] #401 S2 NR 500 rms=0.136m/s2  len=910 heap=146k
+15:49:09 [cmd] ui-mvf3qvoi ok scenario queued
+15:49:09 [pub] #402 S2 NR 500 rms=0.131m/s2  len=912 heap=146k
+15:49:09 [scn] #7 S2 SF 500
+15:49:15 [pub] #403 S2 SF 500 rms=0.144m/s2  len=907 heap=146k
+15:49:20 [pub] #404 S2 SF 500 rms=0.144m/s2  len=913 heap=146k
+15:49:25 [pub] #405 S2 SF 500 rms=0.144m/s2  len=913 heap=146k
+15:49:30 [pub] #406 S2 SF 500 rms=0.143m/s2  len=909 heap=146k
+15:49:34 [pub] #407 S2 SF 500 rms=0.144m/s2  len=913 heap=146k
+15:49:39 [pub] #408 S2 SF 500 rms=0.147m/s2  len=910 heap=146k
+15:49:45 [pub] #409 S2 SF 500 rms=0.146m/s2  len=911 heap=146k
+15:49:50 [pub] #410 S2 SF 500 rms=0.144m/s2  len=908 heap=146k
+15:49:55 [pub] #411 S2 SF 500 rms=0.144m/s2  len=914 heap=146k
+15:50:00 [pub] #412 S2 SF 500 rms=0.145m/s2  len=913 heap=146k
+15:50:05 [pub] #413 S2 SF 500 rms=0.147m/s2  len=913 heap=146k
+15:50:10 [pub] #414 S2 SF 500 rms=0.147m/s2  len=914 heap=146k
+15:50:15 [pub] #415 S2 SF 500 rms=0.145m/s2  len=913 heap=146k
+15:50:20 [pub] #416 S2 SF 500 rms=0.144m/s2  len=913 heap=146k
+15:50:25 [pub] #417 S2 SF 500 rms=0.143m/s2  len=913 heap=146k
+15:50:30 [pub] #418 S2 SF 500 rms=0.146m/s2  len=914 heap=146k
+15:50:36 [pub] #419 S2 SF 500 rms=0.148m/s2  len=909 heap=146k
+15:50:41 [pub] #420 S2 SF 500 rms=0.145m/s2  len=912 heap=146k
+15:50:47 [pub] #421 S2 SF 500 rms=0.143m/s2  len=911 heap=146k
+15:50:48 [cmd] ui-mvf3t0wl ok scenario queued
+15:50:53 [pub] #422 S2 SF 500 rms=0.144m/s2  len=912 heap=146k
+15:50:53 [scn] #8 S2 SF 750
+15:50:58 [pub] #423 S2 SF 750 rms=0.447m/s2  len=910 heap=146k
+15:51:04 [pub] #424 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:51:09 [pub] #425 S2 SF 750 rms=0.463m/s2  len=911 heap=146k
+15:51:16 [pub] #426 S2 SF 750 rms=0.438m/s2  len=910 heap=146k
+15:51:21 [pub] #427 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:51:26 [pub] #428 S2 SF 750 rms=0.448m/s2  len=912 heap=146k
+15:51:28 [cmd] E4-T1 ok test queued
+15:51:31 [pub] #429 S2 SF 750 rms=0.486m/s2  len=913 heap=146k
+15:51:31 [test] E4-T1 -> 500 for 10 windows
+15:51:36 [pub] #430 S2 SF 500 rms=0.144m/s2 settle len=956 heap=145k
+15:51:41 [pub] #431 S2 SF 500 rms=0.144m/s2 run len=958 heap=146k
+15:51:46 [pub] #432 S2 SF 500 rms=0.144m/s2 run len=958 heap=146k
+15:51:50 [pub] #433 S2 SF 500 rms=0.143m/s2 run len=954 heap=146k
+15:51:54 [pub] #434 S2 SF 500 rms=0.144m/s2 run len=958 heap=146k
+15:51:59 [pub] #435 S2 SF 500 rms=0.147m/s2 run len=955 heap=146k
+15:52:04 [pub] #436 S2 SF 500 rms=0.146m/s2 run len=956 heap=146k
+15:52:08 [pub] #437 S2 SF 500 rms=0.144m/s2 run len=953 heap=146k
+15:52:13 [pub] #438 S2 SF 500 rms=0.144m/s2 run len=959 heap=146k
+15:52:18 [pub] #439 S2 SF 500 rms=0.145m/s2 run len=958 heap=146k
+15:52:22 [pub] #440 S2 SF 500 rms=0.147m/s2 run len=958 heap=146k
+15:52:22 [test] E4-T1 done
+15:52:27 [pub] #441 S2 SF 750 rms=0.471m/s2  len=913 heap=146k
+15:52:32 [pub] #442 S2 SF 750 rms=0.451m/s2  len=912 heap=146k
+15:52:37 [pub] #443 S2 SF 750 rms=0.433m/s2  len=910 heap=146k
+15:52:42 [pub] #444 S2 SF 750 rms=0.452m/s2  len=913 heap=146k
+15:52:47 [pub] #445 S2 SF 750 rms=0.463m/s2  len=914 heap=146k
+15:52:52 [pub] #446 S2 SF 750 rms=0.460m/s2  len=913 heap=146k
+15:52:57 [pub] #447 S2 SF 750 rms=0.470m/s2  len=913 heap=146k
+15:53:02 [pub] #448 S2 SF 750 rms=0.459m/s2  len=912 heap=146k
+15:53:06 [pub] #449 S2 SF 750 rms=0.473m/s2  len=911 heap=146k
+15:53:12 [pub] #450 S2 SF 750 rms=0.476m/s2  len=915 heap=146k
+15:53:16 [pub] #451 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:53:21 [pub] #452 S2 SF 750 rms=0.471m/s2  len=910 heap=145k
+15:53:26 [pub] #453 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:53:30 [pub] #454 S2 SF 750 rms=0.470m/s2  len=914 heap=146k
+15:53:35 [pub] #455 S2 SF 750 rms=0.481m/s2  len=915 heap=146k
+15:53:40 [pub] #456 S2 SF 750 rms=0.465m/s2  len=912 heap=146k
+15:53:44 [pub] #457 S2 SF 750 rms=0.617m/s2  len=912 heap=146k
+15:53:49 [pub] #458 S2 SF 750 rms=0.476m/s2  len=912 heap=146k
+15:53:54 [pub] #459 S2 SF 750 rms=0.447m/s2  len=910 heap=145k
+15:53:58 [pub] #460 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:54:03 [pub] #461 S2 SF 750 rms=0.463m/s2  len=911 heap=146k
+15:54:07 [pub] #462 S2 SF 750 rms=0.438m/s2  len=910 heap=146k
+15:54:12 [pub] #463 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:54:16 [pub] #464 S2 SF 750 rms=0.448m/s2  len=912 heap=146k
+15:54:21 [pub] #465 S2 SF 750 rms=0.486m/s2  len=913 heap=146k
+15:54:25 [pub] #466 S2 SF 750 rms=0.471m/s2  len=913 heap=146k
+15:54:30 [pub] #467 S2 SF 750 rms=0.451m/s2  len=912 heap=146k
+15:54:34 [pub] #468 S2 SF 750 rms=0.433m/s2  len=910 heap=146k
+15:54:39 [pub] #469 S2 SF 750 rms=0.452m/s2  len=913 heap=146k
+15:54:44 [pub] #470 S2 SF 750 rms=0.463m/s2  len=914 heap=146k
+15:54:47 [pub] #471 S2 SF 750 rms=0.460m/s2  len=913 heap=146k
+15:54:53 [pub] #472 S2 SF 750 rms=0.470m/s2  len=913 heap=146k
+15:54:57 [pub] #473 S2 SF 750 rms=0.459m/s2  len=912 heap=146k
+15:55:02 [pub] #474 S2 SF 750 rms=0.473m/s2  len=911 heap=146k
+15:55:07 [pub] #475 S2 SF 750 rms=0.476m/s2  len=915 heap=146k
+15:55:11 [pub] #476 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:55:17 [pub] #477 S2 SF 750 rms=0.471m/s2  len=910 heap=146k
+15:55:21 [pub] #478 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:55:25 [pub] #479 S2 SF 750 rms=0.470m/s2  len=914 heap=145k
+15:55:29 [pub] #480 S2 SF 750 rms=0.481m/s2  len=915 heap=146k
+15:55:34 [pub] #481 S2 SF 750 rms=0.465m/s2  len=912 heap=146k
+15:55:39 [pub] #482 S2 SF 750 rms=0.617m/s2  len=912 heap=146k
+15:55:43 [pub] #483 S2 SF 750 rms=0.476m/s2  len=912 heap=146k
+15:55:48 [pub] #484 S2 SF 750 rms=0.447m/s2  len=910 heap=146k
+15:55:53 [pub] #485 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:55:58 [pub] #486 S2 SF 750 rms=0.463m/s2  len=911 heap=146k
+15:56:02 [pub] #487 S2 SF 750 rms=0.438m/s2  len=910 heap=146k
+15:56:07 [pub] #488 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:56:11 [pub] #489 S2 SF 750 rms=0.448m/s2  len=912 heap=146k
+15:56:16 [pub] #490 S2 SF 750 rms=0.486m/s2  len=913 heap=146k
+15:56:20 [pub] #491 S2 SF 750 rms=0.471m/s2  len=913 heap=146k
+15:56:25 [pub] #492 S2 SF 750 rms=0.451m/s2  len=912 heap=146k
+15:56:30 [pub] #493 S2 SF 750 rms=0.433m/s2  len=910 heap=146k
+15:56:35 [pub] #494 S2 SF 750 rms=0.452m/s2  len=913 heap=146k
+15:56:39 [pub] #495 S2 SF 750 rms=0.463m/s2  len=914 heap=146k
+15:56:44 [pub] #496 S2 SF 750 rms=0.460m/s2  len=913 heap=146k
+15:56:49 [pub] #497 S2 SF 750 rms=0.470m/s2  len=913 heap=146k
+15:56:53 [pub] #498 S2 SF 750 rms=0.459m/s2  len=912 heap=146k
+15:56:58 [pub] #499 S2 SF 750 rms=0.473m/s2  len=911 heap=146k
+15:57:02 [pub] #500 S2 SF 750 rms=0.476m/s2  len=915 heap=146k
+15:57:07 [pub] #501 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:57:11 [pub] #502 S2 SF 750 rms=0.471m/s2  len=910 heap=146k
+15:57:16 [pub] #503 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:57:20 [pub] #504 S2 SF 750 rms=0.470m/s2  len=914 heap=146k
+15:57:26 [pub] #505 S2 SF 750 rms=0.481m/s2  len=915 heap=146k
+15:57:30 [pub] #506 S2 SF 750 rms=0.465m/s2  len=912 heap=146k
+15:57:34 [pub] #507 S2 SF 750 rms=0.617m/s2  len=912 heap=145k
+15:57:38 [pub] #508 S2 SF 750 rms=0.476m/s2  len=912 heap=146k
+15:57:43 [pub] #509 S2 SF 750 rms=0.447m/s2  len=910 heap=146k
+15:57:47 [pub] #510 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:57:53 [pub] #511 S2 SF 750 rms=0.463m/s2  len=911 heap=146k
+15:57:57 [pub] #512 S2 SF 750 rms=0.438m/s2  len=910 heap=146k
+15:58:01 [pub] #513 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:58:06 [pub] #514 S2 SF 750 rms=0.448m/s2  len=912 heap=146k
+15:58:10 [pub] #515 S2 SF 750 rms=0.486m/s2  len=913 heap=146k
+15:58:15 [pub] #516 S2 SF 750 rms=0.471m/s2  len=913 heap=146k
+15:58:20 [pub] #517 S2 SF 750 rms=0.451m/s2  len=912 heap=146k
+15:58:24 [pub] #518 S2 SF 750 rms=0.433m/s2  len=910 heap=146k
+15:58:28 [pub] #519 S2 SF 750 rms=0.452m/s2  len=913 heap=146k
+15:58:32 [pub] #520 S2 SF 750 rms=0.463m/s2  len=914 heap=146k
+15:58:37 [pub] #521 S2 SF 750 rms=0.460m/s2  len=913 heap=146k
+15:58:42 [pub] #522 S2 SF 750 rms=0.470m/s2  len=913 heap=146k
+15:58:47 [pub] #523 S2 SF 750 rms=0.459m/s2  len=912 heap=146k
+15:58:51 [pub] #524 S2 SF 750 rms=0.473m/s2  len=911 heap=146k
+15:58:55 [pub] #525 S2 SF 750 rms=0.476m/s2  len=915 heap=146k
+15:59:00 [pub] #526 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:59:05 [pub] #527 S2 SF 750 rms=0.471m/s2  len=910 heap=146k
+15:59:09 [pub] #528 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+15:59:14 [pub] #529 S2 SF 750 rms=0.470m/s2  len=914 heap=146k
+15:59:18 [pub] #530 S2 SF 750 rms=0.481m/s2  len=915 heap=146k
+15:59:23 [pub] #531 S2 SF 750 rms=0.465m/s2  len=912 heap=146k
+15:59:29 [pub] #532 S2 SF 750 rms=0.617m/s2  len=912 heap=146k
+15:59:33 [pub] #533 S2 SF 750 rms=0.476m/s2  len=912 heap=146k
+15:59:37 [pub] #534 S2 SF 750 rms=0.447m/s2  len=910 heap=146k
+15:59:41 [pub] #535 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+15:59:46 [pub] #536 S2 SF 750 rms=0.463m/s2  len=911 heap=146k
+15:59:51 [pub] #537 S2 SF 750 rms=0.438m/s2  len=910 heap=146k
+15:59:55 [pub] #538 S2 SF 750 rms=0.452m/s2  len=911 heap=146k
+16:00:00 [pub] #539 S2 SF 750 rms=0.448m/s2  len=912 heap=146k
+16:00:05 [pub] #540 S2 SF 750 rms=0.486m/s2  len=913 heap=146k
+16:00:09 [pub] #541 S2 SF 750 rms=0.471m/s2  len=913 heap=146k
+16:00:13 [pub] #542 S2 SF 750 rms=0.451m/s2  len=912 heap=146k
+16:00:18 [pub] #543 S2 SF 750 rms=0.433m/s2  len=910 heap=146k
+16:00:23 [pub] #544 S2 SF 750 rms=0.452m/s2  len=913 heap=146k
+16:00:28 [pub] #545 S2 SF 750 rms=0.463m/s2  len=914 heap=146k
+16:00:32 [pub] #546 S2 SF 750 rms=0.460m/s2  len=913 heap=146k
+16:00:37 [pub] #547 S2 SF 750 rms=0.470m/s2  len=913 heap=146k
+16:00:41 [pub] #548 S2 SF 750 rms=0.459m/s2  len=912 heap=146k
+16:00:46 [pub] #549 S2 SF 750 rms=0.473m/s2  len=911 heap=146k
+16:00:50 [pub] #550 S2 SF 750 rms=0.476m/s2  len=915 heap=146k
+16:00:54 [pub] #551 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+16:00:59 [pub] #552 S2 SF 750 rms=0.471m/s2  len=910 heap=146k
+16:01:03 [pub] #553 S2 SF 750 rms=0.476m/s2  len=914 heap=146k
+16:01:07 [pub] #554 S2 SF 750 rms=0.470m/s2  len=914 heap=146k
+16:01:12 [pub] #555 S2 SF 750 rms=0.481m/s2  len=915 heap=146k
+16:01:16 [pub] #556 S2 SF 750 rms=0.465m/s2  len=912 heap=146k
+16:01:21 [pub] #557 S2 SF 750 rms=0.617m/s2  len=912 heap=146k
+16:01:26 [pub] #558 S2 SF 750 rms=0.476m/s2  len=912 heap=146k
+--- disconnected (SerialException); waiting for restart
+waiting for the simulator on rfc2217://localhost:4000 ...
+--- connected rfc2217://localhost:4000
+14:00:48 ets Jul 29 2019 12:21:46
+14:00:48 
+14:00:48 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:00:48 configsip: 0, SPIWP:0xee
+14:00:48 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:00:48 mode:DIO, clock div:2
+14:00:48 load:0x3fff0030,len:1156
+14:00:48 load:0x40078000,len:11456
+14:00:48 ho 0 tail 12 room 4
+14:00:48 load:0x40080400,len:2972
+14:00:48 entry 0x400805dc
+14:00:50 
+14:00:50 =============================================
+14:00:50  Active-RCA replay node  arca-1.1.0
+14:00:50  device=MOTOR-01  schema=pdm.telemetry.v1.1
+14:00:50  topics pccoe/arca/add1f2/MOTOR-01/{telemetry,status,cmd,alert}
+14:00:50 =============================================
+14:00:50 [oled] ok
+14:00:52 [wifi] joining Wokwi-GUEST..... up ip=10.13.37.2
+14:01:08 [ntp] NOT synced - TLS certificate dates cannot be checked
+14:01:08 [tls] offering curve P-256 only
+14:01:15 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 25780][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:01:15 failed state=-2 
+14:01:18 ets Jul 29 2019 12:21:46
+14:01:18 
+14:01:18 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:01:18 configsip: 0, SPIWP:0xee
+14:01:18 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:01:18 mode:DIO, clock div:2
+14:01:18 load:0x3fff0030,len:1156
+14:01:18 load:0x40078000,len:11456
+14:01:18 ho 0 tail 12 room 4
+14:01:18 load:0x40080400,len:2972
+14:01:18 entry 0x400805dc
+14:01:20 
+14:01:20 =============================================
+14:01:20  Active-RCA replay node  arca-1.1.0
+14:01:20  device=MOTOR-01  schema=pdm.telemetry.v1.1
+14:01:20  topics pccoe/arca/add1f2/MOTOR-01/{telemetry,status,cmd,alert}
+14:01:20 =============================================
+14:01:20 [oled] ok
+14:01:21 [wifi] joining Wokwi-GUEST. up ip=10.13.37.2
+14:01:36 [ntp] NOT synced - TLS certificate dates cannot be checked
+14:01:36 [tls] offering curve P-256 only
+14:01:42 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 24004][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:01:42 failed state=-2 
+14:01:52 [ 31017][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:01:52 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:01:59 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 38030][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:01:59 failed state=-2 
+14:02:06 [ 45043][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:02:06 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:02:13 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 52054][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:02:13 failed state=-2 
+14:02:20 [ 59067][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:02:20 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:02:27 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 66079][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:02:27 failed state=-2 
+14:02:34 [ 73094][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:02:34 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:02:41 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 80108][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:02:41 failed state=-2 
+14:02:47 [ 87123][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:02:48 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:02:56 [ 96138][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:02:56 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:03:03 [mqtt] connecting broker.hivemq.com:1883 plain ... [103151][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:03:03 failed state=-2 
+14:03:10 [110165][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:03:10 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:03:19 [119181][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:03:19 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:03:28 [128196][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:03:28 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:03:38 [137210][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:03:38 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:03:45 [mqtt] connecting broker.hivemq.com:1883 plain ... [144223][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:03:45 failed state=-2 
+14:03:52 [151235][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:03:52 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:04:01 [160251][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:04:01 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:04:10 [169266][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:04:10 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:04:10 ets Jul 29 2019 12:21:46
+14:04:10 
+14:04:10 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:04:10 configsip: 0, SPIWP:0xee
+14:04:10 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:04:10 mode:DIO, clock div:2
+14:04:10 load:0x3fff0030,len:1156
+14:04:10 load:0x40078000,len:11456
+14:04:10 ho 0 tail 12 room 4
+14:04:10 load:0x40080400,len:2972
+14:04:10 entry 0x400805dc
+14:04:12 
+14:04:12 =============================================
+14:04:12  Active-RCA replay node  arca-1.1.0
+14:04:12  device=MOTOR-01  schema=pdm.telemetry.v1.1
+14:04:12  topics pccoe/arca/add1f2/MOTOR-01/{telemetry,status,cmd,alert}
+14:04:12 =============================================
+14:04:12 [oled] ok
+14:04:13 [wifi] joining Wokwi-GUEST. up ip=10.13.37.2
+14:04:31 [ntp] NOT synced - TLS certificate dates cannot be checked
+14:04:31 [tls] offering curve P-256 only
+14:04:40 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 24221][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:04:40 failed state=-2 
+14:04:50 [ 31234][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for kalaaiintern01-commits.github.io
+14:04:50 [http] /active-rca-demo/data/S1/K001_N09_M07_F10.bin win 0 -> -1 connection refused 
+14:04:59 [mqtt] connecting broker.hivemq.com:1883 plain ... [ 38249][E][WiFiGeneric.cpp:1583] hostByName(): DNS Failed for broker.hivemq.com
+14:04:59 failed state=-2 
+--- disconnected (SerialException); waiting for restart
+waiting for the simulator on rfc2217://localhost:4000 ...
+--- connected rfc2217://localhost:4000
+14:05:35 ets Jul 29 2019 12:21:46
+14:05:35 
+14:05:35 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:05:35 configsip: 0, SPIWP:0xee
+14:05:35 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:05:35 mode:DIO, clock div:2
+14:05:35 load:0x3fff0030,len:1156
+14:05:35 load:0x40078000,len:11456
+14:05:35 ho 0 tail 12 room 4
+14:05:35 load:0x40080400,len:2972
+14:05:35 entry 0x400805dc
+14:05:37 
+14:05:37 =============================================
+14:05:37  Active-RCA replay node  arca-1.1.0
+14:05:37  device=MOTOR-01  schema=pdm.telemetry.v1.1
+14:05:37  topics pccoe/arca/add1f2/MOTOR-01/{telemetry,status,cmd,alert}
+14:05:37 =============================================
+14:05:37 [oled] ok
+14:05:38 [wifi] joining Wokwi-GUEST.. up ip=10.13.37.2
+14:05:42 [ntp] synced
+14:05:42 [tls] offering curve P-256 only
+14:05:43 [mqtt] connecting broker.hivemq.com:1883 plain ... connected
+14:06:06 [http] connected to kalaaiintern01-commits.github.io, keep-alive range requests
+14:06:06 [cmd] ui-mvhuy1rz ok scenario queued
+14:06:11 [pub] #1 S1 K001 N09_M07_F10 rms=1.467m/s2  len=954 heap=147k
+14:06:11 [scn] #2 S1 K001 N09_M07_F10
+14:06:15 [pub] #2 S1 K001 N09_M07_F10 rms=1.467m/s2  len=954 heap=147k
+14:06:21 [pub] #3 S1 K001 N09_M07_F10 rms=1.453m/s2  len=956 heap=147k
+14:06:32 [pub] #4 S1 K001 N09_M07_F10 rms=1.467m/s2  len=952 heap=147k
+14:06:38 [cmd] ui-mvhuyrmo ok scenario queued
+14:06:43 [pub] #5 S1 K001 N09_M07_F10 rms=1.432m/s2  len=953 heap=147k
+14:06:43 [scn] #3 S1 KA01 N15_M01_F10
+14:07:00 [pub] #6 S1 KA01 N15_M01_F10 rms=4.449m/s2  len=955 heap=147k
+14:07:11 [pub] #7 S1 KA01 N15_M01_F10 rms=4.471m/s2  len=951 heap=147k
+14:07:29 [pub] #8 S1 KA01 N15_M01_F10 rms=4.456m/s2  len=955 heap=147k
+14:07:52 [pub] #9 S1 KA01 N15_M01_F10 rms=4.438m/s2  len=952 heap=147k
+14:08:04 [pub] #10 S1 KA01 N15_M01_F10 rms=4.474m/s2  len=956 heap=147k
+14:08:15 [pub] #11 S1 KA01 N15_M01_F10 rms=4.463m/s2  len=959 heap=147k
+14:08:32 [pub] #12 S1 KA01 N15_M01_F10 rms=4.458m/s2  len=959 heap=147k
+14:08:56 [pub] #13 S1 KA01 N15_M01_F10 rms=4.427m/s2  len=955 heap=147k
+14:09:19 [pub] #14 S1 KA01 N15_M01_F10 rms=4.461m/s2  len=958 heap=147k
+14:09:45 [pub] #15 S1 KA01 N15_M01_F10 rms=4.495m/s2  len=955 heap=147k
+14:09:57 [pub] #16 S1 KA01 N15_M01_F10 rms=4.457m/s2  len=960 heap=147k
+14:09:59 [cmd] ui-mvhv32ht ok scenario queued
+14:10:09 [pub] #17 S1 KA01 N15_M01_F10 rms=4.450m/s2  len=957 heap=147k
+14:10:09 [scn] #4 S2 EF 750
+14:10:23 [pub] #18 S2 EF 750 rms=0.670m/s2  len=909 heap=145k
+14:10:36 [pub] #19 S2 EF 750 rms=0.657m/s2  len=909 heap=146k
+14:10:40 [pub] #20 S2 EF 750 rms=0.644m/s2  len=905 heap=145k
+14:10:45 [pub] #21 S2 EF 750 rms=0.656m/s2  len=911 heap=146k
+14:10:49 [pub] #22 S2 EF 750 rms=0.667m/s2  len=908 heap=146k
+14:10:54 [pub] #23 S2 EF 750 rms=0.706m/s2  len=910 heap=145k
+14:11:04 [pub] #24 S2 EF 750 rms=0.656m/s2  len=909 heap=145k
+14:11:14 [pub] #25 S2 EF 750 rms=0.674m/s2  len=912 heap=146k
+14:11:24 [pub] #26 S2 EF 750 rms=0.682m/s2  len=911 heap=146k
+14:11:33 [cmd] ui-mvhv535f ok scenario queued
+14:11:39 [cmd] ui-mvhv55q1 ok scenario queued
+14:11:41 [pub] #27 S2 EF 750 rms=0.777m/s2  len=908 heap=146k
+14:11:41 [scn] #5 S2 MF 500
+14:11:53 [pub] #28 S2 MF 500 rms=0.255m/s2  len=908 heap=146k
+14:12:05 [pub] #29 S2 MF 500 rms=0.256m/s2  len=905 heap=146k
+14:12:17 [pub] #30 S2 MF 500 rms=0.257m/s2  len=908 heap=146k
+14:12:30 [pub] #31 S2 MF 500 rms=0.256m/s2  len=910 heap=146k
+14:12:41 [cmd] E7-T1 ok test queued
+14:12:44 [pub] #32 S2 MF 500 rms=0.256m/s2  len=909 heap=145k
+14:12:44 [test] E7-T1 -> 1000 for 10 windows
+14:13:01 [pub] #33 S2 MF 1000 rms=0.864m/s2 settle len=960 heap=145k
+14:13:13 [pub] #34 S2 MF 1000 rms=0.841m/s2 run len=958 heap=145k
+14:13:23 [pub] #35 S2 MF 1000 rms=0.892m/s2 run len=958 heap=145k
+14:13:34 [pub] #36 S2 MF 1000 rms=0.797m/s2 run len=958 heap=145k
+14:13:43 [pub] #37 S2 MF 1000 rms=0.779m/s2 run len=959 heap=145k
+14:13:47 [pub] #38 S2 MF 1000 rms=0.683m/s2 run len=960 heap=145k
+14:13:51 [pub] #39 S2 MF 1000 rms=0.683m/s2 run len=956 heap=145k
+14:13:55 [pub] #40 S2 MF 1000 rms=0.687m/s2 run len=959 heap=145k
+14:14:00 [pub] #41 S2 MF 1000 rms=0.690m/s2 run len=959 heap=145k
+14:14:04 [pub] #42 S2 MF 1000 rms=0.703m/s2 run len=959 heap=145k
+14:14:09 [pub] #43 S2 MF 1000 rms=0.716m/s2 run len=960 heap=145k
+14:14:09 [test] E7-T1 done
+14:14:13 [pub] #44 S2 MF 500 rms=0.255m/s2  len=912 heap=146k
+14:14:17 [pub] #45 S2 MF 500 rms=0.256m/s2  len=911 heap=146k
+14:14:20 [pub] #46 S2 MF 500 rms=0.256m/s2  len=910 heap=146k
+14:14:25 [pub] #47 S2 MF 500 rms=0.256m/s2  len=909 heap=145k
+14:14:29 [pub] #48 S2 MF 500 rms=0.257m/s2  len=912 heap=146k
+14:14:33 [pub] #49 S2 MF 500 rms=0.256m/s2  len=910 heap=146k
+14:14:38 [pub] #50 S2 MF 500 rms=0.255m/s2  len=911 heap=145k
+14:14:42 [pub] #51 S2 MF 500 rms=0.255m/s2  len=911 heap=145k
+14:14:47 [pub] #52 S2 MF 500 rms=0.255m/s2  len=909 heap=146k
+14:14:52 [pub] #53 S2 MF 500 rms=0.255m/s2  len=911 heap=146k
+14:15:27 ets Jul 29 2019 12:21:46
+14:15:27 
+14:15:27 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:15:27 configsip: 0, SPIWP:0xee
+14:15:27 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:15:27 mode:DIO, clock div:2
+14:15:27 load:0x3fff0030,len:1156
+14:15:27 load:0x40078000,len:11456
+14:15:27 ho 0 tail 12 room 4
+14:15:27 load:0x40080400,len:2972
+14:15:27 entry 0x400805dc
+14:16:19 
+14:16:19 =============================================
+14:16:19  Active-RCA replay node  arca-1.1.0
+14:16:19  device=MOTOR-01  schema=pdm.telemetry.v1.1
+14:16:19  topics pccoe/arca/add1f2/MOTOR-01/{telemetry,status,cmd,alert}
+14:16:19 =============================================
+14:16:19 [oled] ok
+14:16:20 [wifi] joining Wokwi-GUEST. up ip=10.13.37.2
+14:16:22 [ntp] synced
+14:16:22 [tls] offering curve P-256 only
+14:16:22 [mqtt] connecting broker.hivemq.com:1883 plain ... connected
+14:16:29 [http] connected to kalaaiintern01-commits.github.io, keep-alive range requests
+14:16:34 [pub] #1 S1 K001 N09_M07_F10 rms=1.467m/s2  len=954 heap=147k
+14:16:38 [pub] #2 S1 K001 N09_M07_F10 rms=1.453m/s2  len=956 heap=147k
+14:16:43 [pub] #3 S1 K001 N09_M07_F10 rms=1.467m/s2  len=952 heap=147k
+14:16:48 [pub] #4 S1 K001 N09_M07_F10 rms=1.432m/s2  len=953 heap=147k
+14:16:58 [pub] #5 S1 K001 N09_M07_F10 rms=1.464m/s2  len=951 heap=146k
+14:17:03 [pub] #6 S1 K001 N09_M07_F10 rms=1.456m/s2  len=955 heap=147k
+14:17:07 [pub] #7 S1 K001 N09_M07_F10 rms=1.411m/s2  len=955 heap=147k
+14:17:12 [pub] #8 S1 K001 N09_M07_F10 rms=1.444m/s2  len=952 heap=147k
+14:17:17 [pub] #9 S1 K001 N09_M07_F10 rms=1.434m/s2  len=955 heap=147k

@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "pdm.telemetry.v1",
+  "title": "PdM edge telemetry, schema version 1",
+  "description": "One document per publish window, produced by the ESP32 edge node (Objective 1) and validated at the cloud boundary before storage (Objective 2). Malformed records are rejected here so bad data never reaches the model.",
+  "type": "object",
+  "required": ["schema", "device_id", "seq", "ts", "temp", "vib", "cur", "rpm", "win"],
+  "additionalProperties": false,
+  "properties": {
+    "schema":    { "const": "pdm.telemetry.v1" },
+    "device_id": { "type": "string", "pattern": "^[A-Z0-9-]{3,32}$" },
+    "fw":        { "type": "string" },
+    "seq":       { "type": "integer", "minimum": 1, "description": "Monotonic per boot; gaps reveal lost publishes." },
+    "ts":        { "type": "string", "format": "date-time", "description": "UTC, ISO 8601, milliseconds." },
+    "ts_synced": { "type": "boolean", "description": "false => clock not NTP-synced; use broker arrival time instead." },
+    "t_edge_ms": { "type": "integer", "description": "Epoch ms at publish, for end-to-end latency measurement." },
+    "uptime_s":  { "type": "integer", "minimum": 0 },
+    "label":     { "type": "string", "description": "Induced-fault annotation set over the /cmd topic during data collection.", "examples": ["baseline", "imbalance", "overload", "friction", "blocked_cooling"] },
+
+    "temp": {
+      "type": "object",
+      "required": ["c", "valid"],
+      "additionalProperties": false,
+      "properties": {
+        "c":     { "type": "number", "minimum": -55, "maximum": 125, "description": "Motor housing surface temperature, degC." },
+        "valid": { "type": "boolean", "description": "false => sensor absent or reading out of range; c must be ignored." }
+      }
+    },
+
+    "vib": {
+      "type": "object",
+      "required": ["rms_ms2", "peak_ms2", "valid"],
+      "additionalProperties": false,
+      "properties": {
+        "rms_ms2":  { "type": "number", "minimum": 0, "description": "RMS of the AC (gravity-removed) acceleration magnitude over the window, m/s^2." },
+        "peak_ms2": { "type": "number", "minimum": 0 },
+        "crest":    { "type": "number", "minimum": 0, "description": "peak / RMS - rises for impulsive bearing defects." },
+        "x_rms":    { "type": "number", "minimum": 0 },
+        "y_rms":    { "type": "number", "minimum": 0 },
+        "z_rms":    { "type": "number", "minimum": 0 },
+        "valid":    { "type": "boolean" }
+      }
+    },
+
+    "cur": {
+      "type": "object",
+      "required": ["rms_a", "mean_a"],
+      "additionalProperties": false,
+      "properties": {
+        "rms_a":   { "type": "number", "description": "True RMS motor current over the window, A." },
+        "mean_a":  { "type": "number" },
+        "peak_a":  { "type": "number", "minimum": 0 },
+        "zero_mv": { "type": "number", "description": "Quiescent point measured at boot; drift here invalidates the channel." },
+        "cal_ok":  { "type": "boolean" }
+      }
+    },
+
+    "rpm": {
+      "type": "object",
+      "required": ["avg"],
+      "additionalProperties": false,
+      "properties": {
+        "avg":    { "type": "number", "minimum": 0, "description": "Pulse count / window - the number used for trending." },
+        "inst":   { "type": "number", "minimum": 0, "description": "From the last edge period - reacts within one pulse." },
+        "pulses": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "win": {
+      "type": "object",
+      "required": ["ms", "n", "sample_hz"],
+      "additionalProperties": false,
+      "properties": {
+        "ms":        { "type": "integer", "minimum": 1, "description": "Actual window length; nominally PUBLISH_MS." },
+        "n":         { "type": "integer", "minimum": 0, "description": "Vibration samples in the window (expect sample_hz * ms / 1000)." },
+        "n_cur":     { "type": "integer", "minimum": 0 },
+        "sample_hz": { "type": "integer", "minimum": 1 },
+        "dropped":   { "type": "integer", "minimum": 0, "description": "Samples missed to I2C errors or scheduler slip - a data-quality gate for the model." }
+      }
+    },
+
+    "net": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rssi":          { "type": "integer" },
+        "ip":            { "type": "string" },
+        "tls":           { "type": "boolean" },
+        "wifi_reconn":   { "type": "integer", "minimum": 0 },
+        "mqtt_reconn":   { "type": "integer", "minimum": 0 },
+        "publish_fails": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

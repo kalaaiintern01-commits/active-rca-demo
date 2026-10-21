@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "pdm.telemetry.v1.1",
+  "title": "PdM edge telemetry, schema version 1.1",
+  "description": "v1 plus: src (which machine the replay node stands in for), scn (scenario epoch), op (operating point), test (active-test tag), replay (position in the recording) and spec (frequency-domain features). One document per 2 s window. label is the injected ground truth: kept for scoring, never shown to the reasoning layer.",
+  "type": "object",
+  "required": ["schema", "device_id", "src", "seq", "ts", "scn", "op", "temp", "vib", "spec", "cur", "rpm", "win"],
+  "additionalProperties": false,
+  "properties": {
+    "schema":    { "const": "pdm.telemetry.v1.1" },
+    "device_id": { "type": "string", "pattern": "^[A-Z0-9-]{3,32}$" },
+    "src":       { "enum": ["S1", "S2", "S3"] },
+    "fw":        { "type": "string" },
+    "seq":       { "type": "integer", "minimum": 1 },
+    "ts":        { "type": "string" },
+    "ts_synced": { "type": "boolean" },
+    "t_edge_ms": { "type": "integer" },
+    "uptime_s":  { "type": "integer", "minimum": 0 },
+    "label":     { "type": "string" },
+    "scn":       { "type": "integer", "minimum": 0, "description": "Increments whenever a new condition is injected." },
+    "op":        { "type": "string", "description": "Operating point the window was recorded at (S1 N15_M07_F10, S2 750, S3 5V)." },
+    "test": {
+      "type": "object", "additionalProperties": false, "required": ["id", "phase"],
+      "properties": {
+        "id":    { "type": "string" },
+        "phase": { "enum": ["settle", "run"] },
+        "left":  { "type": "integer", "minimum": 0 }
+      }
+    },
+    "replay": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "file": { "type": "string" }, "win": { "type": "integer" }, "of": { "type": "integer" } }
+    },
+    "temp": {
+      "type": "object", "required": ["c", "valid"], "additionalProperties": false,
+      "properties": { "c": { "type": "number", "minimum": -55, "maximum": 125 }, "valid": { "type": "boolean" } }
+    },
+    "vib": {
+      "type": "object", "required": ["rms_ms2", "peak_ms2", "crest", "valid"], "additionalProperties": false,
+      "properties": {
+        "rms_ms2":  { "type": "number", "minimum": 0, "description": "AC RMS, vector over axes. m/s^2 when cal_ok, sensor units otherwise (S3)." },
+        "peak_ms2": { "type": "number", "minimum": 0 },
+        "crest":    { "type": "number", "minimum": 0 },
+        "x_rms":    { "type": "number", "minimum": 0 },
+        "y_rms":    { "type": "number", "minimum": 0 },
+        "z_rms":    { "type": "number", "minimum": 0 },
+        "valid":    { "type": "boolean" },
+        "cal_ok":   { "type": "boolean" }
+      }
+    },
+    "spec": {
+      "type": "object", "required": ["kurt", "b0", "b1", "b2", "b3", "fdom"], "additionalProperties": false,
+      "properties": {
+        "kurt":   { "type": "number" },
+        "skew":   { "type": "number" },
+        "b0":     { "type": "number", "minimum": 0, "description": "Band energy 0-50 Hz, (m/s^2)^2" },
+        "b1":     { "type": "number", "minimum": 0, "description": "50-200 Hz" },
+        "b2":     { "type": "number", "minimum": 0, "description": "200-800 Hz" },
+        "b3":     { "type": "number", "minimum": 0, "description": "800-2500 Hz" },
+        "bhf":    { "type": ["number", "null"], "minimum": 0, "description": "1-5 kHz, only when sample_hz >= 10 kHz" },
+        "a1x":    { "type": ["number", "null"], "minimum": 0, "description": "RMS amplitude at shaft frequency" },
+        "a2x":    { "type": ["number", "null"], "minimum": 0 },
+        "app":    { "type": ["number", "null"], "minimum": 0, "description": "RMS amplitude at pole-pass frequency (pole pairs x shaft)" },
+        "fdom":   { "type": "number", "minimum": 0 },
+        "df":     { "type": "number" },
+        "frames": { "type": "integer" }
+      }
+    },
+    "cur": {
+      "type": "object", "required": ["rms_a", "mean_a"], "additionalProperties": false,
+      "properties": {
+        "rms_a": { "type": "number" }, "mean_a": { "type": "number" }, "peak_a": { "type": "number", "minimum": 0 },
+        "valid": { "type": "boolean" }, "cal_ok": { "type": "boolean" }, "zero_mv": { "type": "number" }
+      }
+    },
+    "rpm": {
+      "type": "object", "required": ["avg"], "additionalProperties": false,
+      "properties": {
+        "avg": { "type": "number", "minimum": 0 }, "inst": { "type": "number", "minimum": 0 },
+        "pulses": { "type": "integer" }, "torque_nm": { "type": "number" }, "supply_v": { "type": "number" }
+      }
+    },
+    "win": {
+      "type": "object", "required": ["ms", "n", "sample_hz"], "additionalProperties": false,
+      "properties": {
+        "ms": { "type": "integer", "minimum": 1 }, "n": { "type": "integer", "minimum": 0 },
+        "n_cur": { "type": "integer" }, "sample_hz": { "type": "integer", "minimum": 1 },
+        "dropped": { "type": "integer", "minimum": 0 }, "t0_s": { "type": "number" }
+      }
+    },
+    "net": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "rssi": { "type": "integer" }, "ip": { "type": "string" }, "tls": { "type": "boolean" },
+        "wifi_reconn": { "type": "integer" }, "mqtt_reconn": { "type": "integer" }, "http_reconn": { "type": "integer" },
+        "publish_fails": { "type": "integer" }, "heap_kb": { "type": "integer" }
+      }
+    }
+  }
+}

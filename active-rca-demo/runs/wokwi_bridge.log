@@ -1,0 +1,6 @@
+12:34:06 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+12:34:11 [feeder] relaying windows from https://kalaaiintern01-commits.github.io/active-rca-demo/data/ on pccoe/arca/add1f2/MOTOR-01/feed
+12:34:11 [bridge] engine = mock-rule-based (not an LLM)
+12:34:11 [win] #24 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+13:03:47 [feeder] served 1 windows (last S1/K001_N09_M07_F10.bin #0, 20 chunks)
+13:09:45 [win] #1 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor

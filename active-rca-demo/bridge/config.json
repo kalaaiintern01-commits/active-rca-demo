@@ -1,0 +1,25 @@
+{
+  "site_id": "add1f2",
+  "device_id": "MOTOR-01",
+  "broker": {
+    "host": "broker.hivemq.com",
+    "port": 8883,
+    "tls": true,
+    "username": "",
+    "password": ""
+  },
+  "llm": {
+    "engine": "claude",
+    "model": "opus",
+    "effort": "medium",
+    "timeout_s": 300,
+    "fallback_to_mock": true
+  },
+  "episode": {
+    "max_tests": 3,
+    "p_stop": 0.8,
+    "hold_s": 20,
+    "cooldown_windows": 10,
+    "test_timeout_s": 300
+  }
+}

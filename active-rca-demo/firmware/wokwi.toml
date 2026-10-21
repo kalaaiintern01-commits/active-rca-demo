@@ -1,0 +1,11 @@
+# Wokwi for VS Code - runs the replay node locally (the extension's built-in gateway sends the
+# simulated ESP32's Wi-Fi traffic out through this PC).
+#   1. cd firmware && pio run        (builds .pio/build/esp32dev/firmware.bin)
+#   2. F1 -> "Wokwi: Select Config File" -> active-rca-demo/firmware/wokwi.toml
+#   3. F1 -> "Wokwi: Start Simulator"
+[wokwi]
+version = 1
+firmware = ".pio/build/esp32dev/firmware.bin"
+elf = ".pio/build/esp32dev/firmware.elf"
+# Serial port exposed over TCP (RFC2217) so tools/serial_tap.py can log it outside VS Code.
+rfc2217ServerPort = 4000

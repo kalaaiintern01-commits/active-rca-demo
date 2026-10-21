@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "author": "Mehul Rawat, Atharva Palande (PCCoE E&TC)",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "board-ssd1306", "id": "oled", "top": -150, "left": 160, "attrs": { "i2cAddress": "0x3c" } },
+    { "type": "wokwi-pushbutton", "id": "btnFault", "top": 40, "left": 250, "attrs": { "color": "red", "label": "FAULT", "bounce": "0" } },
+    { "type": "wokwi-pushbutton", "id": "btnSource", "top": 120, "left": 250, "attrs": { "color": "blue", "label": "SOURCE", "bounce": "0" } },
+    { "type": "wokwi-led", "id": "ledPub", "top": 200, "left": 230, "attrs": { "color": "green", "label": "PUB" } },
+    { "type": "wokwi-led", "id": "ledTest", "top": 200, "left": 290, "attrs": { "color": "blue", "label": "TEST" } },
+    { "type": "wokwi-led", "id": "ledAlarm", "top": 200, "left": 350, "attrs": { "color": "red", "label": "ALARM" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 280, "left": 220, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 280, "left": 280, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": 280, "left": 340, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-text", "id": "t1", "top": -190, "left": -40, "attrs": { "text": "MOTOR-01  -  replays real recordings of 3 machines from GitHub Pages", "fontSize": "13px" } },
+    { "type": "wokwi-text", "id": "t2", "top": 330, "left": -40, "attrs": { "text": "FAULT = next injected condition   SOURCE = next machine (S1 -> S2 -> S3)\nPUB blinks per 2 s window, TEST = active test running, ALARM = LLM diagnosis severity alarm", "fontSize": "12px" } }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "oled:GND", "esp:GND.1", "black", [] ],
+    [ "oled:VCC", "esp:3V3", "red", [] ],
+    [ "oled:SCL", "esp:D22", "cyan", [] ],
+    [ "oled:SDA", "esp:D21", "blue", [] ],
+    [ "btnFault:1.l", "esp:D32", "orange", [] ],
+    [ "btnFault:2.l", "esp:GND.2", "black", [] ],
+    [ "btnSource:1.l", "esp:D33", "orange", [] ],
+    [ "btnSource:2.l", "esp:GND.2", "black", [] ],
+    [ "ledPub:A", "esp:D25", "green", [] ],
+    [ "ledPub:C", "r1:1", "black", [] ],
+    [ "r1:2", "esp:GND.2", "black", [] ],
+    [ "ledTest:A", "esp:D26", "blue", [] ],
+    [ "ledTest:C", "r2:1", "black", [] ],
+    [ "r2:2", "esp:GND.2", "black", [] ],
+    [ "ledAlarm:A", "esp:D27", "red", [] ],
+    [ "ledAlarm:C", "r3:1", "black", [] ],
+    [ "r3:2", "esp:GND.2", "black", [] ]
+  ],
+  "dependencies": {}
+}

@@ -1,0 +1,1380 @@
+<title>Sensor to Broker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* ------------------------------------------------------------------ tokens
+     Olive-biased instrument neutrals; the four channel hues are the same ones
+     the live dashboard uses, so the two pages read as one system.          */
+  :root {
+    color-scheme: light;
+    --ground:  #f2f4ef;
+    --panel:   #fafbf7;
+    --well:    #e8ebe2;
+    --rule:    #d2d8c6;
+    --rule-2:  #e2e7d8;
+    --ink:     #171a12;
+    --ink-2:   #4d5343;
+    --ink-3:   #797f6b;
+
+    --temp: #eb6834;
+    --vib:  #2a78d6;
+    --cur:  #1baf7a;
+    --rpm:  #4a3aa7;
+
+    --good:     #0ca30c;
+    --warning:  #fab219;
+    --critical: #d03b3b;
+
+    --code-kw: #4a3aa7;
+    --code-st: #1f7a55;
+    --code-cm: #797f6b;
+    --code-nm: #c05215;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground:  #12140f;
+      --panel:   #1a1d16;
+      --well:    #22261d;
+      --rule:    #343a2a;
+      --rule-2:  #2a2f22;
+      --ink:     #f2f5ea;
+      --ink-2:   #bfc7b0;
+      --ink-3:   #8b927c;
+
+      --temp: #d95926;
+      --vib:  #3987e5;
+      --cur:  #199e70;
+      --rpm:  #9085e9;
+
+      --code-kw: #9085e9;
+      --code-st: #56c396;
+      --code-cm: #8b927c;
+      --code-nm: #e8945c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:  #12140f;
+    --panel:   #1a1d16;
+    --well:    #22261d;
+    --rule:    #343a2a;
+    --rule-2:  #2a2f22;
+    --ink:     #f2f5ea;
+    --ink-2:   #bfc7b0;
+    --ink-3:   #8b927c;
+
+    --temp: #d95926;
+    --vib:  #3987e5;
+    --cur:  #199e70;
+    --rpm:  #9085e9;
+
+    --code-kw: #9085e9;
+    --code-st: #56c396;
+    --code-cm: #8b927c;
+    --code-nm: #e8945c;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
+  /* prose measure stays near 66ch; figures and code break out wider */
+  .prose { max-width: 65ch; }
+
+  h1, h2, h3, h4, .eyebrow, .lede, th, .spec dt, figcaption b {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+  }
+  h1 {
+    font-size: clamp(34px, 5.2vw, 52px); font-weight: 700; line-height: 1.04;
+    letter-spacing: -0.025em; margin: 0 0 14px; text-wrap: balance;
+  }
+  h2 {
+    font-size: 27px; font-weight: 650; letter-spacing: -0.015em;
+    margin: 0 0 6px; text-wrap: balance;
+  }
+  h3 {
+    font-size: 19px; font-weight: 650; letter-spacing: -0.008em;
+    margin: 34px 0 8px; text-wrap: balance;
+  }
+  h4 {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.09em; color: var(--ink-3); margin: 26px 0 8px;
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--ink); text-decoration-color: var(--ink-3); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--vib); outline-offset: 3px; }
+  strong { font-weight: 600; }
+  em.term { font-style: normal; font-weight: 600; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--ink-3); margin: 0 0 18px;
+  }
+  .lede { font-size: 20px; line-height: 1.5; color: var(--ink-2); font-weight: 500;
+          max-width: 60ch; margin: 0 0 26px; }
+
+  /* ------------------------------------------------------------- masthead */
+  header.mast { padding: 54px 0 26px; border-bottom: 1px solid var(--rule); }
+  .spec {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 1px; margin: 30px 0 0; background: var(--rule-2);
+    border: 1px solid var(--rule-2); border-radius: 3px; overflow: hidden;
+  }
+  .spec div { background: var(--panel); padding: 11px 13px; }
+  .spec dt {
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-3); margin: 0 0 3px;
+  }
+  .spec dd {
+    margin: 0; font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums;
+  }
+  .spec dd small { font-size: 11px; color: var(--ink-3); font-weight: 400; }
+
+  /* -------------------------------------------------------------- stages */
+  section.stage { padding: 46px 0 8px; border-top: 1px solid var(--rule); margin-top: 42px; }
+  section.stage:first-of-type { border-top: none; }
+  .stagehead { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 22px; }
+  .num {
+    font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 700;
+    color: var(--ink-3); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 4px 7px; flex: none; margin-top: 5px; letter-spacing: 0.04em;
+  }
+  .stagehead .sh-sub { color: var(--ink-2); font-size: 15px; margin: 4px 0 0;
+                       font-family: Archivo, sans-serif; }
+
+  /* --------------------------------------------------------- sensor cards */
+  .sensor { margin: 0 0 40px; }
+  .sensor > .bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding-bottom: 9px; margin-bottom: 14px;
+    border-bottom: 2px solid var(--chan, var(--rule));
+  }
+  .sensor h3 { margin: 0; font-size: 20px; }
+  .chip {
+    font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 500;
+    padding: 3px 7px; border-radius: 3px; background: var(--well);
+    color: var(--ink-2); white-space: nowrap;
+  }
+  .chip.bus { border: 1px solid var(--chan); color: var(--ink); }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; background: var(--chan); flex: none; }
+  #s-temp { --chan: var(--temp); }
+  #s-vib  { --chan: var(--vib);  }
+  #s-cur  { --chan: var(--cur);  }
+  #s-rpm  { --chan: var(--rpm);  }
+
+  /* ----------------------------------------------------------------- code */
+  figure { margin: 24px 0; }
+  figure.wide { max-width: 100%; }
+  pre {
+    margin: 0; padding: 15px 17px; background: var(--panel);
+    border: 1px solid var(--rule); border-left: 3px solid var(--chan, var(--ink-3));
+    border-radius: 3px; overflow-x: auto;
+  }
+  code {
+    font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    font-size: 13px; line-height: 1.72; color: var(--ink);
+  }
+  p code, li code, td code, th code {
+    font-size: 13.5px; background: var(--well); padding: 1px 5px;
+    border-radius: 3px; color: var(--ink-2);
+  }
+  .c { color: var(--code-cm); font-style: italic; }
+  .k { color: var(--code-kw); font-weight: 500; }
+  .s { color: var(--code-st); }
+  .n { color: var(--code-nm); }
+  figcaption {
+    font-size: 13.5px; color: var(--ink-3); margin-top: 9px;
+    font-family: Archivo, sans-serif; line-height: 1.5; max-width: 70ch;
+  }
+  figcaption b { color: var(--ink-2); font-weight: 600; }
+
+  /* ------------------------------------------------------------- figures */
+  figure.diagram {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 20px 20px 14px; margin: 28px 0;
+  }
+  figure.diagram svg { display: block; width: 100%; height: auto; color: var(--ink-2); }
+  figure.diagram figcaption { padding-top: 4px; border-top: 1px solid var(--rule-2);
+                              margin-top: 14px; }
+
+  /* -------------------------------------------------------------- tables */
+  .tw { overflow-x: auto; margin: 24px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th {
+    text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-3); padding: 0 14px 7px 0;
+    border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  td { padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule-2);
+       vertical-align: top; }
+  td.mono, td.num { font-family: "JetBrains Mono", monospace; font-size: 13px;
+                    font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ------------------------------------------------------------- callouts */
+  .why {
+    background: var(--well); border-radius: 3px; padding: 14px 17px;
+    margin: 20px 0; font-size: 16px; line-height: 1.55;
+  }
+  .why h4 { margin: 0 0 5px; color: var(--ink-2); }
+  .math {
+    font-family: "JetBrains Mono", monospace; font-size: 14px;
+    background: var(--well); border-radius: 3px; padding: 13px 16px;
+    margin: 18px 0; overflow-x: auto; line-height: 1.9; color: var(--ink-2);
+  }
+  .math b { color: var(--ink); font-weight: 700; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  .st { font-family: Archivo, sans-serif; font-size: 12px; font-weight: 700; }
+  .st-good { color: var(--good); } .st-warn { color: var(--warning); }
+  .st-crit { color: var(--critical); }
+
+  footer {
+    border-top: 1px solid var(--rule); margin-top: 50px; padding-top: 20px;
+    font-size: 14px; color: var(--ink-3); max-width: 68ch;
+  }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .stagehead { gap: 12px; }
+    .page { padding: 0 16px 60px; }
+  }
+</style>
+
+<div class="page">
+
+<header class="mast">
+  <p class="eyebrow">Objective 1 &middot; sensing &amp; telemetry layer</p>
+  <h1>Sensor to broker</h1>
+  <p class="lede">
+    Four sensors, one ESP32, and a JSON document every two seconds. This is what
+    the firmware does between a physical quantity and a message on a topic &mdash;
+    and why each step is there.
+  </p>
+  <dl class="spec">
+    <div><dt>Channels</dt><dd>4</dd></div>
+    <div><dt>Sample rate</dt><dd>200 <small>Hz</small></dd></div>
+    <div><dt>Window</dt><dd>2.0 <small>s</small></dd></div>
+    <div><dt>Samples / window</dt><dd>400</dd></div>
+    <div><dt>Payload</dt><dd>~540 <small>bytes</small></dd></div>
+    <div><dt>Per motor</dt><dd>23 <small>MB/day</small></dd></div>
+  </dl>
+</header>
+
+<!-- ===================================================== OVERVIEW ======= -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">00</span>
+    <div>
+      <h2>The whole path, once</h2>
+      <p class="sh-sub">Six stages. Every arrow is data moving; nothing moves right to left.</p>
+    </div>
+  </div>
+
+  <figure class="diagram wide">
+    <svg viewBox="0 0 940 214" role="img"
+         aria-label="Pipeline: four sensors feed conditioning, which feeds a window accumulator, which becomes one JSON document, published to an MQTT broker and fanned out to three subscribers.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+                markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="Archivo, sans-serif" font-size="12.5" fill="currentColor">
+        <!-- boxes -->
+        <g fill="none" stroke="currentColor" stroke-width="1.4">
+          <rect x="6"   y="62" width="136" height="56" rx="2"/>
+          <rect x="167" y="62" width="136" height="56" rx="2"/>
+          <rect x="328" y="62" width="136" height="56" rx="2"/>
+          <rect x="489" y="62" width="136" height="56" rx="2"/>
+          <rect x="650" y="62" width="136" height="56" rx="2" stroke="#2a78d6" stroke-width="1.8"/>
+          <rect x="811" y="62" width="123" height="56" rx="2" stroke-dasharray="4 3"/>
+        </g>
+        <!-- box titles -->
+        <g font-size="13.5" font-weight="600" text-anchor="middle" fill="currentColor">
+          <text x="74"  y="86">4 sensors</text>
+          <text x="235" y="86">condition</text>
+          <text x="396" y="86">accumulate</text>
+          <text x="557" y="86">serialise</text>
+          <text x="712" y="86" fill="#2a78d6">broker</text>
+          <text x="872" y="86">subscribers</text>
+        </g>
+        <!-- box detail -->
+        <g font-size="10.5" text-anchor="middle" opacity="0.72">
+          <text x="74"  y="104">1-Wire · I²C · ADC · IRQ</text>
+          <text x="235" y="104">calibrate, filter</text>
+          <text x="396" y="104">sum, sum of squares</text>
+          <text x="557" y="104">one JSON document</text>
+          <text x="712" y="104">MQTT over TCP/TLS</text>
+          <text x="872" y="104">cloud · dashboard</text>
+        </g>
+        <!-- arrows -->
+        <g stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)">
+          <line x1="144" y1="90" x2="163" y2="90"/>
+          <line x1="305" y1="90" x2="324" y2="90"/>
+          <line x1="466" y1="90" x2="485" y2="90"/>
+          <line x1="627" y1="90" x2="646" y2="90"/>
+          <line x1="788" y1="90" x2="807" y2="90"/>
+        </g>
+        <!-- arrow labels above -->
+        <g font-size="10.5" text-anchor="middle" opacity="0.9">
+          <text x="153" y="52">raw counts</text>
+          <text x="314" y="52">m/s², A, °C</text>
+          <text x="475" y="52">400 samples</text>
+          <text x="636" y="52">540 bytes</text>
+          <text x="797" y="52">fan-out</text>
+        </g>
+        <!-- rate band underneath -->
+        <line x1="6" y1="146" x2="934" y2="146" stroke="currentColor" stroke-width="1" opacity="0.28"/>
+        <g font-size="10.5" font-family="JetBrains Mono, monospace" text-anchor="middle" opacity="0.8">
+          <text x="74"  y="164">200 Hz / 1 Hz</text>
+          <text x="235" y="164">every sample</text>
+          <text x="396" y="164">every sample</text>
+          <text x="557" y="164">every 2 s</text>
+          <text x="712" y="164">QoS 0</text>
+          <text x="872" y="164">on subscribe</text>
+        </g>
+        <g font-size="10.5" text-anchor="middle" opacity="0.55">
+          <text x="320" y="188">on the ESP32 — nothing leaves the device until the window closes</text>
+          <text x="795" y="188">off the device</text>
+        </g>
+        <line x1="6" y1="196" x2="632" y2="196" stroke="currentColor" stroke-width="1" opacity="0.28"/>
+        <line x1="648" y1="196" x2="934" y2="196" stroke="currentColor" stroke-width="1" opacity="0.28"/>
+      </g>
+    </svg>
+    <figcaption>
+      <b>The shape of the whole thing.</b> Four sensors on four different buses are
+      read, conditioned, and summed into running totals. Every two seconds those
+      totals become one JSON document and leave over MQTT. The device does not know
+      or care who is subscribed.
+    </figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>
+      The important structural fact: <strong>data only moves one way.</strong> The
+      ESP32 senses and reports. It has no motor-driver output, no control loop, no
+      authority over the machine. Two settings can arrive from outside &mdash; a
+      fault label and the publish interval &mdash; and neither touches hardware.
+    </p>
+  </div>
+</section>
+
+<!-- ===================================================== SENSORS ======== -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">01</span>
+    <div>
+      <h2>Four sensors, four completely different ways of reading them</h2>
+      <p class="sh-sub">A digital bus, a register bus, an analogue pin, and an interrupt.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>
+      People assume "reading a sensor" is one skill. It isn't. These four sensors
+      share a microcontroller and nothing else: one talks over a single wire with
+      microsecond timing, one over a two-wire register bus, one is just a voltage,
+      and one doesn't get "read" at all &mdash; it interrupts the CPU.
+    </p>
+  </div>
+
+  <!-- ---------------------------------------------------------- TEMP ---- -->
+  <div class="sensor" id="s-temp">
+    <div class="bar">
+      <span class="swatch"></span>
+      <h3>Temperature</h3>
+      <span class="chip bus">1-Wire · GPIO4</span>
+      <span class="chip">DS18B20</span>
+      <span class="chip">12-bit · 0.0625 °C</span>
+      <span class="chip">1 Hz</span>
+    </div>
+    <div class="prose">
+      <p>
+        The DS18B20 is a small computer, not a thermistor. You send it a command,
+        it converts internally, and you read back a scratchpad. The catch is that a
+        12-bit conversion takes <strong>750 ms</strong> &mdash; and the obvious way
+        to write this code destroys everything else.
+      </p>
+    </div>
+
+    <figure>
+      <pre><code class="cpp">ds18b20.setWaitForConversion(false);   // never block on the sensor
+
+void tempTick() {
+  uint32_t now = millis();
+
+  // Phase 1: ask for a conversion, return immediately.
+  if (!g_tempPending && now - g_lastTempReqMs >= TEMP_PERIOD_MS) {
+    ds18b20.requestTemperatures();
+    g_lastTempReqMs = now;
+    g_tempPending   = true;
+    return;
+  }
+
+  // Phase 2: 750 ms later, collect the result.
+  if (g_tempPending && now - g_lastTempReqMs >= DS18B20_CONV_MS) {
+    g_tempPending = false;
+    float c = g_tempOk ? ds18b20.getTempC(tempAddr) : DEVICE_DISCONNECTED_C;
+
+    // Range-check at the source. A bad reading is reported as invalid,
+    // never forwarded as 0 or -127 for the model to learn from.
+    if (c &gt; -55.0f &amp;&amp; c &lt; 125.0f) { g_tempC = c; g_tempValid = true; }
+    else                             { g_tempValid = false; }
+  }
+}</code></pre>
+      <figcaption>
+        <b>Asynchronous, in two phases.</b> The naive version calls
+        <code>requestTemperatures()</code> and blocks for 750 ms. At 200 Hz that
+        would throw away 150 vibration samples every second. Here the function asks,
+        returns, and comes back for the answer later &mdash; so the sample clock
+        never notices.
+      </figcaption>
+    </figure>
+
+    <div class="why prose">
+      <h4>Why the range check matters more than it looks</h4>
+      A disconnected DS18B20 returns &minus;127&nbsp;°C. If that reaches the cloud as
+      a number, the model learns &minus;127&nbsp;°C as a legitimate machine state, and
+      a real sensor failure later looks normal. So the payload carries
+      <code>temp.valid</code>, and a bad reading is marked rather than shipped.
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------------- VIB ---- -->
+  <div class="sensor" id="s-vib">
+    <div class="bar">
+      <span class="swatch"></span>
+      <h3>Vibration</h3>
+      <span class="chip bus">I²C 400 kHz · GPIO21/22</span>
+      <span class="chip">MPU6050</span>
+      <span class="chip">±8 g</span>
+      <span class="chip">94 Hz DLPF</span>
+      <span class="chip">200 Hz</span>
+    </div>
+    <div class="prose">
+      <p>
+        An accelerometer at rest does not read zero. It reads <strong>9.81
+        m/s²</strong> &mdash; gravity. Average its output and you learn which way is
+        down, not how much the motor is shaking. Gravity is 20 to 100 times larger
+        than the vibration we care about, so it has to go first.
+      </p>
+    </div>
+
+    <figure>
+      <pre><code class="cpp">sensors_event_t a, g, t;
+if (mpu.getEvent(&amp;a, &amp;g, &amp;t)) {
+  float x = a.acceleration.x, y = a.acceleration.y, z = a.acceleration.z;
+
+  // Seed the trackers on the first reading instead of ramping from zero,
+  // or gravity reads as vibration until the filter catches up.
+  if (g_dcSettle == 0) { g_dcX = x; g_dcY = y; g_dcZ = z; }
+
+  // A slow exponential average follows the steady part: gravity plus
+  // mounting angle plus sensor offset. alpha = 0.02 at 200 Hz puts the
+  // corner at about 0.64 Hz -- well below any real vibration.
+  g_dcX += VIB_DC_ALPHA * (x - g_dcX);
+  g_dcY += VIB_DC_ALPHA * (y - g_dcY);
+  g_dcZ += VIB_DC_ALPHA * (z - g_dcZ);
+
+  // What is left after subtracting it IS the vibration.
+  float rx = x - g_dcX, ry = y - g_dcY, rz = z - g_dcZ;
+  accVibX.add(rx);
+  accVibY.add(ry);
+  accVibZ.add(rz);
+  accVibMag.add(sqrtf(rx * rx + ry * ry + rz * rz));
+}</code></pre>
+      <figcaption>
+        <b>A high-pass filter in three lines.</b> The same idea as a DC-blocking
+        capacitor in an audio circuit, done in arithmetic. Because the tracker is
+        slow, it follows gravity but cannot follow vibration &mdash; so subtracting
+        it leaves exactly the part that matters.
+      </figcaption>
+    </figure>
+
+    <figure class="diagram wide">
+      <svg viewBox="0 0 900 236" role="img"
+           aria-label="Two stacked plots. The raw accelerometer signal oscillates around 9.81 metres per second squared. After the DC tracker is subtracted, the same oscillation sits around zero.">
+        <g font-family="Archivo, sans-serif" font-size="11" fill="currentColor">
+          <!-- top plot -->
+          <line x1="64" y1="30" x2="64" y2="96" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+          <line x1="64" y1="62.6" x2="856" y2="62.6" stroke="currentColor"
+                stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+          <polyline fill="none" stroke="#2a78d6" stroke-width="1.8"
+            points="64,62.9 77,58.4 90,56.1 104,54.5 117,54.8 130,54.8 143,54.5 156,55.5 170,54.3 183,53.3 196,50.7 209,48.5 222,48.5 236,45.9 249,47.5 262,50.0 275,55.0 288,57.8 302,58.8 315,59.1 328,58.0 341,57.7 354,56.9 368,58.8 381,60.1 394,63.4 407,68.1 420,69.4 434,72.9 447,73.3 460,74.6 473,73.5 486,71.9 500,71.1 513,71.0 526,72.8 539,75.5 552,77.8 566,78.2 579,75.9 592,75.6 605,71.5 618,67.9 632,66.8 645,63.7 658,62.0 671,65.4 684,64.4 698,64.1 711,63.5 724,59.8 737,57.0 750,54.7 764,49.7 777,48.2 790,47.8 803,48.5 816,51.2 830,53.0 843,55.0 856,52.9"/>
+          <text x="58" y="34" text-anchor="end" font-family="JetBrains Mono, monospace">10.7</text>
+          <text x="58" y="66" text-anchor="end" font-family="JetBrains Mono, monospace" opacity="0.75">9.81</text>
+          <text x="58" y="99" text-anchor="end" font-family="JetBrains Mono, monospace">8.9</text>
+          <text x="64" y="20" font-weight="600">Raw accelerometer, Z axis &mdash; m/s²</text>
+          <text x="856" y="20" text-anchor="end" opacity="0.7">the dashed line is gravity, tracked by the EMA</text>
+
+          <!-- bottom plot -->
+          <line x1="64" y1="128" x2="64" y2="194" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+          <line x1="64" y1="161" x2="856" y2="161" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+          <polyline fill="none" stroke="#2a78d6" stroke-width="1.8"
+            points="64,161.2 77,156.8 90,154.5 104,152.9 117,153.1 130,153.1 143,152.8 156,153.9 170,152.7 183,151.7 196,149.1 209,146.8 222,146.9 236,144.3 249,145.9 262,148.4 275,153.4 288,156.2 302,157.2 315,157.4 328,156.4 341,156.0 354,155.3 368,157.2 381,158.5 394,161.7 407,166.5 420,167.8 434,171.3 447,171.7 460,172.9 473,171.9 486,170.3 500,169.5 513,169.3 526,171.2 539,173.9 552,176.1 566,176.5 579,174.2 592,173.9 605,169.8 618,166.3 632,165.2 645,162.1 658,160.4 671,163.8 684,162.7 698,162.5 711,161.9 724,158.2 737,155.3 750,153.1 764,148.0 777,146.5 790,146.2 803,146.8 816,149.6 830,151.4 843,153.4 856,151.3"/>
+          <text x="58" y="132" text-anchor="end" font-family="JetBrains Mono, monospace">+0.9</text>
+          <text x="58" y="165" text-anchor="end" font-family="JetBrains Mono, monospace" opacity="0.75">0</text>
+          <text x="58" y="197" text-anchor="end" font-family="JetBrains Mono, monospace">&minus;0.9</text>
+          <text x="64" y="118" font-weight="600">Residual after subtracting the tracker &mdash; this is what we measure</text>
+
+          <text x="64" y="222" opacity="0.7">0 ms</text>
+          <text x="856" y="222" text-anchor="end" opacity="0.7">800 ms &mdash; 160 samples at 200 Hz</text>
+        </g>
+      </svg>
+      <figcaption>
+        <b>Same signal, two views.</b> Top: what the sensor reports &mdash; a small
+        oscillation riding on a large constant. Bottom: the same oscillation with the
+        constant removed. The RMS of the top trace is about 9.8; the RMS of the bottom
+        one is about 0.25. Only the second number tells you anything about the machine.
+      </figcaption>
+    </figure>
+
+    <div class="prose">
+      <h4>Then: three numbers out of 400 samples</h4>
+      <p>
+        From the residual we keep <strong>RMS</strong> (how much energy),
+        <strong>peak</strong> (the largest single excursion), and their ratio,
+        <strong>crest factor</strong> &mdash; which is the cheapest fault classifier
+        in the whole project:
+      </p>
+      <div class="math">
+        crest = peak / RMS &nbsp;&nbsp;→&nbsp;&nbsp;
+        <b>≈ 1.41</b> smooth sine &mdash; rotor imbalance, one heavy spot going round<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <b>&gt; 3</b>&nbsp;&nbsp;&nbsp; sharp impacts &mdash; a bearing ball striking a crack, once per pass
+      </div>
+      <p>
+        Two faults with identical RMS, told apart by the <em class="term">shape</em>
+        of the signal, from a sensor that costs about ₹150.
+      </p>
+
+      <h4>Why the filter is set to 94 Hz</h4>
+      <p>
+        <strong>Nyquist's theorem:</strong> sampling at 200 Hz, you can only
+        represent signals up to 100 Hz. Feed in a 150 Hz vibration and it doesn't
+        get ignored &mdash; it reappears <em class="term">disguised</em> as 50 Hz.
+        That's <em class="term">aliasing</em>, and it is poison for a model: a
+        completely fictional feature it will happily learn from. The MPU6050's
+        internal low-pass filter is set to 94 Hz so out-of-band energy is removed
+        <em class="term">before</em> it can be sampled and mislabelled. Same reason
+        a car wheel appears to spin backwards on video.
+      </p>
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------------- CUR ---- -->
+  <div class="sensor" id="s-cur">
+    <div class="bar">
+      <span class="swatch"></span>
+      <h3>Current</h3>
+      <span class="chip bus">ADC1 · GPIO34</span>
+      <span class="chip">ACS712, Hall effect</span>
+      <span class="chip">100 mV/A</span>
+      <span class="chip">200 Hz</span>
+    </div>
+    <div class="prose">
+      <p>
+        The simplest electrical interface and the fussiest calibration. The ACS712
+        sits <em class="term">in series</em> with the motor supply; motor current
+        flows through an internal conductor and a Hall element measures the magnetic
+        field it creates. The sense side is galvanically isolated, which is why a
+        12 V motor circuit cannot hurt a 3.3 V microcontroller through it.
+      </p>
+      <p>
+        Its output is a voltage centred on half its supply: <strong>2.5 V means zero
+        amps</strong>, and every 100 mV away from that is one amp, in either
+        direction.
+      </p>
+    </div>
+
+    <figure>
+      <pre><code class="cpp">float readCurrentMv() {
+  // The sensor runs at 5 V behind a 2:1 divider, so undo the divider.
+  return analogReadMilliVolts(PIN_CURRENT_ADC) * CURRENT_DIVIDER_GAIN;
+}
+
+void calibrateCurrentZero() {
+  // Measure the zero point at boot with the motor stopped -- do not trust
+  // the datasheet. The divider ratio and the ADC both drift.
+  double acc = 0;
+  for (uint16_t i = 0; i &lt; ACS712_ZERO_SAMPLES; i++) {   // 256 samples
+    acc += readCurrentMv();
+    delayMicroseconds(200);
+  }
+  g_zeroMv = (float)(acc / ACS712_ZERO_SAMPLES);
+  g_calOk  = (g_zeroMv &gt; ACS712_ZERO_MV_MIN) &amp;&amp; (g_zeroMv &lt; ACS712_ZERO_MV_MAX);
+}
+
+float readCurrentAmps() {
+  float a = (readCurrentMv() - g_zeroMv) / ACS712_MV_PER_AMP;
+  if (fabsf(a) &lt; ACS712_DEADBAND_A) a = 0.0f;   // ADC noise floor
+  return a;
+}</code></pre>
+      <figcaption>
+        <b>The zero point is measured, not assumed.</b> Hardcode 2.5 V when the truth
+        is 2.53 V and every reading is wrong by 0.3 A &mdash; forever, invisibly, and
+        your model learns the bias as if it were the machine. The measured value ships
+        in every message as <code>cur.zero_mv</code>, with <code>cal_ok</code> beside
+        it, so the cloud can reject the channel instead of trusting it.
+      </figcaption>
+    </figure>
+
+    <div class="why prose">
+      <h4>Why RMS and not the average</h4>
+      Motor current is not smooth DC &mdash; it pulses with commutation, and under an
+      AC drive it alternates around zero, where the plain average is ≈ 0 A even at
+      full load. RMS squares each sample first, which makes negatives positive
+      <em class="term">and</em> weights large excursions more heavily. That is not a
+      trick: heating in the winding goes as I²R, so <strong>RMS is the
+      DC-equivalent heating value</strong> &mdash; the number that actually predicts
+      thermal ageing.
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------------- RPM ---- -->
+  <div class="sensor" id="s-rpm">
+    <div class="bar">
+      <span class="swatch"></span>
+      <h3>Speed</h3>
+      <span class="chip bus">Interrupt · GPIO27</span>
+      <span class="chip">optical / Hall tacho</span>
+      <span class="chip">2 pulses/rev</span>
+      <span class="chip">event-driven</span>
+    </div>
+    <div class="prose">
+      <p>
+        This one is never "read". A slot or magnet passing the sensor produces a
+        pulse, the pulse yanks a GPIO high, and the CPU <em class="term">stops
+        whatever it is doing</em> to run six lines of code. That is an
+        <em class="term">interrupt service routine</em>, and it is why no pulse is
+        ever missed even while the main loop is busy with Wi-Fi.
+      </p>
+    </div>
+
+    <figure>
+      <pre><code class="cpp">void IRAM_ATTR onTachoEdge() {          // IRAM: must not wait on flash
+  uint32_t now = micros();
+  uint32_t dt  = now - g_lastEdgeUs;
+
+  // Debounce: reject anything faster than a quarter of the shortest
+  // credible pulse at 6000 rpm. Optical and Hall pickups both bounce.
+  if (dt &lt; RPM_DEBOUNCE_US) return;     // 1250 us
+
+  g_lastEdgeUs   = now;
+  g_lastPeriodUs = dt;                  // for the instantaneous estimate
+  g_pulses++;                           // for the windowed average
+}</code></pre>
+      <figcaption>
+        <b>Short on purpose.</b> An ISR runs with the rest of the system paused, so it
+        does the minimum: note the time, reject bounce, increment a counter. All the
+        arithmetic happens later, in the main loop.
+      </figcaption>
+    </figure>
+
+    <div class="prose">
+      <p>Two speeds come out of those two variables, and they answer different questions:</p>
+      <div class="math">
+        <b>rpm.avg</b>&nbsp;&nbsp;= pulses × 60000 / (window_ms × pulses_per_rev)
+        &nbsp;&nbsp;<span style="opacity:.7">— steady, averaged over 2 s; this is what you trend</span><br>
+        <b>rpm.inst</b> = 60000000 / (last_period_us × pulses_per_rev)
+        &nbsp;&nbsp;<span style="opacity:.7">— reacts within a single pulse; catches transients</span>
+      </div>
+      <p>
+        When those two disagree by more than about 1%, something is wrong with the
+        measurement &mdash; and that is exactly how a real 3% error in this firmware
+        got caught during testing.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== SCHEDULER ====== -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">02</span>
+    <div>
+      <h2>One CPU, four different clocks</h2>
+      <p class="sh-sub">No <code>delay()</code> anywhere. Every job asks &ldquo;is it my turn?&rdquo; and leaves.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>
+      A beginner Arduino sketch reads a sensor, calls <code>delay(2000)</code>, and
+      repeats. Do that here and you get one vibration sample every two seconds,
+      which tells you nothing about vibration. The whole loop is six lines:
+    </p>
+  </div>
+
+  <figure>
+    <pre><code class="cpp">void loop() {
+  netService();     // Wi-Fi + broker, non-blocking state machine
+  sampleTick();     // vibration + current at 200 Hz
+  tempTick();       // DS18B20, asynchronous
+  tachoSimTick();   // simulator-only pulse source
+  publishTick();    // window close -> JSON -> MQTT
+  ledTick();        // link status on the onboard LED
+}</code></pre>
+    <figcaption>
+      <b>A cooperative scheduler.</b> This runs thousands of times a second and each
+      function usually does nothing but check a timestamp and return. That is what
+      lets one core sample at 200 Hz while managing a network connection.
+    </figcaption>
+  </figure>
+
+  <figure class="diagram wide">
+    <svg viewBox="0 0 900 268" role="img"
+         aria-label="Timeline of one two-second window showing 400 sample ticks at 5 millisecond intervals, two temperature conversions each taking 750 milliseconds, and a single publish event at the end of the window.">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+                markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="Archivo, sans-serif" font-size="11" fill="currentColor">
+        <!-- lane labels -->
+        <g text-anchor="end" font-size="11.5" font-weight="600">
+          <text x="118" y="49">sampleTick</text>
+          <text x="118" y="89">tempTick</text>
+          <text x="118" y="129">publishTick</text>
+          <text x="118" y="169">netService</text>
+        </g>
+        <g text-anchor="end" font-size="10" opacity="0.65" font-family="JetBrains Mono, monospace">
+          <text x="118" y="62">5 ms</text>
+          <text x="118" y="102">1 s</text>
+          <text x="118" y="142">2 s</text>
+          <text x="118" y="182">always</text>
+        </g>
+
+        <!-- sample lane: dense ticks -->
+        <g stroke="#2a78d6" stroke-width="1.5" opacity="0.85">
+          <line x1="132" y1="36" x2="132" y2="52"/><line x1="150" y1="36" x2="150" y2="52"/>
+          <line x1="168" y1="36" x2="168" y2="52"/><line x1="186" y1="36" x2="186" y2="52"/>
+          <line x1="204" y1="36" x2="204" y2="52"/><line x1="222" y1="36" x2="222" y2="52"/>
+          <line x1="240" y1="36" x2="240" y2="52"/><line x1="258" y1="36" x2="258" y2="52"/>
+          <line x1="276" y1="36" x2="276" y2="52"/><line x1="294" y1="36" x2="294" y2="52"/>
+        </g>
+        <rect x="303" y="36" width="530" height="16" fill="#2a78d6" opacity="0.18"/>
+        <g stroke="#2a78d6" stroke-width="1.5" opacity="0.85">
+          <line x1="840" y1="36" x2="840" y2="52"/><line x1="858" y1="36" x2="858" y2="52"/>
+        </g>
+        <text x="568" y="48" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace">400 ticks · 5 ms apart</text>
+
+        <!-- temp lane -->
+        <rect x="132" y="76" width="182" height="16" rx="2" fill="none"
+              stroke="#eb6834" stroke-width="1.5"/>
+        <rect x="496" y="76" width="182" height="16" rx="2" fill="none"
+              stroke="#eb6834" stroke-width="1.5"/>
+        <text x="223" y="88" text-anchor="middle" font-size="10">750 ms convert</text>
+        <text x="587" y="88" text-anchor="middle" font-size="10">750 ms convert</text>
+        <g font-size="9.5" opacity="0.7">
+          <text x="132" y="106">ask</text>
+          <text x="290" y="106" text-anchor="middle">collect</text>
+        </g>
+
+        <!-- publish lane -->
+        <rect x="833" y="116" width="26" height="16" rx="2" fill="#4a3aa7" opacity="0.9"/>
+        <text x="826" y="128" text-anchor="end" font-size="10.5">window closes, resets, serialises, publishes →</text>
+
+        <!-- net lane -->
+        <rect x="132" y="156" width="727" height="16" fill="currentColor" opacity="0.12"/>
+        <text x="495" y="168" text-anchor="middle" font-size="10">keepalive, reconnect, inbound commands — never blocks the sampler</text>
+
+        <!-- time axis -->
+        <line x1="132" y1="196" x2="859" y2="196" stroke="currentColor" stroke-width="1"/>
+        <g stroke="currentColor" stroke-width="1">
+          <line x1="132" y1="196" x2="132" y2="202"/>
+          <line x1="314" y1="196" x2="314" y2="202"/>
+          <line x1="496" y1="196" x2="496" y2="202"/>
+          <line x1="677" y1="196" x2="677" y2="202"/>
+          <line x1="859" y1="196" x2="859" y2="202"/>
+        </g>
+        <g font-size="10" text-anchor="middle" font-family="JetBrains Mono, monospace" opacity="0.8">
+          <text x="132" y="216">0</text>
+          <text x="314" y="216">500</text>
+          <text x="496" y="216">1000</text>
+          <text x="677" y="216">1500</text>
+          <text x="859" y="216">2000 ms</text>
+        </g>
+
+        <!-- zoom bracket -->
+        <line x1="132" y1="238" x2="294" y2="238" stroke="currentColor"
+              stroke-width="1" marker-start="url(#ar2)" marker-end="url(#ar2)"/>
+        <text x="304" y="242" font-size="10.5" opacity="0.8">
+          10 ticks drawn to scale — the shaded band is the other 390
+        </text>
+      </g>
+    </svg>
+    <figcaption>
+      <b>How four rates share one core.</b> The sampler fires 400 times; the
+      temperature sensor converts twice, asked and collected 750 ms apart; the
+      publisher fires once, at the end. The network lane runs continuously and
+      is never allowed to block the others.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <pre><code class="cpp">void sampleTick() {
+  const uint32_t periodUs = 1000000UL / SAMPLE_HZ;   // 5000 us
+  uint32_t now = micros();
+  if ((int32_t)(now - g_nextSampleUs) &lt; 0) return;   // not my turn yet
+
+  // Advance the deadline by exactly one period. Absolute deadlines, not
+  // "now + 5 ms", so a late tick does not push every later tick late.
+  g_nextSampleUs += periodUs;
+
+  // If we fell more than four periods behind, resynchronise instead of
+  // burst-sampling to catch up -- and report the slots actually missed.
+  if ((int32_t)(now - g_nextSampleUs) &gt; (int32_t)(periodUs * 4)) {
+    g_droppedSamples += (now - g_nextSampleUs) / periodUs;
+    g_nextSampleUs = now + periodUs;
+  }
+  sampleOnce();
+}</code></pre>
+    <figcaption>
+      <b>Absolute deadlines beat relative sleeps.</b> Adding the period to the
+      previous deadline means timing errors do not accumulate. And when the loop
+      genuinely does fall behind, the firmware counts the samples it lost and puts
+      that count in the payload &mdash; instead of quietly pretending the window
+      was complete.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ===================================================== WINDOW ========= -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">03</span>
+    <div>
+      <h2>400 samples become 15 numbers</h2>
+      <p class="sh-sub">Averaging on the device removes noise before it costs bandwidth.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>
+      Nothing is stored. Each sample is folded into four running totals and
+      discarded &mdash; so summarising 400 samples costs a handful of bytes of RAM,
+      not an array.
+    </p>
+  </div>
+
+  <figure>
+    <pre><code class="cpp">struct Accum {
+  uint32_t n;
+  double   sum;      // for the mean
+  double   sumsq;    // for the RMS -- this is why every sample matters
+  float    peak;     // for crest factor
+
+  void add(float v) {
+    n++;
+    sum   += v;
+    sumsq += (double)v * (double)v;
+    float a = fabsf(v);
+    if (a &gt; peak) peak = a;
+  }
+  float rms()  const { return n ? sqrtf((float)(sumsq / n)) : 0.0f; }
+  float mean() const { return n ? (float)(sum / n)          : 0.0f; }
+};</code></pre>
+    <figcaption>
+      <b>Streaming statistics.</b> Because <code>sumsq</code> accumulates as each
+      sample arrives, the RMS is exact &mdash; and it explains why the sampler must
+      see every sample. You cannot compute an RMS from numbers that have already
+      been averaged.
+    </figcaption>
+  </figure>
+
+  <div class="prose">
+    <h4>The bandwidth argument, with numbers</h4>
+    <div class="math">
+      raw, every sample&nbsp;&nbsp;&nbsp; 200 Hz × 8 bytes = 1600 B/s →
+      <b>138 MB per day, per motor</b><br>
+      summarised&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      540 B every 2 s = 270 B/s → <b>23 MB per day</b>
+    </div>
+    <p>
+      Six times less &mdash; and that is against a raw <em class="term">binary</em>
+      stream. As JSON, per-sample would be fifty times worse. But the saving is the
+      lesser half of the argument: the summary is also the part the model actually
+      wants. RMS, peak and crest factor <em class="term">are</em> the features. The
+      individual samples were only ever raw material.
+    </p>
+
+    <h4>The order of operations, which turned out to matter</h4>
+    <p>
+      When the window closes, the counters are snapshotted and reset
+      <em class="term">first</em>, and only then is the JSON built and published:
+    </p>
+  </div>
+
+  <figure>
+    <pre><code class="cpp">// Close the window FIRST, reset, and only then serialise. Building and
+// publishing costs tens of milliseconds; resetting afterwards would discard
+// every sample taken in that time, and divide the pulse count by a window
+// shorter than the one those pulses arrived in.
+noInterrupts();                       // the ISR must not fire mid-snapshot
+uint32_t pulses = g_pulses;
+g_pulses = 0;
+interrupts();
+
+const float vibRms = accVibMag.rms();
+/* ... every other statistic copied to a local ... */
+
+accVibMag.reset(); accVibX.reset(); accVibY.reset(); accVibZ.reset();
+accCurrent.reset();
+g_windowStartMs = nowMs;              // the next window starts here</code></pre>
+    <figcaption>
+      <b>A real bug, found by reading the data.</b> The first version reset
+      afterwards. The published <code>win.ms</code> came out as 1940 instead of
+      2000, ~3% of samples were silently thrown away, and the pulse count was
+      divided by the wrong interval &mdash; giving 154.6 rpm where the instantaneous
+      estimate said 150.0. Two fields that were only there for diagnostics were what
+      exposed it.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ===================================================== PAYLOAD ======== -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">04</span>
+    <div>
+      <h2>What actually gets sent</h2>
+      <p class="sh-sub">One document per window, ~540 bytes, on a versioned schema.</p>
+    </div>
+  </div>
+
+  <figure>
+    <pre><code class="json">{
+  "schema": "pdm.telemetry.v1",     "device_id": "MOTOR-01",
+  "fw": "obj1-1.0.0",               "seq": 12,
+  "ts": "2026-09-07T10:14:22.031Z", "ts_synced": true,
+  "t_edge_ms": 1788516862031,       "uptime_s": 24,
+  "label": "baseline",
+
+  "temp": { "c": 32.00, "valid": true },
+
+  "vib":  { "rms_ms2": 0.412, "peak_ms2": 1.281, "crest": 3.11,
+            "x_rms": 0.204, "y_rms": 0.191, "z_rms": 0.298, "valid": true },
+
+  "cur":  { "rms_a": 1.842, "mean_a": 1.790, "peak_a": 2.310,
+            "zero_mv": 1650.3, "cal_ok": true },
+
+  "rpm":  { "avg": 1479.6, "inst": 1481.2, "pulses": 49 },
+
+  "win":  { "ms": 2000, "n": 398, "n_cur": 400,
+            "sample_hz": 200, "dropped": 0 },
+
+  "net":  { "rssi": -58, "ip": "10.13.37.2", "tls": false,
+            "wifi_reconn": 0, "mqtt_reconn": 0, "publish_fails": 0 }
+}</code></pre>
+    <figcaption>
+      <b>The contract.</b> This shape is frozen in
+      <code>docs/telemetry-schema.json</code>, which the cloud validates against
+      before storing anything. Malformed records are rejected at the boundary, so
+      bad data never reaches the model.
+    </figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>
+      Roughly a third of those fields are not measurements. They are there so the
+      receiver can decide <em class="term">whether to believe</em> the
+      measurements &mdash; which is the difference between a data stream and a
+      trustworthy one.
+    </p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Field</th><th>Job</th><th>Why it exists</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">schema</td><td>version tag</td>
+          <td>When the payload changes shape next year, <code>v2</code> runs alongside <code>v1</code> and nothing breaks.</td></tr>
+        <tr><td class="mono">seq</td><td>monotonic counter</td>
+          <td>A gap means a message was lost. Loss becomes visible instead of invisible.</td></tr>
+        <tr><td class="mono">ts_synced</td><td>clock honesty</td>
+          <td><code>false</code> means NTP hasn't synced; the cloud should use arrival time, not a fabricated timestamp.</td></tr>
+        <tr><td class="mono">t_edge_ms</td><td>publish instant</td>
+          <td>Subtract it at the dashboard to report a <em>measured</em> end-to-end latency rather than an estimate.</td></tr>
+        <tr><td class="mono">label</td><td>fault annotation</td>
+          <td>Set over MQTT while a fault is induced. This is what turns a stream of numbers into a labelled training set.</td></tr>
+        <tr><td class="mono">temp.valid</td><td>reading trust</td>
+          <td>A failed sensor is marked, never forwarded as &minus;127&nbsp;°C for the model to learn.</td></tr>
+        <tr><td class="mono">cur.cal_ok</td><td>calibration trust</td>
+          <td>An implausible zero point invalidates the whole current channel. Better to say so than to publish a confident wrong number.</td></tr>
+        <tr><td class="mono">win.ms</td><td>real window length</td>
+          <td>The actual measured window, so the cloud never has to assume it was exactly 2000 ms.</td></tr>
+        <tr><td class="mono">win.n / dropped</td><td>coverage</td>
+          <td>Expected 400, got 398? That's a quality gate: a degraded window can be excluded rather than silently trusted.</td></tr>
+        <tr><td class="mono">net.*</td><td>link health</td>
+          <td>Falling RSSI and rising reconnect counts explain missing data after the fact.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================================================== MQTT =========== -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">05</span>
+    <div>
+      <h2>How MQTT gets it off the device</h2>
+      <p class="sh-sub">Publish/subscribe: the device announces, it never sends <em>to</em> anyone.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>
+      With HTTP, a client asks a specific server for a specific thing and waits for
+      an answer. MQTT inverts that. The ESP32 <em class="term">publishes</em> to a
+      named <em class="term">topic</em> on a <em class="term">broker</em>. Anyone
+      interested <em class="term">subscribes</em> to that topic. The device does not
+      know how many subscribers exist &mdash; or whether there are any at all.
+    </p>
+    <p>
+      That decoupling is the point. Add a dashboard, a second database, an alerting
+      service: the firmware never changes. And the protocol overhead is a
+      <strong>2-byte header</strong> against HTTP's hundreds of bytes of text, which
+      matters when you are doing it every two seconds on battery-adjacent hardware.
+    </p>
+  </div>
+
+  <figure class="diagram wide">
+    <svg viewBox="0 0 900 330" role="img"
+         aria-label="The ESP32 publishes telemetry and a retained status to the broker. The broker fans messages out to a cloud service, a dashboard and a validator. A command topic carries labels back to the device, and the broker publishes a last-will offline message if the device disappears.">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+                markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+        </marker>
+        <marker id="ar3b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+                markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="#2a78d6"/>
+        </marker>
+      </defs>
+      <g font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">
+        <!-- device -->
+        <rect x="8" y="112" width="150" height="74" rx="2" fill="none"
+              stroke="currentColor" stroke-width="1.6"/>
+        <text x="83" y="141" text-anchor="middle" font-size="13.5" font-weight="600">ESP32</text>
+        <text x="83" y="159" text-anchor="middle" font-size="10.5" opacity="0.72">MOTOR-01</text>
+        <text x="83" y="175" text-anchor="middle" font-size="10" opacity="0.72"
+              font-family="JetBrains Mono, monospace">publisher</text>
+
+        <!-- broker -->
+        <rect x="360" y="96" width="170" height="106" rx="2" fill="none"
+              stroke="#2a78d6" stroke-width="1.8"/>
+        <text x="445" y="126" text-anchor="middle" font-size="13.5" font-weight="600" fill="#2a78d6">broker</text>
+        <text x="445" y="145" text-anchor="middle" font-size="10.5" opacity="0.8">holds topics</text>
+        <text x="445" y="161" text-anchor="middle" font-size="10.5" opacity="0.8">routes messages</text>
+        <text x="445" y="180" text-anchor="middle" font-size="10" opacity="0.7"
+              font-family="JetBrains Mono, monospace">keepalive 30 s</text>
+
+        <!-- subscribers -->
+        <g fill="none" stroke="currentColor" stroke-width="1.4">
+          <rect x="700" y="36"  width="192" height="50" rx="2"/>
+          <rect x="700" y="120" width="192" height="50" rx="2"/>
+          <rect x="700" y="204" width="192" height="50" rx="2"/>
+        </g>
+        <g font-size="12.5" font-weight="600">
+          <text x="716" y="58">cloud ingest</text>
+          <text x="716" y="142">dashboard</text>
+          <text x="716" y="226">schema validator</text>
+        </g>
+        <g font-size="10" opacity="0.72">
+          <text x="716" y="74">validate → TimescaleDB → model</text>
+          <text x="716" y="158">live tiles + trends in the browser</text>
+          <text x="716" y="242">proves the contract holds</text>
+        </g>
+
+        <!-- publish arrows -->
+        <line x1="160" y1="136" x2="356" y2="126" stroke="#2a78d6" stroke-width="1.8"
+              marker-end="url(#ar3b)"/>
+        <text x="258" y="112" text-anchor="middle" font-size="10.5" fill="#2a78d6"
+              font-family="JetBrains Mono, monospace">PUBLISH …/telemetry</text>
+        <text x="258" y="126" text-anchor="middle" font-size="10" opacity="0.75">
+          ~540 B · QoS 0 · every 2 s</text>
+
+        <line x1="160" y1="160" x2="356" y2="168" stroke="currentColor" stroke-width="1.3"
+              marker-end="url(#ar3)"/>
+        <text x="258" y="188" text-anchor="middle" font-size="10.5"
+              font-family="JetBrains Mono, monospace">PUBLISH …/status</text>
+        <text x="258" y="201" text-anchor="middle" font-size="10" opacity="0.75">
+          "online" · retained</text>
+
+        <!-- fan out -->
+        <g stroke="currentColor" stroke-width="1.4" marker-end="url(#ar3)">
+          <line x1="534" y1="118" x2="696" y2="62"/>
+          <line x1="534" y1="148" x2="696" y2="146"/>
+          <line x1="534" y1="178" x2="696" y2="230"/>
+        </g>
+        <text x="612" y="88" text-anchor="middle" font-size="10" opacity="0.8"
+              font-family="JetBrains Mono, monospace">SUBSCRIBE</text>
+
+        <!-- command path -->
+        <path d="M700 268 L445 268 L445 206" fill="none" stroke="currentColor"
+              stroke-width="1.3" stroke-dasharray="5 3" marker-end="url(#ar3)"/>
+        <path d="M360 232 L83 232 L83 190" fill="none" stroke="currentColor"
+              stroke-width="1.3" stroke-dasharray="5 3" marker-end="url(#ar3)"/>
+        <text x="560" y="284" text-anchor="middle" font-size="10.5"
+              font-family="JetBrains Mono, monospace">PUBLISH …/cmd {"label":"imbalance"}</text>
+        <text x="222" y="226" text-anchor="middle" font-size="10" opacity="0.78">
+          settings only — never actuation</text>
+
+        <!-- LWT note -->
+        <text x="445" y="308" text-anchor="middle" font-size="10.5" opacity="0.8">
+          If the ESP32 disappears, the broker publishes "offline" on …/status by itself — the last will,
+        </text>
+        <text x="445" y="322" text-anchor="middle" font-size="10.5" opacity="0.8">
+          registered during the connection handshake.
+        </text>
+      </g>
+    </svg>
+    <figcaption>
+      <b>Three subscribers the firmware knows nothing about.</b> Solid arrows are
+      telemetry out; dashed arrows are the only inbound path, carrying settings.
+      The command topic cannot move the motor &mdash; there is no output to move it
+      with.
+    </figcaption>
+  </figure>
+
+  <h3>The topic tree</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Topic</th><th>Direction</th><th>Payload</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">pdm/v1/MOTOR-01/telemetry</td><td>out</td>
+            <td>~540 B JSON</td><td>every 2 s, QoS 0</td></tr>
+        <tr><td class="mono">pdm/v1/MOTOR-01/status</td><td>out</td>
+            <td><code>online</code> / <code>offline</code></td>
+            <td>retained, and the last-will message</td></tr>
+        <tr><td class="mono">pdm/v1/MOTOR-01/cmd</td><td>in</td>
+            <td><code>{"label":"…"}</code></td>
+            <td>label, publish interval, re-zero</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>
+      The <code>v1</code> sits in the path, not just in the payload, so a future
+      firmware revision can publish a different shape to a different topic while old
+      subscribers keep working.
+    </p>
+  </div>
+
+  <h3>Four protocol features doing real work</h3>
+
+  <figure>
+    <pre><code class="cpp">// Last will: hand the broker a message to publish on our behalf if we
+// ever drop off, so a dead device shows as dead instead of frozen.
+bool ok = mqtt.connect(MQTT_CLIENT_ID, user, pass,
+                       TOPIC_STATUS,   // will topic
+                       MQTT_QOS,
+                       true,           // will retained
+                       "offline",      // will payload
+                       true);          // clean session
+
+mqtt.publish(TOPIC_STATUS, "online", true);   // retained: late subscribers
+mqtt.subscribe(TOPIC_CMD, MQTT_QOS);          // still learn we are here</code></pre>
+    <figcaption>
+      <b>Registering your own death notice at handshake time.</b> The broker holds
+      that message and publishes it if the keepalive lapses &mdash; so the dashboard
+      learns the device is gone even though the device could not tell it.
+    </figcaption>
+  </figure>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Feature</th><th>Setting</th><th>What it buys</th></tr></thead>
+      <tbody>
+        <tr><td><strong>QoS 0</strong></td><td class="mono">at most once</td>
+          <td>Telemetry is periodic and loss-tolerant &mdash; the next window is 2 s away. Higher QoS costs round-trips and buffering for data that is about to be superseded. <code>seq</code> makes any loss visible, which is cheaper than preventing it.</td></tr>
+        <tr><td><strong>Retained</strong></td><td class="mono">status only</td>
+          <td>The broker keeps the last status message. Open the dashboard an hour later and it immediately knows whether the device is up, without waiting for an event.</td></tr>
+        <tr><td><strong>Last will</strong></td><td class="mono">"offline"</td>
+          <td>Distinguishes &ldquo;nothing has changed&rdquo; from &ldquo;the device is gone&rdquo; &mdash; the two look identical otherwise.</td></tr>
+        <tr><td><strong>Keepalive</strong></td><td class="mono">30 s</td>
+          <td>Silence longer than this and the broker declares the client dead and fires the will. Sets how quickly a failure is noticed.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>When the network fails, which it will</h3>
+  <figure>
+    <pre><code class="cpp">g_mqttReconnects++;
+g_retryAtMs = now + g_backoffMs;
+g_backoffMs = min(g_backoffMs * 2, (uint32_t)RECONNECT_MAX_MS);
+// 1 s, 2, 4, 8, 16, then capped at 30 s</code></pre>
+    <figcaption>
+      <b>Exponential backoff.</b> Naive code retries every second forever and
+      hammers a broker that is already struggling. Sampling continues throughout, so
+      the window that follows a reconnect is still a valid window.
+    </figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>
+      Wi-Fi association and the broker handshake block for over a second, so the
+      window spanning them has poor sample coverage. The firmware therefore
+      <strong>realigns the window boundary on connect</strong> &mdash; the first
+      window it publishes is a complete one, not a partial one dressed up as
+      complete.
+    </p>
+    <p>
+      <strong>TLS</strong> is a build switch: <code>USE_TLS 1</code> moves to port
+      8883. In the lab the broker is accepted without pinning a certificate; on the
+      cloud broker in Objective 2 that becomes a pinned root CA plus a per-device
+      certificate and private key, so the broker knows <em class="term">which</em>
+      motor is talking and nobody can impersonate it.
+    </p>
+  </div>
+</section>
+
+<!-- ===================================================== HONESTY ======== -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">06</span>
+    <div>
+      <h2>How the stream tells you when not to trust it</h2>
+      <p class="sh-sub">The design rule: never publish a wrong number as if it were right.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>
+      A model trained on data that silently lies is worse than no model, because it
+      is confidently wrong. So every failure mode has a field, and each one is a gate
+      the cloud can act on rather than a surprise later.
+    </p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>What goes wrong</th><th>How you find out</th><th>What the cloud does</th></tr></thead>
+      <tbody>
+        <tr><td>Temperature sensor unplugged</td><td class="mono">temp.valid = false</td>
+            <td>Ignore the channel; alert on the sensor, not the motor</td></tr>
+        <tr><td>Current zero drifted or motor ran at boot</td><td class="mono">cur.cal_ok = false</td>
+            <td>Reject the current channel entirely for this device</td></tr>
+        <tr><td>Loop starved, samples missed</td><td class="mono">win.n &lt; sample_hz × ms</td>
+            <td>Exclude a window below ~95% coverage from training</td></tr>
+        <tr><td>Message lost in transit</td><td class="mono">gap in seq</td>
+            <td>Interpolate or skip &mdash; knowingly, not accidentally</td></tr>
+        <tr><td>Clock not yet synced</td><td class="mono">ts_synced = false</td>
+            <td>Use broker arrival time instead of the device timestamp</td></tr>
+        <tr><td>Device powered off or crashed</td><td class="mono">status = "offline"</td>
+            <td>Show the device as stale rather than showing old numbers</td></tr>
+        <tr><td>Payload larger than the buffer</td><td class="mono">publish_fails climbs</td>
+            <td>Nothing truncated is ever sent &mdash; half a JSON document is worse than none</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="why prose">
+    <h4>This paid for itself during testing</h4>
+    <code>win.ms</code> and <code>win.n</code> exist purely as diagnostics. They are
+    what revealed that windows were 1940 ms instead of 2000, that 3% of samples were
+    being discarded, and that RPM was consequently 3% high. Then
+    <code>win.dropped</code> pinned the remaining loss on the serial monitor: printing
+    540 bytes of JSON at 115200 baud blocks the loop for 47 ms, which is 9 samples,
+    every window. Neither bug was visible in the sensor readings themselves.
+  </div>
+</section>
+
+<!-- ===================================================== BOUNDARY ======= -->
+<section class="stage">
+  <div class="stagehead">
+    <span class="num">07</span>
+    <div>
+      <h2>Where this stops</h2>
+      <p class="sh-sub">Objective 1 ends at the broker, deliberately.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>
+      Nothing in this firmware decides anything. There is no health score, no
+      anomaly detection, no threshold that raises an alarm. That is not an omission
+      &mdash; it is the architecture. The edge senses and communicates; the cloud
+      predicts; a deterministic rule engine decides.
+    </p>
+    <p>
+      The reason is practical. If the model lived on the ESP32, improving it would
+      mean reflashing hardware bolted to a running machine. Keeping analytics in the
+      cloud means the device stays cheap, simple, and rarely touched &mdash; and
+      because prediction and decision are separate, every future alert traces back to
+      a specific inspectable condition rather than to a number nobody can audit.
+    </p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Stage</th><th>What happens</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Objective 1</strong></td>
+            <td>Sense four channels, condition, summarise, publish JSON over MQTT</td>
+            <td class="mono">this firmware</td></tr>
+        <tr><td><strong>Objective 2</strong></td>
+            <td>Validate against the schema, store as a time series, Isolation Forest for anomalies plus XGBoost for fault class, then a rule engine that turns a score into &ldquo;Inspect bearing, HIGH&rdquo;</td>
+            <td class="mono">cloud service</td></tr>
+        <tr><td><strong>Objective 3</strong></td>
+            <td>React dashboard over WebSocket, model evaluation, end-to-end latency measured with <code>t_edge_ms</code></td>
+            <td class="mono">FastAPI + React</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>
+    <strong>IoT &amp; ML-Based Predictive Maintenance System for Rotating
+    Machinery.</strong> Pimpri Chinchwad College of Engineering, Nigdi, Pune
+    &middot; Department of Electronics &amp; Telecommunication &middot; B.Tech MDM
+    IoT, 2026&ndash;27.<br>
+    Atharva Palande (123B1C060) &middot; Mehul Rawat (123B1C063) &middot; Guide:
+    Prof. Kalpana Patil.
+  </p>
+  <p>
+    Every code block on this page is the firmware as it runs, not pseudocode.
+    Figures for bandwidth, timing and sample counts are computed from the
+    configured rates in <code>config.h</code>. Vibration amplitudes shown in the
+    filter figure are illustrative.
+  </p>
+</footer>
+</div>
+
+<script>
+/* A small single-pass highlighter: comments, strings, numbers and keywords.
+   One regex, one replace, so nothing re-matches the markup it just inserted. */
+(function () {
+  var KW = "if|else|return|void|bool|float|double|const|struct|for|while|break|"
+         + "switch|case|true|false|nullptr|static|volatile|sizeof|uint8_t|"
+         + "uint16_t|uint32_t|uint64_t|int16_t|int32_t|size_t|char";
+  var RE = new RegExp(
+      "(\\/\\/[^\\n]*)"                  // 1 line comment
+    + "|(\"(?:[^\"\\\\]|\\\\.)*\")"      // 2 string
+    + "|\\b(\\d[\\w.]*)\\b"              // 3 number
+    + "|\\b(" + KW + ")\\b",             // 4 keyword
+      "g");
+
+  document.querySelectorAll("code.cpp, code.json").forEach(function (el) {
+    var src = el.textContent
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    el.innerHTML = src.replace(RE, function (m, c, s, n, k) {
+      if (c) return '<span class="c">' + c + "</span>";
+      if (s) return '<span class="s">' + s + "</span>";
+      if (n) return '<span class="n">' + n + "</span>";
+      return '<span class="k">' + k + "</span>";
+    });
+  });
+})();
+</script>

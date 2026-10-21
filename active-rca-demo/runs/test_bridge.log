@@ -1,0 +1,20 @@
+11:17:29 [bridge] engine = mock-rule-based (not an LLM)
+11:17:29 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:17:36 [win] #1 S2 EF op=500 rms=0.2641  streak=1 flagged=b3,rms,b0,b1 state=monitor
+11:17:36 [win] #2 S2 EF op=500 rms=0.2634  streak=2 flagged=b3,rms,b0,b1 state=monitor
+11:17:36 [episode] E1 started by gate on S2 op=500 flagged=['b3', 'rms', 'b0', 'b1', 'b2']
+11:17:36 [llm] E1 step 1 -> mock-rule-based (not an LLM) (3983 chars, 2 tests allowed)
+11:17:36 [win] #3 S2 EF op=500 rms=0.2645  streak=3 flagged=b3,rms,b0,b1 state=diagnosing
+11:17:36 [win] #4 S2 EF op=500 rms=0.2757  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+11:17:36 [win] #5 S2 EF op=500 rms=0.2744  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+11:17:36 [win] #6 S2 EF op=500 rms=0.2811  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+11:17:36 [win] #7 S2 EF op=500 rms=0.2841  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+11:17:36 [llm] E1 step 1 (0.0 s, mock-rule-based (not an LLM)): eccentricity 100%, stator_winding 0%, healthy 0% | next=none
+11:17:36 [episode] E1 DONE (confident) -> eccentricity 100% | truth=eccentricity correct=True | 0 tests, 0.0 s
+11:17:37 [win] #8 S2 EF op=500 rms=0.2874  streak=0 flagged=rms,b0,b1,b2 state=cooldown
+11:17:37 [win] #9 S2 EF op=500 rms=0.292  streak=0 flagged=rms,b0,b1,b2 state=cooldown
+11:17:37 [win] #10 S2 EF op=500 rms=0.2868  streak=0 flagged=rms,b0,b1,b2 state=cooldown
+11:17:38 [win] #11 S2 EF op=500 rms=0.2981  streak=0 flagged=rms,b0,b1,b2 state=cooldown
+11:17:38 [win] #12 S2 EF op=500 rms=0.3002  streak=0 flagged=rms,b0,b1,b2 state=cooldown
+11:17:39 [win] #13 S2 EF op=500 rms=0.2948  streak=0 flagged=rms,b0,b1,b2 state=cooldown
+11:17:39 [win] #14 S2 EF op=500 rms=0.2986  streak=0 flagged=rms,b0,b1,b2 state=cooldown

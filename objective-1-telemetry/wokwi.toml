@@ -1,0 +1,7 @@
+# For the Wokwi for VS Code extension (optional - wokwi.com needs only
+# sketch.ino, config.h, diagram.json and libraries.txt).
+# Build with Arduino CLI or PlatformIO first, then point these at the artefacts.
+[wokwi]
+version = 1
+firmware = ".pio/build/esp32dev/firmware.bin"
+elf = ".pio/build/esp32dev/firmware.elf"

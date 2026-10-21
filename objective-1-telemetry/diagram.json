@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "author": "Atharva Palande, Mehul Rawat - PCCoE E&TC",
+  "editor": "wokwi",
+  "serialMonitor": { "display": "always", "newline": "lf" },
+  "parts": [
+    {
+      "type": "board-esp32-devkit-v1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "temp1",
+      "top": -120,
+      "left": 250,
+      "attrs": { "temperature": "32" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rpullup",
+      "top": -40,
+      "left": 210,
+      "rotate": 90,
+      "attrs": { "value": "4700" }
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "imu1",
+      "top": 60,
+      "left": 260,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "potCurrent",
+      "top": -110,
+      "left": -230,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "potSpeed",
+      "top": 90,
+      "left": -230,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 250,
+      "left": 130,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rled",
+      "top": 300,
+      "left": 60,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "mtr1",
+      "top": -290,
+      "left": -240,
+      "attrs": {
+        "text": "───  DC MOTOR TESTBED  —  deliberately not on this canvas  ───",
+        "fontSize": "15px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "mtr2",
+      "top": -262,
+      "left": -240,
+      "attrs": {
+        "text": "1. Wokwi simulates electrical interfaces, not mechanics: no vibration, no current draw, no thermal mass.",
+        "fontSize": "12px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "mtr3",
+      "top": -244,
+      "left": -240,
+      "attrs": {
+        "text": "    A motor here would be a picture producing no data, so the four inputs below stand in for its effects.",
+        "fontSize": "12px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "mtr4",
+      "top": -222,
+      "left": -240,
+      "attrs": {
+        "text": "2. The ESP32 never drives the motor. It is a monitor, not a controller - nothing flows back to the hardware.",
+        "fontSize": "12px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "mtr5",
+      "top": -204,
+      "left": -240,
+      "attrs": {
+        "text": "    Load and speed are varied by the operator at the motor driver; the ESP32 only measures the consequences.",
+        "fontSize": "12px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl1",
+      "top": -170,
+      "left": -240,
+      "attrs": {
+        "text": "ACS712 stand-in: motor current (GPIO34)",
+        "fontSize": "13px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl2",
+      "top": 30,
+      "left": -240,
+      "attrs": {
+        "text": "Motor-driver speed command -> tacho freq (GPIO35)",
+        "fontSize": "13px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl3",
+      "top": -180,
+      "left": 240,
+      "attrs": {
+        "text": "DS18B20 housing temperature + 4k7 pull-up",
+        "fontSize": "13px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl4",
+      "top": 190,
+      "left": 250,
+      "attrs": {
+        "text": "MPU6050 vibration - drag the sliders to inject a fault",
+        "fontSize": "13px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl5",
+      "top": 350,
+      "left": -60,
+      "attrs": {
+        "text": "GPIO26 -> GPIO27 jumper = simulated tacho pulse train",
+        "fontSize": "13px"
+      }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl6",
+      "top": 250,
+      "left": -230,
+      "attrs": {
+        "text": "Status LED: slow blink = joining Wi-Fi, fast = broker, solid = online.\nGPIO2 is the onboard LED on a real devkit - no part needed there.",
+        "fontSize": "12px"
+      }
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+
+    [ "temp1:GND", "esp:GND.1", "black", [] ],
+    [ "temp1:VCC", "esp:3V3", "red", [] ],
+    [ "temp1:DQ", "esp:D4", "green", [] ],
+    [ "rpullup:1", "esp:D4", "green", [] ],
+    [ "rpullup:2", "esp:3V3", "red", [] ],
+
+    [ "imu1:VCC", "esp:3V3", "red", [] ],
+    [ "imu1:GND", "esp:GND.1", "black", [] ],
+    [ "imu1:SDA", "esp:D21", "blue", [] ],
+    [ "imu1:SCL", "esp:D22", "cyan", [] ],
+
+    [ "potCurrent:VCC", "esp:3V3", "red", [] ],
+    [ "potCurrent:GND", "esp:GND.2", "black", [] ],
+    [ "potCurrent:SIG", "esp:D34", "orange", [] ],
+
+    [ "potSpeed:VCC", "esp:3V3", "red", [] ],
+    [ "potSpeed:GND", "esp:GND.2", "black", [] ],
+    [ "potSpeed:SIG", "esp:D35", "gold", [] ],
+
+    [ "esp:D26", "esp:D27", "magenta", [] ],
+
+    [ "esp:D2", "rled:1", "violet", [] ],
+    [ "rled:2", "led1:A", "violet", [] ],
+    [ "led1:C", "esp:GND.3", "black", [] ]
+  ],
+  "dependencies": {}
+}

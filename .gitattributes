@@ -1,0 +1,7 @@
+# Datasets and binaries are stored byte-for-byte (no line-ending conversion)
+data/** -text
+*.bin binary
+*.elf binary
+*.png binary
+*.jpg binary
+*.pdf binary

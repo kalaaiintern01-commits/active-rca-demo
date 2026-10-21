@@ -1,0 +1,62 @@
+11:18:01 [bridge] engine = claude-subscription:opus
+11:18:01 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:18:07 [win] #1 S1 KA01 op=N09_M07_F10 rms=1.212  streak=1 flagged=b0,b1,temp,rms state=monitor
+11:18:07 [win] #2 S1 KA01 op=N09_M07_F10 rms=1.212  streak=2 flagged=b0,temp,b1,rms state=monitor
+11:18:08 [episode] E1 started by gate on S1 op=N09_M07_F10 flagged=['b0', 'b1', 'temp', 'rms', 'kurt']
+11:18:08 [llm] E1 step 1 -> claude-subscription:opus (3868 chars, 3 tests allowed)
+11:18:08 [win] #3 S1 KA01 op=N09_M07_F10 rms=1.209  streak=3 flagged=b0,b1,temp,rms state=diagnosing
+11:18:09 [win] #4 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:11 [win] #5 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:11 [win] #6 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:12 [win] #7 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:13 [win] #8 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:14 [win] #9 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:15 [win] #10 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:16 [win] #11 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:17 [win] #12 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:18 [win] #13 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:19 [win] #14 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=diagnosing
+11:18:20 [win] #15 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:21 [win] #16 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:22 [win] #17 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:23 [win] #18 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:24 [win] #19 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:25 [win] #20 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:27 [win] #21 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:27 [llm] E1 step 1 (18.4 s, claude-subscription:opus): bearing_outer_race 75%, bearing_inner_race 10%, bearing_rolling_element 5% | next=N15_M07_F10
+11:18:27 [test] E1-T1 -> op N15_M07_F10 for 20 s (The outer-race reference at N15_M07_F10 predicts rms 2.55x, bhf 7.33x, b3 2.84x and kurt 2.71x the h)
+11:18:27 [win] #22 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=testing
+11:18:28 [win] #23 S1 KA01 op=N15_M07_F10 rms=4.506 test=E1-T1:settle streak=0 flagged=- state=testing
+11:18:29 [win] #24 S1 KA01 op=N15_M07_F10 rms=4.535 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:30 [win] #25 S1 KA01 op=N15_M07_F10 rms=4.513 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:31 [win] #26 S1 KA01 op=N15_M07_F10 rms=4.515 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:32 [win] #27 S1 KA01 op=N15_M07_F10 rms=4.509 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:34 [win] #28 S1 KA01 op=N15_M07_F10 rms=4.507 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:34 [win] #29 S1 KA01 op=N15_M07_F10 rms=4.496 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:35 [win] #30 S1 KA01 op=N15_M07_F10 rms=4.507 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:36 [win] #31 S1 KA01 op=N15_M07_F10 rms=4.508 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:37 [win] #32 S1 KA01 op=N15_M07_F10 rms=4.498 test=E1-T1:run streak=0 flagged=- state=testing
+11:18:38 [test] E1-T1 done (10 windows) 
+11:18:38 [llm] E1 step 2 -> claude-subscription:opus (5643 chars, 2 tests allowed)
+11:18:38 [win] #33 S1 KA01 op=N15_M07_F10 rms=4.52 test=E1-T1:run streak=0 flagged=- state=diagnosing
+11:18:39 [win] #34 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:40 [win] #35 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:41 [win] #36 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:42 [win] #37 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=diagnosing
+11:18:43 [win] #38 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:45 [win] #39 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:45 [win] #40 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:46 [win] #41 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:47 [win] #42 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:48 [win] #43 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:49 [win] #44 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:50 [win] #45 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:51 [win] #46 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:52 [win] #47 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:53 [win] #48 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+11:18:54 [win] #49 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=diagnosing
+11:18:55 [llm] E1 step 2 (16.3 s, claude-subscription:opus): bearing_outer_race 90%, bearing_inner_race 5%, bearing_rolling_element 3% | next=none
+11:18:55 [episode] E1 DONE (confident) -> bearing_outer_race 90% | truth=bearing_outer_race correct=True | 1 tests, 46.4 s
+11:18:55 [win] #50 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=cooldown
+11:18:56 [win] #51 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=cooldown
+11:18:57 [win] #52 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=cooldown

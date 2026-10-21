@@ -1,0 +1,737 @@
+/*
+ * ============================================================================
+ *  IoT & ML-Based Predictive Maintenance System for Rotating Machinery
+ *  OBJECTIVE 1 - Sensing & telemetry layer   (synopsis objectives 1, 2, 3)
+ *
+ *  Pimpri Chinchwad College of Engineering, Nigdi, Pune
+ *  Department of Electronics & Telecommunication | B.Tech MDM IoT | 2026-27
+ *  Atharva Palande (123B1C060) - Mehul Rawat (123B1C063)
+ *  Guide: Prof. Kalpana Patil
+ * ============================================================================
+ *
+ *  WHAT THIS FIRMWARE DOES
+ *    1. Acquires four channels on an ESP32 with calibration and signal
+ *       conditioning:
+ *         temperature  DS18B20, 12-bit, asynchronous conversion
+ *         vibration    MPU6050, 3-axis, DC/gravity removed, RMS + crest factor
+ *         current      ACS712 (Hall), boot auto-zero, true-RMS over the window
+ *         speed        tacho pulses, interrupt counted, debounced
+ *    2. Reduces each publish window to summary statistics on-device, so noise
+ *       is removed before it costs bandwidth.
+ *    3. Streams one JSON document per window over Wi-Fi/MQTT on a versioned
+ *       schema, at a fixed interval, with TLS available as a build switch,
+ *       a retained last-will status topic and exponential-backoff reconnect.
+ *
+ *  NOTHING FLOWS BACK TO THE HARDWARE except two non-actuating settings on
+ *  the /cmd topic (publish interval, fault label). The edge senses and
+ *  communicates; it never decides.
+ *
+ *  WOKWI SUBSTITUTIONS (documented, because the simulator has no such parts)
+ *    ACS712        -> potentiometer on GPIO34 feeding the real ACS712
+ *                     transfer function (2.5 V quiescent, 100 mV/A).
+ *    Tacho sensor  -> a hardware square wave on GPIO26 wired to GPIO27.
+ *                     Its frequency is set by the speed pot on GPIO35, so the
+ *                     interrupt counting, debounce and RPM maths are genuine.
+ *    DC motor      -> not simulated; vibration is driven from the MPU6050
+ *                     sliders in the Wokwi UI (that is the fault injection).
+ *  On the physical testbed set SIMULATE_TACHO to 0 and wire the real sensors
+ *  to the same pins - no other change is required.
+ * ============================================================================
+ */
+
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <sys/time.h>
+#include <time.h>
+#include <math.h>
+
+#include "config.h"
+
+// ============================================================================
+//  Windowed statistics accumulator
+// ============================================================================
+struct Accum {
+  uint32_t n;
+  double   sum;
+  double   sumsq;
+  float    peak;
+
+  void reset() { n = 0; sum = 0; sumsq = 0; peak = 0; }
+  void add(float v) {
+    n++;
+    sum   += v;
+    sumsq += (double)v * (double)v;
+    float a = fabsf(v);
+    if (a > peak) peak = a;
+  }
+  float rms()  const { return n ? sqrtf((float)(sumsq / n)) : 0.0f; }
+  float mean() const { return n ? (float)(sum / n)          : 0.0f; }
+};
+
+// ============================================================================
+//  Globals
+// ============================================================================
+#if USE_TLS
+  WiFiClientSecure netClient;
+#else
+  WiFiClient       netClient;
+#endif
+PubSubClient       mqtt(netClient);
+
+OneWire            oneWire(PIN_ONEWIRE);
+DallasTemperature  ds18b20(&oneWire);
+DeviceAddress      tempAddr;
+Adafruit_MPU6050   mpu;
+
+// --- sensor state -----------------------------------------------------------
+bool     g_mpuOk     = false;
+bool     g_tempOk    = false;     // sensor present on the 1-Wire bus
+float    g_tempC     = NAN;       // last valid conversion
+bool     g_tempValid = false;
+
+float    g_dcX = 0, g_dcY = 0, g_dcZ = 0;   // EMA trackers = gravity + offset
+uint32_t g_dcSettle = 0;
+
+float    g_zeroMv = ACS712_ZERO_MV_NOM;     // measured at boot
+bool     g_calOk  = true;
+
+// --- window accumulators ----------------------------------------------------
+Accum    accVibMag, accVibX, accVibY, accVibZ, accCurrent;
+uint32_t g_windowStartMs = 0;
+
+// --- tacho (shared with ISR) ------------------------------------------------
+volatile uint32_t g_pulses       = 0;
+volatile uint32_t g_lastEdgeUs   = 0;
+volatile uint32_t g_lastPeriodUs = 0;
+
+// --- scheduling -------------------------------------------------------------
+uint32_t g_publishMs     = PUBLISH_MS;
+uint32_t g_nextSampleUs  = 0;
+uint32_t g_lastTempReqMs = 0;
+bool     g_tempPending   = false;
+uint32_t g_lastPublishMs = 0;
+
+// --- telemetry bookkeeping --------------------------------------------------
+uint32_t g_seq            = 0;
+uint32_t g_wifiReconnects = 0;
+uint32_t g_mqttReconnects = 0;
+uint32_t g_publishFails   = 0;
+uint32_t g_droppedSamples = 0;
+char     g_label[24]      = DEFAULT_LABEL;   // fault-injection annotation
+
+// --- connection state machine -----------------------------------------------
+enum NetState { NET_WIFI_DOWN, NET_WIFI_WAIT, NET_MQTT_DOWN, NET_ONLINE };
+NetState g_net       = NET_WIFI_DOWN;
+uint32_t g_retryAtMs = 0;
+uint32_t g_backoffMs = RECONNECT_MIN_MS;
+
+// ============================================================================
+//  Tacho input - interrupt service routine
+//  Software debounce rejects contact bounce / optical jitter shorter than a
+//  quarter of the minimum credible pulse period at RPM_MAX.
+// ============================================================================
+void IRAM_ATTR onTachoEdge() {
+  uint32_t now = micros();
+  uint32_t dt  = now - g_lastEdgeUs;
+  if (dt < RPM_DEBOUNCE_US) return;
+  g_lastEdgeUs   = now;
+  g_lastPeriodUs = dt;
+  g_pulses++;
+}
+
+// ============================================================================
+//  Simulated tacho generator (Wokwi only)
+//  The speed-set pot becomes a square wave on PIN_RPM_SIM_OUT, jumpered to
+//  PIN_RPM_IN. LEDC gives a jitter-free source regardless of loop timing.
+//  Guarded for both Arduino-ESP32 2.x and 3.x LEDC APIs.
+// ============================================================================
+#if SIMULATE_TACHO
+static const uint8_t LEDC_CH = 0;
+
+void tachoSimBegin() {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(PIN_RPM_SIM_OUT, 100, 8);
+#else
+  ledcSetup(LEDC_CH, 100, 8);
+  ledcAttachPin(PIN_RPM_SIM_OUT, LEDC_CH);
+#endif
+}
+
+void tachoSimSetRpm(uint32_t rpm) {
+  // pulse frequency = rpm * pulses-per-rev / 60
+  uint32_t hz = (rpm * RPM_PULSES_PER_REV) / 60;
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  if (hz == 0) { ledcWrite(PIN_RPM_SIM_OUT, 0); return; }
+  ledcWriteTone(PIN_RPM_SIM_OUT, hz);          // 50 % duty square wave
+#else
+  if (hz == 0) { ledcWrite(LEDC_CH, 0); return; }
+  ledcWriteTone(LEDC_CH, hz);
+#endif
+}
+
+void tachoSimTick() {
+  static uint32_t lastMs  = 0;
+  static uint32_t lastRpm = 0xFFFFFFFF;
+  if (millis() - lastMs < 100) return;
+  lastMs = millis();
+
+  uint32_t mv  = analogReadMilliVolts(PIN_SPEED_SET);      // 0 .. ~3300
+  uint32_t rpm = RPM_SIM_MIN +
+                 (uint32_t)((RPM_SIM_MAX - RPM_SIM_MIN) * (mv / 3300.0f));
+  if (rpm > (uint32_t)RPM_SIM_MAX) rpm = RPM_SIM_MAX;
+  if (rpm / 10 == lastRpm / 10) return;                    // hysteresis
+  lastRpm = rpm;
+  tachoSimSetRpm(rpm);
+}
+#else
+void tachoSimBegin() {}
+void tachoSimTick()  {}
+#endif
+
+// ============================================================================
+//  Current channel - boot auto-zero
+//  The quiescent output is measured with the motor stopped rather than taken
+//  from the datasheet, because the divider ratio and the ADC both drift.
+// ============================================================================
+float readCurrentMv() {
+  return analogReadMilliVolts(PIN_CURRENT_ADC) * CURRENT_DIVIDER_GAIN;
+}
+
+void calibrateCurrentZero() {
+  double acc = 0;
+  for (uint16_t i = 0; i < ACS712_ZERO_SAMPLES; i++) {
+    acc += readCurrentMv();
+    delayMicroseconds(200);
+  }
+  g_zeroMv = (float)(acc / ACS712_ZERO_SAMPLES);
+  g_calOk  = (g_zeroMv > ACS712_ZERO_MV_MIN) && (g_zeroMv < ACS712_ZERO_MV_MAX);
+
+  Serial.printf("[cal] current zero = %.1f mV (plausible %.0f..%.0f) %s\r\n",
+
+                g_zeroMv, (double)ACS712_ZERO_MV_MIN, (double)ACS712_ZERO_MV_MAX,
+
+                g_calOk ? "OK" : "OUT OF RANGE - motor running during boot?");
+}
+
+float readCurrentAmps() {
+  float a = (readCurrentMv() - g_zeroMv) / ACS712_MV_PER_AMP;
+  if (fabsf(a) < ACS712_DEADBAND_A) a = 0.0f;      // ADC noise floor
+  return a;
+}
+
+// ============================================================================
+//  Fixed-rate sampling of the two fast channels
+// ============================================================================
+void sampleOnce() {
+  // ---- vibration: strip the DC term (gravity + sensor offset) with a slow
+  //      EMA per axis, then accumulate only the AC residual.
+  if (g_mpuOk) {
+    sensors_event_t a, g, t;
+    if (mpu.getEvent(&a, &g, &t)) {
+      float x = a.acceleration.x, y = a.acceleration.y, z = a.acceleration.z;
+
+      // Seed the trackers with the first reading instead of ramping up from
+      // zero. Starting at zero makes the whole 9.8 m/s^2 of gravity look like
+      // vibration until the EMA catches up, which contaminated the first
+      // published window with a metre-per-second-squared of pure artefact.
+      if (g_dcSettle == 0) { g_dcX = x; g_dcY = y; g_dcZ = z; }
+
+      g_dcX += VIB_DC_ALPHA * (x - g_dcX);
+      g_dcY += VIB_DC_ALPHA * (y - g_dcY);
+      g_dcZ += VIB_DC_ALPHA * (z - g_dcZ);
+
+      if (g_dcSettle < VIB_SETTLE_SAMPLES) {
+        g_dcSettle++;                              // tracker not converged yet
+      } else {
+        float rx = x - g_dcX, ry = y - g_dcY, rz = z - g_dcZ;
+        accVibX.add(rx);
+        accVibY.add(ry);
+        accVibZ.add(rz);
+        accVibMag.add(sqrtf(rx * rx + ry * ry + rz * rz));
+      }
+    } else {
+      g_droppedSamples++;
+    }
+  }
+
+  // ---- current: true RMS needs every sample, not an average of magnitudes
+  accCurrent.add(readCurrentAmps());
+}
+
+void sampleTick() {
+  const uint32_t periodUs = 1000000UL / SAMPLE_HZ;
+  uint32_t now = micros();
+  if ((int32_t)(now - g_nextSampleUs) < 0) return;
+
+  g_nextSampleUs += periodUs;
+  // If we fell more than four periods behind (a blocking Wi-Fi join, a TLS
+  // handshake), resynchronise instead of burst-sampling to catch up - and
+  // report how many sample slots were actually missed, not just that a slip
+  // happened, so the cloud can judge the window on real coverage.
+  if ((int32_t)(now - g_nextSampleUs) > (int32_t)(periodUs * 4)) {
+    g_droppedSamples += (now - g_nextSampleUs) / periodUs;
+    g_nextSampleUs = now + periodUs;
+  }
+  sampleOnce();
+}
+
+// ============================================================================
+//  Temperature - asynchronous so a 750 ms conversion never stalls the loop
+// ============================================================================
+void tempTick() {
+  uint32_t now = millis();
+
+  if (!g_tempPending && now - g_lastTempReqMs >= TEMP_PERIOD_MS) {
+    ds18b20.requestTemperatures();        // non-blocking: waitForConversion=false
+    g_lastTempReqMs = now;
+    g_tempPending   = true;
+    return;
+  }
+
+  if (g_tempPending && now - g_lastTempReqMs >= DS18B20_CONV_MS) {
+    g_tempPending = false;
+    float c = g_tempOk ? ds18b20.getTempC(tempAddr) : (float)DEVICE_DISCONNECTED_C;
+    // Range-check at the source: a bad reading is reported as invalid, never
+    // silently forwarded as 0 or -127 for the model to learn from.
+    if (c > -55.0f && c < 125.0f) {
+      g_tempC     = c;
+      g_tempValid = true;
+    } else {
+      g_tempValid = false;
+    }
+  }
+}
+
+// ============================================================================
+//  Time - NTP-backed UTC, with an explicit "not synced" flag
+// ============================================================================
+bool isoTimestamp(char *buf, size_t len, uint64_t *epochMs) {
+  struct timeval tv;
+  gettimeofday(&tv, nullptr);
+  if (epochMs) *epochMs = (uint64_t)tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
+
+  if (tv.tv_sec < 1700000000) {           // clock never set
+    snprintf(buf, len, "1970-01-01T00:00:00.000Z");
+    return false;
+  }
+  struct tm t;
+  time_t secs = (time_t)tv.tv_sec;
+  gmtime_r(&secs, &t);
+  size_t n = strftime(buf, len, "%Y-%m-%dT%H:%M:%S", &t);
+  snprintf(buf + n, len - n, ".%03luZ", (unsigned long)(tv.tv_usec / 1000));
+  return true;
+}
+
+// ============================================================================
+//  Telemetry document - schema "pdm.telemetry.v1"
+//  One publish per window. Field names, units and nesting are frozen here and
+//  mirrored by docs/telemetry-schema.json, which the cloud Pydantic model in
+//  Objective 2 validates against.
+// ============================================================================
+static float r3(float v) { return roundf(v * 1000.0f) / 1000.0f; }
+static float r2(float v) { return roundf(v * 100.0f)  / 100.0f;  }
+static float r1(float v) { return roundf(v * 10.0f)   / 10.0f;   }
+
+void publishTelemetry() {
+  // ---- Close the window FIRST, reset, and only then serialise.
+  //      Building the JSON and publishing it costs tens of milliseconds. If
+  //      the accumulators were reset afterwards, every sample taken during
+  //      that time would be thrown away, and the pulse count would be divided
+  //      by a window shorter than the one those pulses actually arrived in -
+  //      about 3 % of samples lost and 3 % of error in RPM. Snapshotting first
+  //      means those samples simply belong to the next window.
+  noInterrupts();
+  uint32_t pulses   = g_pulses;
+  uint32_t periodUs = g_lastPeriodUs;
+  uint32_t lastEdge = g_lastEdgeUs;
+  g_pulses = 0;
+  interrupts();
+
+  uint32_t nowMs    = millis();
+  uint32_t windowMs = nowMs - g_windowStartMs;
+  if (windowMs == 0) windowMs = 1;
+
+  const float    vibRms  = accVibMag.rms();
+  const float    vibPeak = accVibMag.peak;
+  const float    vibXr   = accVibX.rms();
+  const float    vibYr   = accVibY.rms();
+  const float    vibZr   = accVibZ.rms();
+  const uint32_t vibN    = accVibMag.n;
+  const float    curRms  = accCurrent.rms();
+  const float    curMean = accCurrent.mean();
+  const float    curPeak = accCurrent.peak;
+  const uint32_t curN    = accCurrent.n;
+  const uint32_t dropped = g_droppedSamples;
+
+  accVibMag.reset(); accVibX.reset(); accVibY.reset(); accVibZ.reset();
+  accCurrent.reset();
+  g_droppedSamples = 0;
+  g_windowStartMs  = nowMs;
+
+  // Averaged over the window (steady state) plus an instantaneous estimate
+  // from the last edge period (fast transients). A stale edge means 0 RPM.
+  float rpmAvg  = (pulses * 60000.0f) / ((float)windowMs * RPM_PULSES_PER_REV);
+  float rpmInst = 0.0f;
+  if (periodUs > 0 && (micros() - lastEdge) < 500000UL) {
+    rpmInst = 60000000.0f / ((float)periodUs * RPM_PULSES_PER_REV);
+  }
+
+  char ts[40];
+  uint64_t epochMs = 0;
+  bool tsSynced = isoTimestamp(ts, sizeof(ts), &epochMs);
+
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonDocument doc;
+#else
+  StaticJsonDocument<1024> doc;
+#endif
+
+  doc["schema"]    = SCHEMA_NAME;
+  doc["device_id"] = DEVICE_ID;
+  doc["fw"]        = FW_VERSION;
+  doc["seq"]       = ++g_seq;
+  doc["ts"]        = ts;
+  doc["ts_synced"] = tsSynced;
+  doc["t_edge_ms"] = epochMs;                 // for end-to-end latency (obj 8)
+  doc["uptime_s"]  = nowMs / 1000;
+  doc["label"]     = g_label;                 // induced-fault annotation
+
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonObject temp = doc["temp"].to<JsonObject>();
+  JsonObject vib  = doc["vib"].to<JsonObject>();
+  JsonObject cur  = doc["cur"].to<JsonObject>();
+  JsonObject rpm  = doc["rpm"].to<JsonObject>();
+  JsonObject win  = doc["win"].to<JsonObject>();
+  JsonObject net  = doc["net"].to<JsonObject>();
+#else
+  JsonObject temp = doc.createNestedObject("temp");
+  JsonObject vib  = doc.createNestedObject("vib");
+  JsonObject cur  = doc.createNestedObject("cur");
+  JsonObject rpm  = doc.createNestedObject("rpm");
+  JsonObject win  = doc.createNestedObject("win");
+  JsonObject net  = doc.createNestedObject("net");
+#endif
+
+  temp["c"]     = g_tempValid ? r2(g_tempC) : 0.0f;
+  temp["valid"] = g_tempValid;
+
+  vib["rms_ms2"]  = r3(vibRms);
+  vib["peak_ms2"] = r3(vibPeak);
+  vib["crest"]    = vibRms > 0.001f ? r2(vibPeak / vibRms) : 0.0f;
+  vib["x_rms"]    = r3(vibXr);
+  vib["y_rms"]    = r3(vibYr);
+  vib["z_rms"]    = r3(vibZr);
+  vib["valid"]    = g_mpuOk;
+
+  cur["rms_a"]   = r3(curRms);
+  cur["mean_a"]  = r3(curMean);
+  cur["peak_a"]  = r3(curPeak);
+  cur["zero_mv"] = r1(g_zeroMv);
+  cur["cal_ok"]  = g_calOk;
+
+  rpm["avg"]    = r1(rpmAvg);
+  rpm["inst"]   = r1(rpmInst);
+  rpm["pulses"] = pulses;
+
+  win["ms"]        = windowMs;
+  win["n"]         = vibN;
+  win["n_cur"]     = curN;
+  win["sample_hz"] = SAMPLE_HZ;
+  win["dropped"]   = dropped;
+
+  net["rssi"]          = WiFi.RSSI();
+  net["ip"]            = WiFi.localIP().toString();
+  net["tls"]           = (bool)USE_TLS;
+  net["wifi_reconn"]   = g_wifiReconnects;
+  net["mqtt_reconn"]   = g_mqttReconnects;
+  net["publish_fails"] = g_publishFails;
+
+  // measureJson first: serializeJson() into an undersized buffer truncates
+  // silently, and half a JSON document is worse than no document at all.
+  char   payload[MQTT_BUFFER_BYTES];
+  size_t need = measureJson(doc);
+  bool   ok   = false;
+
+  if (need >= sizeof(payload)) {
+    Serial.printf("[pub FAIL] payload %u B exceeds buffer %u B - raise "
+
+                  "MQTT_BUFFER_BYTES\r\n",
+
+                  (unsigned)need, (unsigned)sizeof(payload));
+  } else {
+    size_t len = serializeJson(doc, payload, sizeof(payload));
+    if (len > 0 && mqtt.connected()) {
+      ok = mqtt.publish(TOPIC_TELEMETRY, (const uint8_t *)payload, len, false);
+    }
+#if SERIAL_VERBOSE
+    Serial.printf("%s %s\r\n", ok ? "[pub]" : "[pub FAIL]", payload);
+#else
+    Serial.printf("%s seq=%lu %-14s T=%.2f vib=%.3f crest=%.2f I=%.3f "
+                  "rpm=%.0f n=%lu/%lu drop=%lu\r\n",
+                  ok ? "[pub]" : "[pub FAIL]", (unsigned long)g_seq, g_label,
+                  g_tempValid ? g_tempC : 0.0f, vibRms,
+                  vibRms > 0.001f ? vibPeak / vibRms : 0.0f, curRms, rpmAvg,
+                  (unsigned long)vibN,
+                  (unsigned long)((uint32_t)SAMPLE_HZ * windowMs / 1000),
+                  (unsigned long)dropped);
+#endif
+  }
+  if (!ok) g_publishFails++;
+  // The window was already closed and reset at the top of this function, so a
+  // failed publish loses exactly one window - it never merges two.
+}
+
+void publishTick() {
+  if (millis() - g_lastPublishMs < g_publishMs) return;
+  g_lastPublishMs = millis();
+  publishTelemetry();
+}
+
+// ============================================================================
+//  Inbound commands - settings only, never actuation
+//    {"label":"imbalance"}   annotate telemetry while a fault is induced
+//    {"publish_ms":1000}     change publish interval (500 .. 60000)
+//    {"rezero":true}         re-run current auto-zero (motor must be stopped)
+// ============================================================================
+void onMqttMessage(char *topic, uint8_t *payload, unsigned int len) {
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonDocument cmd;
+#else
+  StaticJsonDocument<256> cmd;
+#endif
+  if (deserializeJson(cmd, payload, len)) {
+    Serial.println("[cmd] rejected: not valid JSON");
+    return;
+  }
+
+  if (!cmd["label"].isNull()) {
+    strlcpy(g_label, cmd["label"] | DEFAULT_LABEL, sizeof(g_label));
+    Serial.printf("[cmd] label = %s\r\n", g_label);
+  }
+  if (!cmd["publish_ms"].isNull()) {
+    uint32_t v = cmd["publish_ms"] | 0UL;
+    if (v >= 500 && v <= 60000) {
+      g_publishMs = v;
+      Serial.printf("[cmd] publish_ms = %lu\r\n", (unsigned long)g_publishMs);
+    } else {
+      Serial.println("[cmd] publish_ms out of range 500..60000");
+    }
+  }
+  if (cmd["rezero"] | false) {
+    calibrateCurrentZero();
+  }
+}
+
+// ============================================================================
+//  Status LED
+//    slow blink = joining Wi-Fi
+//    fast blink = Wi-Fi up, connecting to the broker
+//    solid      = online
+// ============================================================================
+void ledTick() {
+  uint32_t period = (g_net == NET_ONLINE)    ? 0
+                  : (g_net == NET_MQTT_DOWN) ? 150
+                                             : 700;
+  if (period == 0) { digitalWrite(PIN_STATUS_LED, HIGH); return; }
+  digitalWrite(PIN_STATUS_LED, (millis() / period) % 2);
+}
+
+// ============================================================================
+//  Connectivity - non-blocking state machine with exponential backoff
+//  Reconnection behaviour is documented rather than incidental: Wi-Fi and
+//  broker outages are retried at 1 s doubling to 30 s, and sampling continues
+//  throughout so the window that follows a reconnect is still a valid window.
+// ============================================================================
+void mqttSetup() {
+#if USE_TLS
+  // Simulator/lab: accept the broker without pinning a CA. On the cloud broker
+  // in Objective 2 this becomes netClient.setCACert(AWS_ROOT_CA1) plus the
+  // device certificate and private key - TLS is not optional there.
+  netClient.setInsecure();
+#endif
+  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+  mqtt.setKeepAlive(MQTT_KEEPALIVE_S);
+  mqtt.setBufferSize(MQTT_BUFFER_BYTES);
+  mqtt.setCallback(onMqttMessage);
+}
+
+bool mqttConnectOnce() {
+  Serial.printf("[mqtt] connecting to %s:%d%s ... ",
+
+                MQTT_HOST, (int)MQTT_PORT, USE_TLS ? " (TLS)" : "");
+
+  // Last will: if this device drops off, the broker publishes "offline" on the
+  // retained status topic, so the dashboard can show a stale device as stale.
+  bool ok = mqtt.connect(MQTT_CLIENT_ID,
+                         strlen(MQTT_USER) ? MQTT_USER : nullptr,
+                         strlen(MQTT_PASS) ? MQTT_PASS : nullptr,
+                         TOPIC_STATUS, MQTT_QOS, true, "offline", true);
+  if (!ok) {
+    Serial.printf("failed, state=%d\r\n", mqtt.state());
+    return false;
+  }
+  Serial.println("connected");
+  mqtt.publish(TOPIC_STATUS, "online", true);      // retained
+  mqtt.subscribe(TOPIC_CMD, MQTT_QOS);
+  return true;
+}
+
+void netService() {
+  uint32_t now = millis();
+
+  switch (g_net) {
+    case NET_WIFI_DOWN:
+      Serial.printf("[wifi] joining %s\r\n", WIFI_SSID);
+      WiFi.mode(WIFI_STA);
+      WiFi.setSleep(false);                       // latency over power here
+      WiFi.begin(WIFI_SSID, WIFI_PASS, WIFI_CHANNEL);
+      g_retryAtMs = now + 15000;                  // join timeout
+      g_net       = NET_WIFI_WAIT;
+      break;
+
+    case NET_WIFI_WAIT:
+      if (WiFi.status() == WL_CONNECTED) {
+        Serial.printf("[wifi] up, ip=%s rssi=%d\r\n",
+
+                      WiFi.localIP().toString().c_str(), WiFi.RSSI());
+        configTime(0, 0, NTP_SERVER_1, NTP_SERVER_2);   // UTC, no DST
+        g_backoffMs = RECONNECT_MIN_MS;
+        g_retryAtMs = 0;
+        g_net       = NET_MQTT_DOWN;
+      } else if ((int32_t)(now - g_retryAtMs) >= 0) {
+        Serial.println("[wifi] join timed out, retrying");
+        WiFi.disconnect(true);
+        g_wifiReconnects++;
+        g_net = NET_WIFI_DOWN;
+      }
+      break;
+
+    case NET_MQTT_DOWN:
+      if (WiFi.status() != WL_CONNECTED) {
+        g_wifiReconnects++;
+        g_net = NET_WIFI_DOWN;
+        break;
+      }
+      if ((int32_t)(now - g_retryAtMs) < 0) break;      // still backing off
+      if (mqttConnectOnce()) {
+        g_backoffMs = RECONNECT_MIN_MS;
+        g_net       = NET_ONLINE;
+        // Realign the window on the connection. Wi-Fi association and the
+        // broker handshake block for over a second, so the window spanning
+        // them has poor sample coverage; starting fresh here means the first
+        // window we actually publish is a complete one.
+        accVibMag.reset(); accVibX.reset(); accVibY.reset(); accVibZ.reset();
+        accCurrent.reset();
+        g_droppedSamples = 0;
+        g_windowStartMs  = millis();
+        g_lastPublishMs  = millis();
+      } else {
+        g_mqttReconnects++;
+        g_retryAtMs = now + g_backoffMs;
+        g_backoffMs = min(g_backoffMs * 2, (uint32_t)RECONNECT_MAX_MS);
+        Serial.printf("[mqtt] retry in %lu ms\r\n",
+
+                      (unsigned long)(g_retryAtMs - now));
+      }
+      break;
+
+    case NET_ONLINE:
+      if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[wifi] lost");
+        g_wifiReconnects++;
+        g_net = NET_WIFI_DOWN;
+      } else if (!mqtt.connected()) {
+        Serial.println("[mqtt] lost");
+        g_retryAtMs = now;
+        g_net       = NET_MQTT_DOWN;
+      } else {
+        mqtt.loop();
+      }
+      break;
+  }
+}
+
+// ============================================================================
+//  Sensor bring-up
+// ============================================================================
+void sensorsBegin() {
+  // ---- ADC front end
+  analogReadResolution(ADC_BITS);
+  analogSetPinAttenuation(PIN_CURRENT_ADC, ADC_ATTEN);   // full 0..3.3 V span
+  analogSetPinAttenuation(PIN_SPEED_SET,   ADC_ATTEN);
+
+  // ---- DS18B20
+  ds18b20.begin();
+  ds18b20.setWaitForConversion(false);        // we poll instead of blocking
+  g_tempOk = ds18b20.getDeviceCount() > 0 && ds18b20.getAddress(tempAddr, 0);
+  if (g_tempOk) {
+    ds18b20.setResolution(tempAddr, 12);      // 0.0625 C
+    Serial.println("[ds18b20] found, 12-bit");
+  } else {
+    Serial.println("[ds18b20] NOT FOUND - check DQ pull-up");
+  }
+
+  // ---- MPU6050
+  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+  Wire.setClock(400000);
+  g_mpuOk = mpu.begin(MPU6050_I2CADDR_DEFAULT, &Wire);
+  if (g_mpuOk) {
+    mpu.setAccelerometerRange(MPU_ACCEL_RANGE);
+    mpu.setFilterBandwidth(MPU_FILTER_BW);    // anti-alias below Fs/2
+    Serial.println("[mpu6050] found, +/-8g, 94 Hz DLPF");
+  } else {
+    Serial.println("[mpu6050] NOT FOUND - check I2C wiring");
+  }
+
+  // ---- current channel zero
+  calibrateCurrentZero();
+
+  // ---- tacho input (+ simulated source)
+  pinMode(PIN_RPM_IN, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(PIN_RPM_IN), onTachoEdge, RISING);
+  tachoSimBegin();
+}
+
+// ============================================================================
+void setup() {
+  Serial.begin(SERIAL_BAUD);
+  delay(200);
+  Serial.println();
+  Serial.println("=============================================");
+  Serial.println(" PdM Objective 1 - sensing & telemetry layer");
+  Serial.printf(" device=%s fw=%s schema=%s\r\n",
+
+                DEVICE_ID, FW_VERSION, SCHEMA_NAME);
+  Serial.printf(" sample=%d Hz  publish=%lu ms  tls=%d\r\n",
+
+                (int)SAMPLE_HZ, (unsigned long)PUBLISH_MS, (int)USE_TLS);
+  Serial.println("=============================================");
+
+  pinMode(PIN_STATUS_LED, OUTPUT);
+
+  sensorsBegin();
+  mqttSetup();
+
+  accVibMag.reset(); accVibX.reset(); accVibY.reset(); accVibZ.reset();
+  accCurrent.reset();
+
+  g_windowStartMs = millis();
+  g_lastPublishMs = millis();
+  g_nextSampleUs  = micros();
+}
+
+void loop() {
+  netService();     // Wi-Fi + broker, non-blocking
+  sampleTick();     // vibration + current at SAMPLE_HZ
+  tempTick();       // DS18B20, asynchronous
+  tachoSimTick();   // sim-only pulse source
+  publishTick();    // window close -> JSON -> MQTT
+  ledTick();
+}

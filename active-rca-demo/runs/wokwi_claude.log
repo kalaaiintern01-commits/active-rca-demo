@@ -1,0 +1,480 @@
+00:11:04 [bridge] engine = claude-subscription:opus
+00:11:12 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+00:11:24 [win] #60 S1 KA01 op=N09_M07_F10 rms=1.213  streak=1 flagged=b0,temp,b1,kurt state=monitor
+00:11:34 [win] #61 S1 KA01 op=N09_M07_F10 rms=1.211  streak=2 flagged=b0,b1,temp,kurt state=monitor
+00:11:38 [episode] E1 started by gate on S1 op=N09_M07_F10 flagged=['b0', 'temp', 'b1', 'kurt', 'rms']
+00:11:38 [llm] E1 step 1 -> claude-subscription:opus (3795 chars, 3 tests allowed)
+00:11:38 [win] #62 S1 KA01 op=N09_M07_F10 rms=1.211  streak=3 flagged=b0,temp,b1,kurt state=diagnosing
+00:11:40 [win] #63 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:11:52 [win] #64 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:11:55 [scn] new scenario #3 on S1 op=N09_M07_F10
+00:11:55 [episode] E1 aborted: new scenario injected
+00:11:55 [win] #65 S1 KA01 op=N09_M07_F10 rms=1.212  streak=1 flagged=b0,b1,temp,rms state=monitor
+00:11:56 [llm] stale result for E1 ignored
+00:12:10 [win] #66 S1 KA01 op=N09_M07_F10 rms=1.212  streak=2 flagged=b0,temp,b1,rms state=monitor
+00:12:11 [episode] E2 started by gate on S1 op=N09_M07_F10 flagged=['b0', 'b1', 'temp', 'rms', 'kurt']
+00:12:11 [llm] E2 step 1 -> claude-subscription:opus (3793 chars, 3 tests allowed)
+00:12:11 [win] #67 S1 KA01 op=N09_M07_F10 rms=1.209  streak=3 flagged=b0,b1,temp,rms state=diagnosing
+00:12:14 [win] #68 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:12:14 [win] #69 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:12:18 [win] #70 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:12:28 [llm] E2 step 1 (17.3 s, claude-subscription:opus): bearing_outer_race 75%, bearing_inner_race 10%, bearing_rolling_element 6% | next=N15_M07_F10
+00:12:28 [test] E2-T1 -> op N15_M07_F10 for 20 s (This is the same load and radial force at the higher speed, and its outer-race reference has the cle)
+00:12:29 [win] #71 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:12:29 [win] #72 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:12:32 [win] #73 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:12:44 [win] #74 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:12:52 [win] #75 S1 KA01 op=N15_M07_F10 rms=4.506 test=E2-T1:settle streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:12:52 [win] #76 S1 KA01 op=N15_M07_F10 rms=4.535 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:01 [win] #77 S1 KA01 op=N15_M07_F10 rms=4.513 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:02 [win] #78 S1 KA01 op=N15_M07_F10 rms=4.515 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:10 [win] #79 S1 KA01 op=N15_M07_F10 rms=4.509 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:12 [win] #80 S1 KA01 op=N15_M07_F10 rms=4.507 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:27 [win] #81 S1 KA01 op=N15_M07_F10 rms=4.496 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:29 [win] #82 S1 KA01 op=N15_M07_F10 rms=4.507 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:31 [win] #83 S1 KA01 op=N15_M07_F10 rms=4.508 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:32 [win] #84 S1 KA01 op=N15_M07_F10 rms=4.498 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=testing
+00:13:41 [test] E2-T1 done (10 windows) 
+00:13:41 [llm] E2 step 2 -> claude-subscription:opus (5473 chars, 2 tests allowed)
+00:13:41 [win] #85 S1 KA01 op=N15_M07_F10 rms=4.52 test=E2-T1:run streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:13:50 [win] #86 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:13:52 [win] #87 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:13:53 [llm] E2 step 2 (11.5 s, claude-subscription:opus): bearing_outer_race 90%, bearing_inner_race 5%, bearing_rolling_element 3% | next=none
+00:13:53 [episode] E2 DONE (confident) -> bearing_outer_race 90% | truth=bearing_outer_race correct=True | 1 tests, 101.5 s
+00:13:53 [win] #88 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:13:58 [win] #89 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:14:07 [win] #90 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:09 [win] #91 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:13 [win] #92 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:22 [win] #93 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:25 [win] #94 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:28 [win] #95 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:38 [win] #96 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:40 [win] #97 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:46 [win] #98 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:49 [win] #99 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:14:57 [win] #100 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:00 [win] #101 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:15:09 [win] #102 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:11 [win] #103 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:16 [win] #104 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:22 [win] #105 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:27 [win] #106 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:36 [win] #107 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:38 [win] #108 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:42 [win] #109 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:52 [win] #110 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:53 [win] #111 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:15:58 [win] #112 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:05 [win] #113 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:16:09 [win] #114 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:14 [win] #115 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:19 [win] #116 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:25 [win] #117 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:30 [win] #118 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:36 [win] #119 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:46 [win] #120 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:46 [win] #121 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:50 [win] #122 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:16:56 [win] #123 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:01 [win] #124 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:07 [win] #125 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:17:12 [win] #126 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:18 [win] #127 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:23 [win] #128 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:28 [win] #129 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:32 [win] #130 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:38 [win] #131 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:43 [win] #132 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:48 [win] #133 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:55 [win] #134 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:17:58 [win] #135 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:03 [win] #136 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:10 [win] #137 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:18:14 [win] #138 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:19 [win] #139 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:24 [win] #140 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:30 [win] #141 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:35 [win] #142 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:40 [win] #143 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:46 [win] #144 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:52 [win] #145 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:18:57 [win] #146 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:03 [win] #147 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:08 [win] #148 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:13 [win] #149 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:19:18 [win] #150 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:23 [win] #151 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:29 [win] #152 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:33 [win] #153 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:39 [win] #154 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:44 [win] #155 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:49 [win] #156 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:54 [win] #157 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:19:59 [win] #158 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:05 [win] #159 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:09 [win] #160 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:14 [win] #161 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:20:19 [win] #162 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:25 [win] #163 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:30 [win] #164 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:35 [win] #165 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:41 [win] #166 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:48 [win] #167 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:52 [win] #168 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:20:58 [win] #169 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:03 [win] #170 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:08 [win] #171 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:14 [win] #172 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:18 [win] #173 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:21:24 [win] #174 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:28 [win] #175 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:33 [win] #176 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:38 [win] #177 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:44 [win] #178 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:50 [win] #179 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:55 [win] #180 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:21:59 [win] #181 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:22:04 [win] #182 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:22:09 [win] #183 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:22:14 [win] #184 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:22:46 [scn] new scenario #1 on S1 op=N09_M07_F10
+00:22:46 [win] #1 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:22:46 [win] #2 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:22:50 [win] #3 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:22:53 [win] #4 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:23:01 [win] #5 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:23:03 [win] #6 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:23:09 [win] #7 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:23:17 [win] #8 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:23:20 [win] #9 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:23:25 [win] #10 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:23:32 [win] #11 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:23:35 [win] #12 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:23:39 [win] #13 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:23:45 [win] #14 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:23:50 [win] #15 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:23:55 [win] #16 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:24:01 [win] #17 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:24:06 [win] #18 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:24:11 [win] #19 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:24:16 [win] #20 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:24:22 [win] #21 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:24:28 [win] #22 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:24:32 [win] #23 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:24:37 [win] #24 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:24:42 [win] #25 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:24:48 [win] #26 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:24:53 [win] #27 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:24:58 [win] #28 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:25:05 [win] #29 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:25:09 [win] #30 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:25:16 [win] #31 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:25:20 [win] #32 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:25:26 [win] #33 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:25:34 [win] #34 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:25:38 [win] #35 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:25:41 [win] #36 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:25:49 [win] #37 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:25:57 [win] #38 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:25:57 [win] #39 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:26:02 [win] #40 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:26:07 [win] #41 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:26:17 [win] #42 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:26:22 [win] #43 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:26:23 [win] #44 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:26:28 [win] #45 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:26:33 [win] #46 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:26:39 [win] #47 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:26:45 [win] #48 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:26:59 [scn] new scenario #2 on S2 op=500
+00:26:59 [win] #49 S2 MF op=500 rms=0.2551  streak=1 flagged=b1,rms,b2,b0 state=monitor
+00:26:59 [win] #50 S2 MF op=500 rms=0.2556  streak=2 flagged=b1,rms,b2,b0 state=monitor
+00:26:59 [episode] E3 started by gate on S2 op=500 flagged=['b1', 'rms', 'b2', 'b0', 'b3']
+00:26:59 [llm] E3 step 1 -> claude-subscription:opus (3985 chars, 2 tests allowed)
+00:26:59 [win] #51 S2 MF op=500 rms=0.2566  streak=3 flagged=b1,rms,b2,b0 state=diagnosing
+00:27:03 [win] #52 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+00:27:08 [win] #53 S2 MF op=500 rms=0.2564  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:27:13 [win] #54 S2 MF op=500 rms=0.2548  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:27:17 [llm] E3 step 1 (18.0 s, claude-subscription:opus): magnet_demagnetisation 55%, eccentricity 25%, stator_winding 8% | next=1000
+00:27:17 [test] E3-T1 -> op 1000 for 20 s (At 1000 rpm the two leading hypotheses diverge most. The eccentricity reference predicts b0 about 37)
+00:27:18 [win] #55 S2 MF op=500 rms=0.2555  streak=0 flagged=rms,b1,b2,b3 state=testing
+00:27:27 [win] #56 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=testing
+00:27:27 [win] #57 S2 MF op=1000 rms=0.8636 test=E3-T1:settle streak=0 flagged=rms,b0,b1,b2 state=testing
+00:27:36 [win] #58 S2 MF op=1000 rms=0.8413 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:27:49 [win] #59 S2 MF op=1000 rms=0.8921 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:27:49 [win] #60 S2 MF op=1000 rms=0.7967 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:27:56 [win] #61 S2 MF op=1000 rms=0.7794 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:27:56 [win] #62 S2 MF op=1000 rms=0.6831 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:28:16 [win] #63 S2 MF op=1000 rms=0.6832 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:28:16 [win] #64 S2 MF op=1000 rms=0.687 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:28:26 [win] #65 S2 MF op=1000 rms=0.6904 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:28:26 [win] #66 S2 MF op=1000 rms=0.7031 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=testing
+00:28:40 [test] E3-T1 done (10 windows) 
+00:28:40 [llm] E3 step 2 -> claude-subscription:opus (5554 chars, 1 tests allowed)
+00:28:40 [win] #67 S2 MF op=1000 rms=0.7163 test=E3-T1:run streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+00:28:40 [win] #68 S2 MF op=500 rms=0.2559  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+00:28:40 [win] #69 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+00:28:40 [win] #70 S2 MF op=500 rms=0.2558  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:28:40 [win] #71 S2 MF op=500 rms=0.2554  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:28:54 [win] #72 S2 MF op=500 rms=0.2547  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:28:55 [win] #73 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:28:55 [win] #74 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b0,b1,b2 state=diagnosing
+00:28:55 [win] #75 S2 MF op=500 rms=0.2491  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:28:55 [win] #76 S2 MF op=500 rms=0.2514  streak=0 flagged=rms,b1,b2,b3 state=diagnosing
+00:28:57 [llm] E3 step 2 (17.2 s, claude-subscription:opus): magnet_demagnetisation 85%, eccentricity 7%, stator_winding 4% | next=none
+00:28:57 [episode] E3 DONE (confident) -> magnet_demagnetisation 85% | truth=magnet_demagnetisation correct=True | 1 tests, 117.7 s
+00:29:03 [win] #77 S2 MF op=500 rms=0.2511  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:29:06 [win] #78 S2 MF op=500 rms=0.2507  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:29:08 [win] #79 S2 MF op=500 rms=0.2525  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:29:17 [win] #80 S2 MF op=500 rms=0.2235  streak=0 flagged=rms,b0,b1,b3 state=latched
+00:29:26 [win] #81 S2 MF op=500 rms=0.2282  streak=0 flagged=rms,b1,b3 state=latched
+00:29:27 [win] #82 S2 MF op=500 rms=0.2332  streak=0 flagged=rms,b1,b3 state=latched
+00:29:30 [win] #83 S2 MF op=500 rms=0.2369  streak=0 flagged=rms,b1,b3 state=latched
+00:29:36 [win] #84 S2 MF op=500 rms=0.2399  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:29:41 [win] #85 S2 MF op=500 rms=0.2551  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:29:41 [win] #86 S2 MF op=500 rms=0.2556  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:29:48 [win] #87 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:29:51 [win] #88 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:29:57 [win] #89 S2 MF op=500 rms=0.2564  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:03 [win] #90 S2 MF op=500 rms=0.2548  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:03 [win] #91 S2 MF op=500 rms=0.2555  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:08 [win] #92 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:30:11 [win] #93 S2 MF op=500 rms=0.2559  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:30:15 [win] #94 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:30:21 [win] #95 S2 MF op=500 rms=0.2558  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:28 [win] #96 S2 MF op=500 rms=0.2554  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:29 [win] #97 S2 MF op=500 rms=0.2547  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:33 [win] #98 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:37 [win] #99 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:30:43 [win] #100 S2 MF op=500 rms=0.2491  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:46 [win] #101 S2 MF op=500 rms=0.2514  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:52 [win] #102 S2 MF op=500 rms=0.2511  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:30:56 [win] #103 S2 MF op=500 rms=0.2507  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:31:01 [win] #104 S2 MF op=500 rms=0.2525  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:31:05 [win] #105 S2 MF op=500 rms=0.2235  streak=0 flagged=rms,b0,b1,b3 state=latched
+00:31:11 [win] #106 S2 MF op=500 rms=0.2282  streak=0 flagged=rms,b1,b3 state=latched
+00:31:16 [win] #107 S2 MF op=500 rms=0.2332  streak=0 flagged=rms,b1,b3 state=latched
+00:31:19 [win] #108 S2 MF op=500 rms=0.2369  streak=0 flagged=rms,b1,b3 state=latched
+00:31:26 [win] #109 S2 MF op=500 rms=0.2399  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:31:29 [win] #110 S2 MF op=500 rms=0.2551  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:31:32 [win] #111 S2 MF op=500 rms=0.2556  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:31:39 [win] #112 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:31:48 [win] #113 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:31:50 [win] #114 S2 MF op=500 rms=0.2564  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:31:52 [win] #115 S2 MF op=500 rms=0.2548  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:03 [win] #116 S2 MF op=500 rms=0.2555  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:06 [win] #117 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:32:08 [win] #118 S2 MF op=500 rms=0.2559  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:32:16 [win] #119 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:32:19 [win] #120 S2 MF op=500 rms=0.2558  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:20 [win] #121 S2 MF op=500 rms=0.2554  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:28 [win] #122 S2 MF op=500 rms=0.2547  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:30 [win] #123 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:32 [win] #124 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:32:38 [win] #125 S2 MF op=500 rms=0.2491  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:46 [win] #126 S2 MF op=500 rms=0.2514  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:50 [win] #127 S2 MF op=500 rms=0.2511  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:52 [win] #128 S2 MF op=500 rms=0.2507  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:32:59 [win] #129 S2 MF op=500 rms=0.2525  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:33:01 [win] #130 S2 MF op=500 rms=0.2235  streak=0 flagged=rms,b0,b1,b3 state=latched
+00:33:10 [win] #131 S2 MF op=500 rms=0.2282  streak=0 flagged=rms,b1,b3 state=latched
+00:33:12 [win] #132 S2 MF op=500 rms=0.2332  streak=0 flagged=rms,b1,b3 state=latched
+00:33:16 [win] #133 S2 MF op=500 rms=0.2369  streak=0 flagged=rms,b1,b3 state=latched
+00:33:20 [win] #134 S2 MF op=500 rms=0.2399  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:33:29 [win] #135 S2 MF op=500 rms=0.2551  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:33:31 [win] #136 S2 MF op=500 rms=0.2556  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:33:41 [win] #137 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:33:45 [win] #138 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:33:46 [win] #139 S2 MF op=500 rms=0.2564  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:33:53 [win] #140 S2 MF op=500 rms=0.2548  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:33:55 [win] #141 S2 MF op=500 rms=0.2555  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:33:57 [win] #142 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:34:03 [win] #143 S2 MF op=500 rms=0.2559  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:34:04 [win] #144 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:34:14 [win] #145 S2 MF op=500 rms=0.2558  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:18 [win] #146 S2 MF op=500 rms=0.2554  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:20 [win] #147 S2 MF op=500 rms=0.2547  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:22 [win] #148 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:28 [win] #149 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:34:29 [win] #150 S2 MF op=500 rms=0.2491  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:39 [win] #151 S2 MF op=500 rms=0.2514  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:41 [win] #152 S2 MF op=500 rms=0.2511  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:42 [win] #153 S2 MF op=500 rms=0.2507  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:55 [win] #154 S2 MF op=500 rms=0.2525  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:34:55 [win] #155 S2 MF op=500 rms=0.2235  streak=0 flagged=rms,b0,b1,b3 state=latched
+00:34:58 [win] #156 S2 MF op=500 rms=0.2282  streak=0 flagged=rms,b1,b3 state=latched
+00:35:06 [win] #157 S2 MF op=500 rms=0.2332  streak=0 flagged=rms,b1,b3 state=latched
+00:35:07 [win] #158 S2 MF op=500 rms=0.2369  streak=0 flagged=rms,b1,b3 state=latched
+00:35:10 [win] #159 S2 MF op=500 rms=0.2399  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:35:16 [win] #160 S2 MF op=500 rms=0.2551  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:35:18 [win] #161 S2 MF op=500 rms=0.2556  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:35:28 [win] #162 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:35:29 [win] #163 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:35:38 [win] #164 S2 MF op=500 rms=0.2564  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:35:41 [win] #165 S2 MF op=500 rms=0.2548  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:35:53 [win] #166 S2 MF op=500 rms=0.2555  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:35:55 [win] #167 S2 MF op=500 rms=0.2562  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:35:58 [win] #168 S2 MF op=500 rms=0.2559  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:35:59 [win] #169 S2 MF op=500 rms=0.2566  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:36:08 [win] #170 S2 MF op=500 rms=0.2558  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:36:10 [win] #171 S2 MF op=500 rms=0.2554  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:36:23 [win] #172 S2 MF op=500 rms=0.2547  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:36:24 [win] #173 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b1,b2,b3 state=latched
+00:38:01 [win] #174 S2 MF op=500 rms=0.2549  streak=0 flagged=rms,b0,b1,b2 state=latched
+00:38:48 [scn] new scenario #1 on S1 op=N09_M07_F10
+00:38:48 [win] #1 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:38:51 [win] #2 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:39:06 [win] #3 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:39:07 [win] #4 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:39:07 [win] #5 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:39:09 [win] #6 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:39:10 [win] #7 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:39:10 [win] #8 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:39:18 [win] #9 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:39:19 [win] #10 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:39:33 [win] #11 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:39:41 [win] #12 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:39:46 [win] #13 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:39:51 [win] #14 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:39:52 [win] #15 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:39:59 [win] #16 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:39:59 [win] #17 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:40:07 [win] #18 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:40:11 [win] #19 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:40:19 [win] #20 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:40:22 [win] #21 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:40:23 [win] #22 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:40:29 [win] #23 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:40:36 [win] #24 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:40:40 [win] #25 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:40:43 [win] #26 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:40:48 [win] #27 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:40:56 [win] #28 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:41:00 [win] #29 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:41:07 [win] #30 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:41:11 [win] #31 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:41:16 [win] #32 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:41:23 [win] #33 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:41:27 [win] #34 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:41:35 [win] #35 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:41:42 [win] #36 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:41:44 [win] #37 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:41:50 [win] #38 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:41:58 [win] #39 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:43:07 [win] #40 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:43:10 [win] #41 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:43:12 [win] #42 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:43:22 [win] #43 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:43:28 [win] #44 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:43:40 [win] #45 S1 K001 op=N09_M07_F10 rms=1.434  streak=0 flagged=- state=monitor
+00:43:45 [win] #46 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:43:46 [win] #47 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:43:49 [win] #48 S1 K001 op=N09_M07_F10 rms=1.443  streak=0 flagged=- state=monitor
+00:43:57 [win] #49 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:44:01 [win] #50 S1 K001 op=N09_M07_F10 rms=1.453  streak=0 flagged=- state=monitor
+00:44:02 [win] #51 S1 K001 op=N09_M07_F10 rms=1.467  streak=0 flagged=- state=monitor
+00:44:08 [win] #52 S1 K001 op=N09_M07_F10 rms=1.432  streak=0 flagged=- state=monitor
+00:44:14 [win] #53 S1 K001 op=N09_M07_F10 rms=1.464  streak=0 flagged=- state=monitor
+00:44:18 [win] #54 S1 K001 op=N09_M07_F10 rms=1.456  streak=0 flagged=- state=monitor
+00:44:23 [win] #55 S1 K001 op=N09_M07_F10 rms=1.411  streak=0 flagged=- state=monitor
+00:44:31 [win] #56 S1 K001 op=N09_M07_F10 rms=1.444  streak=0 flagged=- state=monitor
+00:44:41 [scn] new scenario #2 on S1 op=N09_M07_F10
+00:44:41 [win] #57 S1 KA01 op=N09_M07_F10 rms=1.212  streak=1 flagged=b0,b1,temp,rms state=monitor
+00:44:41 [win] #58 S1 KA01 op=N09_M07_F10 rms=1.212  streak=2 flagged=b0,temp,b1,rms state=monitor
+00:44:46 [episode] E4 started by gate on S1 op=N09_M07_F10 flagged=['b0', 'b1', 'temp', 'rms', 'kurt']
+00:44:46 [llm] E4 step 1 -> claude-subscription:opus (3793 chars, 3 tests allowed)
+00:44:46 [win] #59 S1 KA01 op=N09_M07_F10 rms=1.209  streak=3 flagged=b0,b1,temp,rms state=diagnosing
+00:44:50 [win] #60 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:44:57 [win] #61 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:45:00 [win] #62 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=diagnosing
+00:45:02 [llm] E4 step 1 (16.4 s, claude-subscription:opus): bearing_outer_race 82%, bearing_inner_race 8%, bearing_rolling_element 5% | next=none
+00:45:02 [episode] E4 DONE (confident) -> bearing_outer_race 82% | truth=bearing_outer_race correct=True | 0 tests, 16.4 s
+00:45:08 [win] #63 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:11 [win] #64 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:18 [win] #65 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:22 [win] #66 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:30 [win] #67 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:35 [win] #68 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:42 [win] #69 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:47 [win] #70 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:45:53 [win] #71 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:55 [win] #72 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:45:59 [win] #73 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:05 [win] #74 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:10 [win] #75 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:19 [win] #76 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:22 [win] #77 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:26 [win] #78 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:31 [win] #79 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:36 [win] #80 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:41 [win] #81 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:49 [win] #82 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:46:52 [win] #83 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:46:57 [win] #84 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:02 [win] #85 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:09 [win] #86 S1 KA01 op=N09_M07_F10 rms=1.211  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:12 [win] #87 S1 KA01 op=N09_M07_F10 rms=1.174  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:19 [win] #88 S1 KA01 op=N09_M07_F10 rms=1.186  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:23 [win] #89 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:29 [win] #90 S1 KA01 op=N09_M07_F10 rms=1.22  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:34 [win] #91 S1 KA01 op=N09_M07_F10 rms=1.214  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:38 [win] #92 S1 KA01 op=N09_M07_F10 rms=1.208  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:43 [win] #93 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:47:48 [win] #94 S1 KA01 op=N09_M07_F10 rms=1.212  streak=0 flagged=rms,b0,b1,temp state=latched
+00:47:55 [win] #95 S1 KA01 op=N09_M07_F10 rms=1.209  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:48:00 [win] #96 S1 KA01 op=N09_M07_F10 rms=1.213  streak=0 flagged=rms,kurt,b0,b1 state=latched
+00:48:09 [scn] new scenario #3 on S2 op=500
+00:48:09 [win] #97 S2 SF op=500 rms=0.1443  streak=0 flagged=- state=monitor
+00:48:09 [win] #98 S2 SF op=500 rms=0.1444  streak=0 flagged=- state=monitor
+00:48:13 [win] #99 S2 SF op=500 rms=0.1443  streak=0 flagged=- state=monitor
+00:48:18 [win] #100 S2 SF op=500 rms=0.1433  streak=0 flagged=- state=monitor
+00:48:23 [win] #101 S2 SF op=500 rms=0.1435  streak=0 flagged=- state=monitor
+00:48:26 [win] #102 S2 SF op=500 rms=0.1474  streak=1 flagged=b3 state=monitor
+00:48:35 [win] #103 S2 SF op=500 rms=0.146  streak=0 flagged=- state=monitor
+00:48:36 [win] #104 S2 SF op=500 rms=0.1437  streak=0 flagged=- state=monitor
+00:48:44 [win] #105 S2 SF op=500 rms=0.1444  streak=1 flagged=b0 state=monitor
+00:48:47 [win] #106 S2 SF op=500 rms=0.145  streak=0 flagged=- state=monitor
+00:48:53 [win] #107 S2 SF op=500 rms=0.1465  streak=1 flagged=b0 state=monitor
+00:48:56 [win] #108 S2 SF op=500 rms=0.1471  streak=2 flagged=b3 state=monitor
+00:48:58 [win] #109 S2 SF op=500 rms=0.1455  streak=0 flagged=- state=monitor
+00:49:08 [win] #110 S2 SF op=500 rms=0.1444  streak=0 flagged=- state=monitor
+00:49:11 [win] #111 S2 SF op=500 rms=0.1434  streak=0 flagged=- state=monitor
+00:49:14 [win] #112 S2 SF op=500 rms=0.1457  streak=1 flagged=b0 state=monitor
+00:49:16 [win] #113 S2 SF op=500 rms=0.1479  streak=0 flagged=- state=monitor
+00:49:20 [win] #114 S2 SF op=500 rms=0.1449  streak=0 flagged=- state=monitor
+00:49:29 [win] #115 S2 SF op=500 rms=0.1429  streak=0 flagged=- state=monitor
+00:49:36 [win] #116 S2 SF op=500 rms=0.1442  streak=0 flagged=- state=monitor
+00:49:36 [win] #117 S2 SF op=500 rms=0.1444  streak=0 flagged=- state=monitor
+00:49:39 [win] #118 S2 SF op=500 rms=0.1438  streak=0 flagged=- state=monitor
+00:49:45 [win] #119 S2 SF op=500 rms=0.1439  streak=0 flagged=- state=monitor
+00:49:49 [win] #120 S2 SF op=500 rms=0.1412  streak=0 flagged=- state=monitor
+00:49:56 [win] #121 S2 SF op=500 rms=0.1438  streak=0 flagged=- state=monitor
+00:49:58 [win] #122 S2 SF op=500 rms=0.1443  streak=0 flagged=- state=monitor
+00:50:08 [win] #123 S2 SF op=500 rms=0.1444  streak=0 flagged=- state=monitor
+00:50:08 [win] #124 S2 SF op=500 rms=0.1443  streak=0 flagged=- state=monitor
+00:50:12 [win] #125 S2 SF op=500 rms=0.1433  streak=0 flagged=- state=monitor
+00:50:20 [win] #126 S2 SF op=500 rms=0.1435  streak=0 flagged=- state=monitor
+00:50:27 [win] #127 S2 SF op=500 rms=0.1474  streak=1 flagged=b3 state=monitor
+00:50:27 [win] #128 S2 SF op=500 rms=0.146  streak=0 flagged=- state=monitor
+00:50:31 [win] #129 S2 SF op=500 rms=0.1437  streak=0 flagged=- state=monitor
+00:50:36 [win] #130 S2 SF op=500 rms=0.1444  streak=1 flagged=b0 state=monitor
+00:50:40 [win] #131 S2 SF op=500 rms=0.145  streak=0 flagged=- state=monitor
+00:50:43 [win] #132 S2 SF op=500 rms=0.1465  streak=1 flagged=b0 state=monitor
+00:50:49 [win] #133 S2 SF op=500 rms=0.1471  streak=2 flagged=b3 state=monitor
+01:22:54 [mqtt] connected to broker.hivemq.com (Not authorized) root=pccoe/arca/add1f2/MOTOR-01
+01:31:14 [mqtt] connected to broker.hivemq.com (Not authorized) root=pccoe/arca/add1f2/MOTOR-01
+01:33:19 [mqtt] connected to broker.hivemq.com (Not authorized) root=pccoe/arca/add1f2/MOTOR-01
+01:38:16 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+03:23:09 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:06:17 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:15:55 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+18:06:38 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+18:45:31 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+20:39:00 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:44:57 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:52:39 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+11:53:51 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+13:24:19 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+13:25:06 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01
+13:53:42 [mqtt] connected to broker.hivemq.com (Success) root=pccoe/arca/add1f2/MOTOR-01

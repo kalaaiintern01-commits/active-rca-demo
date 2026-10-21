@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOTOR-01 telemetry monitor</title>
+<style>
+  /* ---- Palette: validated categorical slots 1,2,3,7 + fixed status colors.
+         Light values on :root, dark values redefined under both the OS media
+         query and the explicit toggle so either can win. ---------------- */
+  :root {
+    color-scheme: light;
+    --surface-0:      #f4f4f2;   /* page ground */
+    --surface-1:      #fcfcfb;   /* card / chart surface */
+    --surface-2:      #ececea;   /* wells, table stripes */
+    --border:         #dcdcd8;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #7a7975;
+    --grid:           #e6e6e3;
+
+    --temp:    #eb6834;   /* slot 2 orange  */
+    --vib:     #2a78d6;   /* slot 1 blue    */
+    --cur:     #1baf7a;   /* slot 3 aqua    */
+    --rpm:     #4a3aa7;   /* slot 7 violet  */
+
+    --good:     #0ca30c;
+    --warning:  #fab219;
+    --serious:  #ec835a;
+    --critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0:      #121211;
+      --surface-1:      #1a1a19;
+      --surface-2:      #232322;
+      --border:         #33332f;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #8f8e85;
+      --grid:           #2a2a28;
+
+      --temp: #d95926;
+      --vib:  #3987e5;
+      --cur:  #199e70;
+      --rpm:  #9085e9;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0:      #121211;
+    --surface-1:      #1a1a19;
+    --surface-2:      #232322;
+    --border:         #33332f;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #8f8e85;
+    --grid:           #2a2a28;
+
+    --temp: #d95926;
+    --vib:  #3987e5;
+    --cur:  #199e70;
+    --rpm:  #9085e9;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 20px 48px; }
+
+  /* ---------------------------------------------------------- header */
+  header {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
+    padding-bottom: 14px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 {
+    margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.01em;
+  }
+  h1 .dev { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .sub { color: var(--text-muted); font-size: 12.5px; }
+  .sub code {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .spacer { flex: 1 1 auto; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    font-size: 12.5px; font-weight: 550; white-space: nowrap;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex: none; }
+  .dot.live { background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+  .dot.wait { background: var(--warning); }
+  .dot.dead { background: var(--critical); }
+
+  /* ------------------------------------------------------- controls */
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .group {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 8px; border: 1px solid var(--border);
+    border-radius: 9px; background: var(--surface-1);
+  }
+  .group > span.lbl {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-muted); font-weight: 600; padding-left: 2px;
+  }
+  input[type=text] {
+    font: inherit; font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+    width: 148px; padding: 4px 7px;
+    background: var(--surface-2); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  button {
+    font: inherit; font-size: 12.5px; font-weight: 550;
+    padding: 5px 11px; min-height: 30px;
+    background: var(--surface-2); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 7px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--text-muted); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  button.on { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+  button.primary { background: var(--vib); border-color: var(--vib); color: #fff; }
+
+  /* ---------------------------------------------------------- tiles */
+  .tiles {
+    display: grid; gap: 14px; margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  }
+  .tile {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 15px 8px;
+  }
+  .tile .head {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px;
+  }
+  .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .tile .name {
+    font-size: 12px; font-weight: 650; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--text-secondary);
+  }
+  .hero {
+    display: flex; align-items: baseline; gap: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero .val {
+    font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  .hero .unit { font-size: 13px; color: var(--text-muted); font-weight: 550; }
+  .second {
+    font-size: 12px; color: var(--text-muted); min-height: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  .second b { color: var(--text-secondary); font-weight: 600; }
+  .plot { position: relative; margin-top: 4px; }
+  .plot svg { display: block; width: 100%; height: 66px; overflow: visible; }
+  .yrange {
+    display: flex; justify-content: space-between;
+    font-size: 10.5px; color: var(--text-muted);
+    font-variant-numeric: tabular-nums; padding-top: 1px;
+  }
+
+  .tip {
+    position: absolute; pointer-events: none; opacity: 0;
+    transform: translate(-50%, -100%);
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 7px; padding: 5px 8px; font-size: 11.5px; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18); z-index: 5;
+    font-variant-numeric: tabular-nums;
+  }
+  .tip b { font-family: ui-monospace, Consolas, monospace; }
+
+  /* -------------------------------------------------- quality strip */
+  .quality {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 15px; margin-bottom: 16px;
+  }
+  .quality h2 {
+    margin: 0 0 10px; font-size: 12px; font-weight: 650;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
+  }
+  .checks { display: grid; gap: 9px 18px; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); }
+  .check { display: flex; align-items: baseline; gap: 7px; font-size: 12.5px; }
+  .check .ico { font-weight: 700; font-size: 12px; flex: none; width: 13px; text-align: center; }
+  .check .k { color: var(--text-muted); }
+  .check .v { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600;
+              font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+  .st-good     { color: var(--good); }
+  .st-warning  { color: var(--warning); }
+  .st-serious  { color: var(--serious); }
+  .st-critical { color: var(--critical); }
+  .st-idle     { color: var(--text-muted); }
+
+  /* ---------------------------------------------------------- panels */
+  details {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 14px;
+  }
+  summary {
+    padding: 11px 15px; cursor: pointer; font-size: 12px; font-weight: 650;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
+  }
+  .panel-body { padding: 0 15px 14px; }
+  pre {
+    margin: 0; padding: 12px; background: var(--surface-2);
+    border-radius: 8px; overflow-x: auto;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 11.5px; line-height: 1.65; color: var(--text-secondary);
+  }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px;
+          font-variant-numeric: tabular-nums; }
+  th, td { padding: 5px 9px; text-align: right; white-space: nowrap;
+           border-bottom: 1px solid var(--border); }
+  th { color: var(--text-muted); font-weight: 600; font-size: 11px;
+       text-transform: uppercase; letter-spacing: 0.04em; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  td { font-family: ui-monospace, Consolas, monospace; color: var(--text-secondary); }
+  tbody tr:nth-child(even) { background: var(--surface-2); }
+
+  footer {
+    color: var(--text-muted); font-size: 11.5px; line-height: 1.7;
+    border-top: 1px solid var(--border); padding-top: 12px; margin-top: 20px;
+  }
+  .empty {
+    padding: 26px 15px; text-align: center; color: var(--text-muted); font-size: 13px;
+  }
+  .err {
+    background: color-mix(in srgb, var(--critical) 12%, var(--surface-1));
+    border: 1px solid var(--critical); color: var(--text-primary);
+    border-radius: 10px; padding: 11px 14px; margin-bottom: 16px; font-size: 13px;
+  }
+  .err[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Live telemetry &middot; <span class="dev" id="hDev">MOTOR-01</span></h1>
+    <div class="spacer"></div>
+    <span class="pill"><span class="dot" id="dot"></span><span id="connText">not connected</span></span>
+  </header>
+
+  <div class="sub" style="margin:-8px 0 16px">
+    Objective 1 &mdash; sensing &amp; telemetry layer &nbsp;·&nbsp;
+    schema <code>pdm.telemetry.v1</code> &nbsp;·&nbsp;
+    topic <code id="hTopic">pdm/v1/MOTOR-01/telemetry</code> &nbsp;·&nbsp;
+    broker <code>broker.hivemq.com</code>
+  </div>
+
+  <div class="err" id="err" hidden></div>
+
+  <div class="controls">
+    <div class="group">
+      <span class="lbl">device</span>
+      <input type="text" id="devIn" value="MOTOR-01" spellcheck="false">
+      <button id="btnConn" class="primary">Connect</button>
+    </div>
+    <div class="group">
+      <span class="lbl">window</span>
+      <button class="rng on" data-sec="60">1 min</button>
+      <button class="rng" data-sec="180">3 min</button>
+      <button class="rng" data-sec="600">10 min</button>
+    </div>
+    <div class="group">
+      <span class="lbl">device</span>
+      <button id="btnRezero" title="Re-runs the current-sensor auto-zero. Set the current pot to mid-travel first.">re-zero current</button>
+    </div>
+    <div class="group">
+      <span class="lbl">label</span>
+      <button class="lb" data-label="baseline">baseline</button>
+      <button class="lb" data-label="imbalance">imbalance</button>
+      <button class="lb" data-label="bearing">bearing</button>
+      <button class="lb" data-label="overload">overload</button>
+      <button class="lb" data-label="blocked_cooling">cooling</button>
+    </div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="quality">
+    <h2>Data quality &mdash; this is what makes the stream trustworthy</h2>
+    <div class="checks" id="checks"></div>
+  </div>
+
+  <details id="tableWrap">
+    <summary>Recent windows (table view)</summary>
+    <div class="panel-body tblwrap">
+      <table>
+        <thead><tr>
+          <th>time (UTC)</th><th>seq</th><th>label</th><th>temp °C</th>
+          <th>vib m/s²</th><th>crest</th><th>current A</th><th>rpm</th>
+          <th>n / exp</th><th>drop</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <details>
+    <summary>Last raw payload</summary>
+    <div class="panel-body"><pre id="raw">waiting for the first message…</pre></div>
+  </details>
+
+  <footer>
+    This page subscribes to the ESP32's MQTT topic over a WebSocket and renders what
+    arrives &mdash; nothing is computed here that the device did not send.
+    Health scores, anomaly detection and maintenance advisories are Objective 2;
+    this is the telemetry layer proving itself end to end.
+    <br>
+    Each channel is plotted on its own axis: temperature, vibration, current and speed
+    have unrelated units, so a shared scale would be meaningless.
+  </footer>
+</div>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+/* ===========================================================================
+   Objective 1 telemetry monitor
+   Reads pdm.telemetry.v1 documents off the broker and shows them. Deliberately
+   a viewer, not an analyser: every number on screen is a field from the
+   payload, so what you see is exactly what the device published.
+   =========================================================================== */
+
+/* HiveMQ's public broker offers both; some campus networks allow only one, so
+   fall back to plain ws once before giving up. A local file has no mixed-content
+   restriction, so ws:// is usable here. */
+const WS_URLS  = ["wss://broker.hivemq.com:8884/mqtt",
+                  "ws://broker.hivemq.com:8000/mqtt"];
+let   urlIndex = 0;
+const KEEP     = 320;            // ~10 min of 2 s windows
+const CHANNELS = [
+  { key: "temp",  name: "Temperature",  unit: "°C",   color: "var(--temp)",
+    pick: d => d.temp.valid ? d.temp.c : null, zeroBased: false, dp: 2,
+    second: d => `valid <b>${d.temp.valid ? "yes" : "no"}</b>` },
+  { key: "vib",   name: "Vibration RMS", unit: "m/s²", color: "var(--vib)",
+    pick: d => d.vib.rms_ms2, zeroBased: true, dp: 3,
+    second: d => `peak <b>${d.vib.peak_ms2.toFixed(2)}</b> · crest <b>${(d.vib.crest||0).toFixed(2)}</b>` },
+  { key: "cur",   name: "Current RMS",  unit: "A",    color: "var(--cur)",
+    pick: d => d.cur.rms_a, zeroBased: true, dp: 3,
+    second: d => d.cur.cal_ok
+        ? `mean <b>${d.cur.mean_a.toFixed(2)}</b> · zero <b>${d.cur.zero_mv}</b> mV`
+        : `<span class="st-warning">⚠ zero not calibrated (${d.cur.zero_mv} mV)</span>` },
+  { key: "rpm",   name: "Speed",        unit: "rpm",  color: "var(--rpm)",
+    pick: d => d.rpm.avg, zeroBased: true, dp: 0,
+    second: d => `instant <b>${d.rpm.inst.toFixed(0)}</b> · pulses <b>${d.rpm.pulses}</b>` },
+];
+
+let client = null, windowSec = 60;
+const rows = [];                 // accepted documents, oldest first
+const arrivals = [];             // wall-clock arrival times
+let gaps = 0, rejected = 0, lastSeq = null;
+
+/* ---------------------------------------------------------------- tiles */
+const tilesEl = document.getElementById("tiles");
+const nodes = {};
+for (const ch of CHANNELS) {
+  const el = document.createElement("div");
+  el.className = "tile";
+  el.innerHTML = `
+    <div class="head">
+      <span class="swatch" style="background:${ch.color}"></span>
+      <span class="name">${ch.name}</span>
+    </div>
+    <div class="hero"><span class="val" data-val>—</span><span class="unit">${ch.unit}</span></div>
+    <div class="second" data-second></div>
+    <div class="plot">
+      <svg data-svg preserveAspectRatio="none"></svg>
+      <div class="tip" data-tip></div>
+    </div>
+    <div class="yrange"><span data-lo></span><span data-hi></span></div>`;
+  tilesEl.appendChild(el);
+  nodes[ch.key] = {
+    val: el.querySelector("[data-val]"), second: el.querySelector("[data-second]"),
+    svg: el.querySelector("[data-svg]"), tip: el.querySelector("[data-tip]"),
+    lo: el.querySelector("[data-lo]"), hi: el.querySelector("[data-hi]"), ch,
+  };
+}
+
+/* --------------------------------------------------------- sparklines
+   One panel per channel, single series, own y-axis. Line 2px, hover shows a
+   crosshair plus an 8px marker ringed in the surface colour so it stays
+   readable wherever it lands. */
+function draw(ch) {
+  const n = nodes[ch.key], svg = n.svg;
+  const w = svg.clientWidth || 240, h = 66, padT = 6, padB = 4;
+  const pts = visible().map(r => ({ t: r._t, ts: r.ts, v: ch.pick(r) }))
+                       .filter(p => p.v !== null);
+
+  if (pts.length < 2) {
+    svg.innerHTML = `<text x="4" y="38" fill="var(--text-muted)" font-size="11">
+      collecting…</text>`;
+    n.lo.textContent = n.hi.textContent = "";
+    return;
+  }
+
+  let lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
+  if (ch.zeroBased) lo = 0;                 // magnitudes read from zero
+  if (hi - lo < 1e-6) { hi = lo + (ch.zeroBased ? 1 : 0.5); }
+  const pad = (hi - lo) * 0.12; hi += pad; if (!ch.zeroBased) lo -= pad;
+
+  const t0 = pts[0].t, t1 = pts[pts.length - 1].t || t0 + 1;
+  const X = t => (t1 === t0 ? w : ((t - t0) / (t1 - t0)) * (w - 2) + 1);
+  const Y = v => h - padB - ((v - lo) / (hi - lo)) * (h - padT - padB);
+
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${X(p.t).toFixed(1)},${Y(p.v).toFixed(1)}`).join("");
+  const area = `${d}L${X(pts[pts.length-1].t).toFixed(1)},${h - padB}L${X(t0).toFixed(1)},${h - padB}Z`;
+
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.innerHTML = `
+    <line x1="0" y1="${h - padB}" x2="${w}" y2="${h - padB}" stroke="var(--grid)" stroke-width="1"/>
+    <path d="${area}" fill="${ch.color}" opacity="0.10"/>
+    <path d="${d}" fill="none" stroke="${ch.color}" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${X(pts[pts.length-1].t).toFixed(1)}" cy="${Y(pts[pts.length-1].v).toFixed(1)}"
+            r="3.5" fill="${ch.color}" stroke="var(--surface-1)" stroke-width="2"/>
+    <g data-hover style="display:none">
+      <line y1="0" y2="${h - padB}" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="2 2"/>
+      <circle r="4.5" fill="${ch.color}" stroke="var(--surface-1)" stroke-width="2"/>
+    </g>`;
+
+  n.lo.textContent = fmt(lo, ch.dp) + " " + ch.unit;
+  n.hi.textContent = fmt(hi, ch.dp);
+  svg._pts = pts; svg._X = X; svg._Y = Y;
+}
+
+for (const key in nodes) {
+  const n = nodes[key], svg = n.svg;
+  svg.addEventListener("mousemove", e => {
+    const pts = svg._pts; if (!pts || pts.length < 2) return;
+    const box = svg.getBoundingClientRect();
+    const x = ((e.clientX - box.left) / box.width) * (svg.clientWidth || box.width);
+    let best = pts[0], bd = Infinity;
+    for (const p of pts) { const dx = Math.abs(svg._X(p.t) - x); if (dx < bd) { bd = dx; best = p; } }
+    const g = svg.querySelector("[data-hover]");
+    g.style.display = ""; g.querySelector("line").setAttribute("x1", svg._X(best.t));
+    g.querySelector("line").setAttribute("x2", svg._X(best.t));
+    g.querySelector("circle").setAttribute("cx", svg._X(best.t));
+    g.querySelector("circle").setAttribute("cy", svg._Y(best.v));
+    n.tip.style.opacity = 1;
+    n.tip.style.left = (svg._X(best.t) / (svg.clientWidth || 1) * 100) + "%";
+    n.tip.style.top = (svg._Y(best.v) - 8) + "px";
+    // Show the device's own timestamp, not the browser's - every other time on
+    // this page comes from the payload, and in the simulator the virtual clock
+    // can lag wall time by minutes.
+    n.tip.innerHTML = `<b>${fmt(best.v, n.ch.dp)}</b> ${n.ch.unit}<br>
+      <span style="color:var(--text-muted)">${(best.ts || "").slice(11, 19)} UTC</span>`;
+  });
+  svg.addEventListener("mouseleave", () => {
+    n.tip.style.opacity = 0;
+    const g = svg.querySelector("[data-hover]"); if (g) g.style.display = "none";
+  });
+}
+
+/* ------------------------------------------------------------- helpers */
+const fmt = (v, dp) => v === null || v === undefined || Number.isNaN(v)
+  ? "—" : Number(v).toFixed(dp);
+const visible = () => {
+  const cut = Date.now() - windowSec * 1000;
+  return rows.filter(r => r._t >= cut);
+};
+function meanInterval() {
+  if (arrivals.length < 3) return null;
+  const a = arrivals.slice(-11);
+  let s = 0; for (let i = 1; i < a.length; i++) s += a[i] - a[i - 1];
+  return s / (a.length - 1) / 1000;
+}
+
+/* ------------------------------------------------------ quality checks
+   Every check ships an icon and a word, never colour alone. */
+function renderChecks() {
+  const d = rows[rows.length - 1];
+  const box = document.getElementById("checks");
+  if (!d) { box.innerHTML = `<div class="check st-idle"><span class="ico">·</span>
+    <span class="k">waiting for the first window</span></div>`; return; }
+
+  const exp = d.win.sample_hz * d.win.ms / 1000;
+  const cov = exp ? (d.win.n / exp) * 100 : 0;
+  const iv  = meanInterval();
+  const ivErr = iv === null ? null : Math.abs(iv - d.win.ms / 1000) / (d.win.ms / 1000) * 100;
+
+  const items = [
+    ["sample coverage", `${cov.toFixed(1)}%`,
+      cov >= 95 ? "good" : cov >= 85 ? "warning" : "serious",
+      `${d.win.n} of ${exp.toFixed(0)} samples`],
+    ["publish interval", iv === null ? "—" : `${iv.toFixed(2)} s`,
+      ivErr === null ? "idle" : ivErr < 5 ? "good" : ivErr < 15 ? "warning" : "serious",
+      `nominal ${(d.win.ms / 1000).toFixed(2)} s`],
+    ["sequence gaps", String(gaps), gaps === 0 ? "good" : "warning",
+      `${rows.length} windows accepted`],
+    ["schema rejects", String(rejected), rejected === 0 ? "good" : "critical",
+      "malformed payloads"],
+    ["dropped samples", String(d.win.dropped),
+      d.win.dropped === 0 ? "good" : d.win.dropped <= 5 ? "warning" : "serious",
+      "this window"],
+    ["current calibration", d.cur.cal_ok ? "ok" : "out of range",
+      d.cur.cal_ok ? "good" : "warning", `zero ${d.cur.zero_mv} mV`],
+    ["clock", d.ts_synced ? "NTP synced" : "not synced",
+      d.ts_synced ? "good" : "warning", d.ts],
+    ["link", `${d.net?.rssi ?? "—"} dBm`,
+      (d.net?.rssi ?? -100) > -75 ? "good" : (d.net?.rssi ?? -100) > -85 ? "warning" : "serious",
+      `${d.net?.wifi_reconn ?? 0} wifi / ${d.net?.mqtt_reconn ?? 0} mqtt reconnects`],
+  ];
+  const ico = { good: "✓", warning: "!", serious: "!", critical: "✕", idle: "·" };
+  box.innerHTML = items.map(([k, v, st, title]) => `
+    <div class="check st-${st}" title="${title}">
+      <span class="ico">${ico[st]}</span>
+      <span class="k">${k}</span><span class="v">${v}</span>
+    </div>`).join("");
+}
+
+function renderTable() {
+  const body = document.getElementById("tbody");
+  body.innerHTML = rows.slice(-14).reverse().map(d => {
+    const exp = d.win.sample_hz * d.win.ms / 1000;
+    return `<tr>
+      <td>${d.ts.slice(11, 23)}</td><td>${d.seq}</td><td>${d.label}</td>
+      <td>${d.temp.valid ? d.temp.c.toFixed(2) : "—"}</td>
+      <td>${d.vib.rms_ms2.toFixed(3)}</td><td>${(d.vib.crest || 0).toFixed(2)}</td>
+      <td>${d.cur.rms_a.toFixed(3)}</td><td>${d.rpm.avg.toFixed(0)}</td>
+      <td>${d.win.n}/${exp.toFixed(0)}</td><td>${d.win.dropped}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderAll() {
+  const d = rows[rows.length - 1];
+  for (const ch of CHANNELS) {
+    const n = nodes[ch.key];
+    if (d) {
+      const v = ch.pick(d);
+      n.val.textContent = fmt(v, ch.dp);
+      n.second.innerHTML = ch.second(d);
+    }
+    draw(ch);
+  }
+  renderChecks();
+  renderTable();
+  if (d) document.getElementById("raw").textContent = JSON.stringify(d, (k, v) =>
+    k.startsWith("_") ? undefined : v, 2);
+}
+
+/* ----------------------------------------------------- payload intake
+   Shape-check before use. A malformed document is counted and dropped, not
+   rendered - the same contract the cloud enforces with Pydantic. */
+function accept(text) {
+  let d;
+  try { d = JSON.parse(text); } catch { rejected++; return; }
+  const ok = d && d.schema === "pdm.telemetry.v1" && d.temp && d.vib && d.cur
+          && d.rpm && d.win && typeof d.seq === "number";
+  if (!ok) { rejected++; renderChecks(); return; }
+
+  if (lastSeq !== null && d.seq !== lastSeq + 1 && d.seq > lastSeq) gaps++;
+  lastSeq = d.seq;
+
+  d._t = Date.now();
+  rows.push(d); arrivals.push(d._t);
+  while (rows.length > KEEP) rows.shift();
+  while (arrivals.length > KEEP) arrivals.shift();
+  renderAll();
+}
+
+/* ------------------------------------------------------------- MQTT */
+function setStatus(cls, text) {
+  document.getElementById("dot").className = "dot " + cls;
+  document.getElementById("connText").textContent = text;
+}
+function showErr(msg) {
+  const e = document.getElementById("err");
+  e.hidden = false; e.textContent = msg;
+}
+
+function connect() {
+  const dev = document.getElementById("devIn").value.trim() || "MOTOR-01";
+  document.getElementById("hDev").textContent = dev;
+  document.getElementById("hTopic").textContent = `pdm/v1/${dev}/telemetry`;
+
+  if (typeof mqtt === "undefined") {
+    showErr("The MQTT client library did not load. This page needs internet access "
+          + "for the CDN and the broker.");
+    setStatus("dead", "library missing"); return;
+  }
+
+  if (client) { try { client.end(true); } catch {} client = null; }
+  rows.length = 0; arrivals.length = 0; gaps = rejected = 0; lastSeq = null;
+
+  const url = WS_URLS[urlIndex];
+  setStatus("wait", "connecting…");
+  client = mqtt.connect(url, {
+    clientId: "pdm-monitor-" + Math.random().toString(16).slice(2, 8),
+    keepalive: 30, reconnectPeriod: 3000, connectTimeout: 10000,
+  });
+
+  client.on("connect", () => {
+    setStatus("wait", "connected · waiting for telemetry");
+    document.getElementById("err").hidden = true;
+    client.subscribe([`pdm/v1/${dev}/telemetry`, `pdm/v1/${dev}/status`]);
+    document.getElementById("btnConn").textContent = "Reconnect";
+  });
+  client.on("message", (topic, payload) => {
+    if (topic.endsWith("/status")) {
+      const s = payload.toString();
+      setStatus(s === "online" ? "live" : "dead", `device ${s}`);
+      return;
+    }
+    setStatus("live", "receiving");
+    accept(payload.toString());
+  });
+  client.on("error", e => {
+    if (urlIndex < WS_URLS.length - 1) {          // try the other transport once
+      urlIndex++;
+      showErr(`${url} failed (${e.message}) — retrying on ${WS_URLS[urlIndex]}`);
+      setTimeout(connect, 400);
+      return;
+    }
+    showErr("Broker error: " + e.message
+          + " — check internet access, or that ports 8884/8000 are not blocked.");
+    setStatus("dead", "error");
+  });
+  client.on("close",   () => setStatus("dead", "disconnected"));
+  client.on("offline", () => setStatus("dead", "offline"));
+}
+
+/* --------------------------------------------------------- controls */
+document.getElementById("btnConn").addEventListener("click", connect);
+document.getElementById("devIn").addEventListener("keydown", e => {
+  if (e.key === "Enter") connect();
+});
+document.querySelectorAll(".rng").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".rng").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); windowSec = +b.dataset.sec; renderAll();
+}));
+document.getElementById("btnRezero").addEventListener("click", () => {
+  if (!client || !client.connected) { showErr("Connect first."); return; }
+  const dev = document.getElementById("devIn").value.trim() || "MOTOR-01";
+  client.publish(`pdm/v1/${dev}/cmd`, JSON.stringify({ rezero: true }));
+});
+document.querySelectorAll(".lb").forEach(b => b.addEventListener("click", () => {
+  if (!client || !client.connected) { showErr("Connect first, then set a label."); return; }
+  const dev = document.getElementById("devIn").value.trim() || "MOTOR-01";
+  client.publish(`pdm/v1/${dev}/cmd`, JSON.stringify({ label: b.dataset.label }));
+  document.querySelectorAll(".lb").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+}));
+
+new ResizeObserver(() => { for (const ch of CHANNELS) draw(ch); })
+  .observe(document.getElementById("tiles"));
+
+renderAll();
+connect();                       // auto-connect on open
+</script>
+</body>
+</html>

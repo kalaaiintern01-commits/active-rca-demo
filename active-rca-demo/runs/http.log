@@ -1,0 +1,11 @@
+::1 - - [11/Oct/2026 11:21:52] "GET / HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:21:56] "GET / HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:21:56] "GET /style.css HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:21:56] "GET /config.js HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:21:56] "GET /app.js HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:21:58] "GET /data/manifest.json HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:25:43] "GET / HTTP/1.1" 304 -
+::1 - - [11/Oct/2026 11:25:43] "GET /style.css HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:25:43] "GET /config.js HTTP/1.1" 304 -
+::1 - - [11/Oct/2026 11:25:43] "GET /app.js HTTP/1.1" 200 -
+::1 - - [11/Oct/2026 11:25:43] "GET /data/manifest.json HTTP/1.1" 304 -

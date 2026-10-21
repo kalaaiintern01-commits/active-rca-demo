@@ -1,0 +1,6 @@
+# Wokwi library list - Active-RCA replay node
+PubSubClient
+ArduinoJson
+Adafruit SSD1306
+Adafruit GFX Library
+Adafruit BusIO

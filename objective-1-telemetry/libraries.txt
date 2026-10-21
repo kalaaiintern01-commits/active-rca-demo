@@ -1,0 +1,15 @@
+# Wokwi library list - Objective 1 (sensing & telemetry layer)
+# Resolved by Wokwi from the Arduino Library Manager index.
+
+# temperature: DS18B20 over 1-Wire
+OneWire
+DallasTemperature
+
+# vibration: MPU6050 3-axis accelerometer
+Adafruit MPU6050
+Adafruit Unified Sensor
+Adafruit BusIO
+
+# telemetry: MQTT client + JSON serialiser
+PubSubClient
+ArduinoJson

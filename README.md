@@ -1,28 +1,21 @@
-# Active-RCA live demo — GitHub Pages content
+# IoT & LLM-based Predictive Maintenance with Active Root-Cause Analysis
 
-This repository is the static half of the PCCoE MDM IoT capstone demo
-*IoT & LLM-based Predictive Maintenance with Active Root-Cause Analysis*
-(Mehul Rawat, Atharva Palande · guide Prof. Kalpana Patil).
+B.Tech MDM IoT capstone, PCCoE (E&TC) · Mehul Rawat, Atharva Palande · Guide: Prof. Kalpana Patil
 
-- `index.html`, `app.js`, `style.css`, `config.js` — the live dashboard. It connects to the MQTT
-  broker over secure WebSockets and shows telemetry, the drift gate and the LLM's reasoning.
-- `data/<src>/<condition>_<operating point>.bin` — replay slices that the simulated ESP32 node
-  (Wokwi) streams over HTTPS, two seconds at a time.
-- `data/manifest.json` — what each slice contains.
+An ESP32 edge node (Wokwi) replays real motor recordings, computes vibration and current features every
+2 s and publishes them over MQTT. A drift gate catches departures from the healthy baseline, and Claude
+reasons over the evidence, orders its own diagnostic test (a speed change) when it is unsure, and names
+the root cause. Live dashboard: https://kalaaiintern01-commits.github.io/active-rca-demo/
 
-## Slice format
-
-Concatenated windows; each window is a 48-byte little-endian header
-(`'PDMW'`, channels, flags, sample rate, samples, rpm, temperature, aux, 4 × int16 scale, vibration mask,
-current channel) followed by `int16[n][channels]` interleaved samples.
-
-## Data sources and attribution
-
-The slices are decimated, quantised excerpts of three public datasets, used here for a
-non-commercial academic demonstration. See each source for its licence and cite it if you reuse them.
-
-| Folder | Source |
+| Folder | Contents |
 |---|---|
-| `data/S1` | Paderborn University KAt Bearing DataCenter — C. Lessmeier, J. K. Kimotho, D. Zimmer, W. Sextro, *Condition Monitoring of Bearing Damage in Electromechanical Drive Systems…*, PHM Society European Conference 2016. Bearings K001 (healthy) and KA01 (outer-race damage). |
-| `data/S2` | Multi-condition PMSM vibration fault dataset (CubeMars RI60), Zenodo, doi:10.5281/zenodo.22039010 (validation split). |
-| `data/S3` | CARTIF open DC-motor dataset, Zenodo, doi:10.5281/zenodo.4314249. |
+| `active-rca-demo/` | The working system - see [its README](active-rca-demo/README.md) for running it |
+| `active-rca-demo/firmware/` | ESP32 firmware (PlatformIO), Wokwi circuit and config, prebuilt image |
+| `active-rca-demo/bridge/` | Drift gate, episode loop, Claude reasoning layer, trained baselines and fault signatures |
+| `active-rca-demo/common/`, `training/` | Feature extractor and gate shared by training and live; dataset and model builder |
+| `active-rca-demo/site/` | Dashboard and replay slices, published to GitHub Pages by `.github/workflows/pages.yml` |
+| `active-rca-demo/tools/`, `docs/` | Serial tap, demo replay builder, presentation figures |
+| `active-rca-demo/runs/` | Recorded episodes (`episodes.jsonl`) and logs from real runs |
+| `data/` | The three source datasets as CSV (4.7 GB) - sources and licences in [data/README.md](data/README.md) |
+| `objective-1-telemetry/` | Objective 1: telemetry node and schema work |
+| `paper/` | Research paper |
