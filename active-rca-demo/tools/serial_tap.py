@@ -1,8 +1,9 @@
 """
-Log the Wokwi VS Code simulator's serial output (RFC2217 on localhost:4000, see firmware/wokwi.toml)
-to the console and runs/wokwi_serial.log. Waits for the simulator and reconnects after restarts.
+Log the node's serial output to the console and a file. Waits for the port and reconnects after
+restarts or an unplugged cable.
 
-    python tools/serial_tap.py
+    python tools/serial_tap.py          Wokwi for VS Code (RFC2217 on localhost:4000) -> runs/wokwi_serial.log
+    python tools/serial_tap.py COM7     real ESP32 on a USB port                      -> runs/esp32_serial.log
 """
 import sys
 import time
@@ -11,8 +12,8 @@ from pathlib import Path
 
 import serial
 
-LOG = Path(__file__).resolve().parents[1] / "runs" / "wokwi_serial.log"
 URL = sys.argv[1] if len(sys.argv) > 1 else "rfc2217://localhost:4000"
+LOG = Path(__file__).resolve().parents[1] / "runs" / ("wokwi_serial.log" if URL.startswith("rfc2217") else "esp32_serial.log")
 
 
 def main():
