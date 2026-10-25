@@ -87,7 +87,20 @@ WinHdr hdr;
 
 struct { uint8_t src, cond, baseOp; uint32_t epoch; } scn = {DEFAULT_SRC, DEFAULT_COND, 0, 1};
 struct { bool active; char id[32]; uint8_t op; uint16_t hold, done; bool settle; uint32_t resumeWin; } test = {};
-struct { bool scn; uint8_t src, cond, op; bool test; char id[32]; uint8_t top; uint16_t hold; bool abort; } pend = {};
+struct { bool scn; uint8_t src, cond, op; bool test; char id[32]; uint8_t top; uint16_t hold; bool abort; uint8_t blink; } pend = {};
+
+// green, blue, red one at a time, then all three together - a dark LED here is a wiring fault
+static void lampTest(uint8_t rounds) {
+  const uint8_t leds[3] = {PIN_LED_PUB, PIN_LED_TEST, PIN_LED_ALARM};
+  for (uint8_t r = 0; r < rounds; r++) {
+    for (uint8_t p : leds) { digitalWrite(p, HIGH); delay(350); digitalWrite(p, LOW); }
+    for (uint8_t p : leds) digitalWrite(p, HIGH);
+    delay(600);
+    for (uint8_t p : leds) digitalWrite(p, LOW);
+    delay(200);
+  }
+  Serial.printf("[led] lamp test x%u done: PUB green D25, TEST blue D26, ALARM red D27\n", rounds);
+}
 struct { uint8_t op; uint32_t win, total; char path[72]; } rp = {};
 struct { char id[32]; bool ok; char msg[48]; } ack = {"", true, ""};
 struct { char state[12]; char cause[32]; float p; char sev[8]; } dx = {"", "", 0, ""};
@@ -215,6 +228,9 @@ static void handleCmd(JsonDocument &d) {
     pend.test = true; pend.top = oi; pend.hold = (hold + 1) / 2;
     strlcpy(pend.id, id, sizeof(pend.id));
     setAck(id, true, "test queued");
+  } else if (strcmp(cmd, "blink") == 0) {              // {"v":1,"cmd":"blink","times":5} - LED wiring check
+    pend.blink = constrain((int)(d["times"] | 3), 1, 20);
+    setAck(id, true, "blink queued");
   } else if (strcmp(cmd, "abort") == 0) {
     pend.abort = true;
     setAck(id, true, "abort queued");
@@ -556,15 +572,7 @@ void setup() {
   pinMode(PIN_LED_PUB, OUTPUT);
   pinMode(PIN_LED_TEST, OUTPUT);
   pinMode(PIN_LED_ALARM, OUTPUT);
-  // lamp test: green, blue, red one at a time, then all three - a dark LED here is a wiring fault
-  {
-    const uint8_t leds[3] = {PIN_LED_PUB, PIN_LED_TEST, PIN_LED_ALARM};
-    for (uint8_t p : leds) { digitalWrite(p, HIGH); delay(350); digitalWrite(p, LOW); }
-    for (uint8_t p : leds) digitalWrite(p, HIGH);
-    delay(600);
-    for (uint8_t p : leds) digitalWrite(p, LOW);
-    Serial.println("[led] lamp test done: PUB green, TEST blue, ALARM red");
-  }
+  lampTest(1);
 
   Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
   Wire.setClock(400000);
@@ -616,6 +624,7 @@ void loop() {
   if (!MQTT_TLS || dataEverOk || millis() > 120000) mqttEnsure();
   service();
   applyPending();
+  if (pend.blink) { uint8_t n = pend.blink; pend.blink = 0; lampTest(n); }
   if (millis() < httpRetryAt) { delay(10); return; }
 
   if (rp.total && rp.win >= rp.total) rp.win = 0;          // loop the recording
