@@ -88,14 +88,26 @@
 #define TEST_HOLD_MAX_S   60
 
 // ---------------------------------------------------------------- pins
+// Defaults match the Wokwi circuit (diagram.json). A breadboard wired differently overrides any of
+// the buttons/LEDs in config.local.h (find them with diag/pinfinder).
 #define PIN_I2C_SDA       21       // SSD1306 OLED
 #define PIN_I2C_SCL       22
 #define OLED_ADDR         0x3C
-#define PIN_BTN_FAULT     32       // cycle injected condition within the source
-#define PIN_BTN_SOURCE    33       // cycle source S1 -> S2 -> S3
-#define PIN_LED_PUB       25       // green: blinks on every publish
-#define PIN_LED_TEST      26       // blue:  on while an active test runs
-#define PIN_LED_ALARM     27       // red:   on when the reasoning layer reports an alarm
+#ifndef PIN_BTN_FAULT
+  #define PIN_BTN_FAULT   32       // cycle injected condition within the source
+#endif
+#ifndef PIN_BTN_SOURCE
+  #define PIN_BTN_SOURCE  33       // cycle source S1 -> S2 -> S3
+#endif
+#ifndef PIN_LED_PUB
+  #define PIN_LED_PUB     25       // green: blinks on every publish
+#endif
+#ifndef PIN_LED_TEST
+  #define PIN_LED_TEST    26       // blue:  on while an active test runs
+#endif
+#ifndef PIN_LED_ALARM
+  #define PIN_LED_ALARM   27       // red:   on when the reasoning layer reports an alarm
+#endif
 
 #define NTP_SERVER_1      "pool.ntp.org"
 #define NTP_SERVER_2      "time.google.com"
