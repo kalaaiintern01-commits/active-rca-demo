@@ -17,9 +17,19 @@
 #define SITE_ID           "add1f2"
 
 // ---------------------------------------------------------------- network
-#define WIFI_SSID         "Wokwi-GUEST"
-#define WIFI_PASS         ""
-#define WIFI_CHANNEL      6
+// A real board reads its Wi-Fi from config.local.h (git-ignored, never pushed):
+//   #define WIFI_SSID "my-hotspot"   #define WIFI_PASS "secret"   #define WIFI_CHANNEL 0
+// Without that file the defaults below join the Wokwi simulator's open network.
+#if __has_include("config.local.h")
+  #include "config.local.h"
+#endif
+#ifndef WIFI_SSID
+  #define WIFI_SSID       "Wokwi-GUEST"
+  #define WIFI_PASS       ""
+#endif
+#ifndef WIFI_CHANNEL
+  #define WIFI_CHANNEL    6        // Wokwi-GUEST is on channel 6; 0 = scan (any real network)
+#endif
 
 // ---------------------------------------------------------------- build profile
 // Every 2 s window is fetched from GitHub Pages with one HTTPS Range request over a single

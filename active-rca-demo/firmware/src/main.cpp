@@ -518,6 +518,17 @@ static void wifiUp() {
   uint32_t t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000) { delay(250); Serial.print('.'); }
   Serial.printf(" %s ip=%s\n", WiFi.status() == WL_CONNECTED ? "up" : "FAILED", WiFi.localIP().toString().c_str());
+  if (WiFi.status() != WL_CONNECTED) {
+    // show what the radio can actually see - the usual causes are a 5 GHz-only network or a
+    // name that differs from WIFI_SSID by one character
+    WiFi.disconnect();
+    int n = WiFi.scanNetworks();
+    Serial.printf("[wifi] status=%d, %d networks visible (2.4 GHz only):\n", (int)WiFi.status(), n);
+    for (int i = 0; i < n && i < 15; i++)
+      Serial.printf("[wifi]   \"%s\"  ch %d  %d dBm  %s\n", WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i),
+                    WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "open" : "secured");
+    WiFi.scanDelete();
+  }
 }
 
 static void timeSync() {
