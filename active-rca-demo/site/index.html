@@ -3,148 +3,197 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Active-RCA Live Demo</title>
-<meta name="description" content="Live dashboard for the IoT and LLM-based predictive maintenance demo with active root-cause analysis (PCCoE MDM IoT capstone).">
-<meta name="theme-color" content="#0b1a2e">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1a2e'/%3E%3Cpath d='M5 19c4-9 18-9 22 0' fill='none' stroke='%2396c8f0' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M9 22c3-5 11-5 14 0' fill='none' stroke='%2396c8f0' stroke-opacity='.55' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='14' r='3.2' fill='%233fd0a4'/%3E%3C/svg%3E">
+<title>Active-RCA Condition Monitor</title>
+<meta name="description" content="Condition monitoring and active root-cause analysis for MOTOR-01 - PCCoE MDM IoT capstone.">
+<meta name="theme-color" content="#1c2633">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c2633'/%3E%3Cpath d='M6 22a10 10 0 0 1 20 0' fill='none' stroke='%23e8edf2' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 22l6-7' stroke='%232e9e44' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
 </head>
 <body>
-<header class="top">
-  <a class="brand" href="./" aria-label="Active-RCA, live dashboard">
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19c4-9 18-9 22 0" /><path class="far" d="M9 22c3-5 11-5 14 0" /><circle cx="16" cy="14" r="3.2" /></svg>
-    <span>Active<b>·</b>RCA</span>
-  </a>
-  <p class="where"><span id="devName">MOTOR-01</span><span class="dim" id="topMachine"></span><span id="topOp"></span><span class="ep" id="topEp"></span></p>
-  <span class="replay-badge" id="replayBadge" hidden>Replay</span>
-  <div class="chips">
-    <span class="chip" id="chipBroker" title="MQTT broker"><i></i>broker</span>
-    <span class="chip" id="chipNode" title="ESP32 edge node"><i></i>node</span>
-    <span class="chip" id="chipBridge" title="Gate and AI bridge"><i></i>AI</span>
+<header class="appbar">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 22a10 10 0 0 1 20 0" /><path class="needle" d="M16 22l6-7" /></svg>
+    <span><b>ACTIVE-RCA</b> Condition Monitor</span>
+  </div>
+  <nav class="crumbs" aria-label="Location">PCCoE IoT Lab <i>›</i> Motor test cell <i>›</i> <b id="devName">MOTOR-01</b></nav>
+  <div class="replaybar" id="replayBox" hidden>
+    <span class="tag">REPLAY</span>
+    <select id="repEp" aria-label="Recorded episode"></select>
+    <button class="tb" id="repPlay">Pause</button>
+    <button class="tb" id="repRestart">Restart</button>
+    <div class="seg" role="group" aria-label="Playback speed"><button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button></div>
+    <span class="rt" id="repTime"></span>
+  </div>
+  <div class="links">
+    <span class="link" id="chipBroker" title="MQTT broker"><i></i><span>Broker</span></span>
+    <span class="link" id="chipNode" title="ESP32 edge node"><i></i><span>Node</span></span>
+    <span class="link" id="chipBridge" title="Drift gate + AI reasoning"><i></i><span>AI</span></span>
+    <span class="clock" id="clock">--:--:--</span>
   </div>
 </header>
 
-<main class="grid">
-  <!-- ============ left rail: controls only ============ -->
-  <aside class="rail">
-    <section class="block">
-      <h2>Inject</h2>
-      <select id="selSrc" aria-label="Machine"></select>
-      <p class="machine" id="machineDesc" hidden></p>
-      <select id="selCond" aria-label="Condition"></select>
-      <select id="selOp" aria-label="Operating point"></select>
-      <button class="btn primary" id="btnDeploy">Deploy</button>
-      <div class="btnrow">
-        <button class="btn" id="btnDiagnose" title="Start an episode now, even if the gate has not fired">Diagnose</button>
-        <button class="btn quiet" id="btnReset" title="Reset the episode">Reset</button>
+<div class="shell">
+  <!-- ================= asset tree + node facts ================= -->
+  <aside class="tree">
+    <div class="pane-h">Assets</div>
+    <ul class="assets" id="assetTree" role="tree">
+      <li class="lvl0">PCCoE IoT Lab</li>
+      <li class="lvl1">Motor test cell</li>
+      <li class="lvl2 dev">MOTOR-01 <span class="dot" id="treeDot"></span></li>
+      <li class="lvl3 src" data-src="S1"><span class="dot"></span>S1 · Paderborn PMSM</li>
+      <li class="lvl3 src" data-src="S2"><span class="dot"></span>S2 · CubeMars PMSM</li>
+      <li class="lvl3 src" data-src="S3"><span class="dot"></span>S3 · CARTIF DC motor</li>
+    </ul>
+    <p class="treehint">Machine and fault are selected on the node with the FAULT and SOURCE buttons.</p>
+
+    <div class="pane-h">Injected condition <span class="sub">ground truth, hidden from the AI</span></div>
+    <div class="truth" id="kvCond">—</div>
+
+    <div class="pane-h">Node</div>
+    <dl class="facts">
+      <dt>Firmware</dt><dd id="kvFw">—</dd>
+      <dt>Wi-Fi</dt><dd id="kvRssi">—</dd>
+      <dt>Uptime</dt><dd id="kvUp">—</dd>
+      <dt>Window</dt><dd id="kvWin">—</dd>
+      <dt>Recording</dt><dd id="kvReplay">—</dd>
+      <dt>Last cmd</dt><dd id="kvAck">—</dd>
+    </dl>
+    <a class="altlink" id="modeLink" href="?replay">Play a recorded episode</a>
+  </aside>
+
+  <!-- ================= main ================= -->
+  <main class="work">
+    <div class="tabs" role="tablist">
+      <button role="tab" class="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" class="tab" data-tab="signals" aria-selected="false">Signals</button>
+      <button role="tab" class="tab" data-tab="events" aria-selected="false">Events &amp; AI reasoning <span class="count" id="evCount" hidden>0</span></button>
+      <button role="tab" class="tab" data-tab="inject" aria-selected="false" id="injectTab" hidden>Inject (fallback)</button>
+      <div class="statebar"><span class="state" id="statePill">WAITING</span><span class="op" id="topOp">—</span></div>
+    </div>
+
+    <!-- ================= OVERVIEW ================= -->
+    <section class="view" data-view="overview">
+      <div class="row r1">
+        <article class="panel asset">
+          <header><h2>Asset</h2><span class="ph-meta" id="assetSrc">—</span></header>
+          <div class="motor" id="motor">
+            <span class="m3-test" id="motorTest" hidden>TEST</span>
+            <p class="m3-fallback">3D view needs WebGL.</p>
+          </div>
+          <div class="assetinfo">
+            <div><span>Machine</span><b id="aMachine">—</b></div>
+            <div><span>Operating point</span><b id="aOp">—</b></div>
+            <div><span>Sensors</span><b id="aSensors">—</b></div>
+          </div>
+        </article>
+
+        <article class="panel gauges">
+          <header><h2>Live readings</h2><span class="ph-meta" id="gaugeMeta">per 2 s window</span></header>
+          <div class="ggrid">
+            <figure class="gauge" id="gSpeed"></figure>
+            <figure class="gauge" id="gVib"></figure>
+            <figure class="gauge" id="gTemp"></figure>
+            <figure class="gauge" id="gCur"></figure>
+          </div>
+        </article>
+
+        <article class="panel health">
+          <header><h2>Health status</h2><span class="ph-meta" id="streak">gate streak 0 / 3</span></header>
+          <div class="hhead"><span></span><span>Healthy</span><span>Warning</span><span>Alarm</span><span>z</span></div>
+          <div id="healthRows" class="hrows"></div>
+          <p class="hnote">|z| vs the healthy baseline at this speed · warning above 3σ · 3 flagged windows in a row start a diagnosis</p>
+        </article>
       </div>
-      <p class="hint" id="cmdHint"></p>
+
+      <div class="row r2">
+        <article class="panel trend">
+          <header><h2>Vibration trend <span class="unit" id="rmsUnit">rms m/s²</span></h2>
+            <div class="legend"><span><i class="lg line"></i>RMS</span><span><i class="lg band"></i>healthy μ±3σ</span><span><i class="lg test"></i>AI test</span><span><i class="lg fire"></i>drift caught</span></div>
+          </header>
+          <div class="chart fill"><canvas id="cRms"></canvas><div class="empty" id="emptyMsg">Connecting…</div></div>
+        </article>
+
+        <article class="panel diag">
+          <header><h2>Diagnosis</h2><span class="ph-meta" id="diagMeta">—</span></header>
+          <div class="verdict" id="verdict"><p class="idle">No diagnosis. The machine is being monitored.</p></div>
+          <div class="testbar" id="testBar" hidden></div>
+          <h3 class="sub-h">Root-cause ranking</h3>
+          <div class="rank" id="rank"><p class="idle">Appears when a diagnosis starts.</p></div>
+        </article>
+      </div>
+
+      <div class="row r3">
+        <article class="panel conds">
+          <header><h2>Monitored conditions</h2><span class="ph-meta" id="condMeta">—</span></header>
+          <div class="tablewrap">
+            <table class="grid">
+              <thead><tr><th>Tag</th><th>Description</th><th class="n">Value</th><th class="n">Healthy μ</th><th class="n">z</th><th>Status</th></tr></thead>
+              <tbody id="condRows"><tr><td colspan="6" class="idle">Waiting for the first window…</td></tr></tbody>
+            </table>
+          </div>
+        </article>
+        <article class="panel ranking">
+          <header><h2>Feature deviation</h2><span class="ph-meta">|z|, latest window, sorted</span></header>
+          <div class="chart fill"><canvas id="cDev"></canvas></div>
+        </article>
+      </div>
     </section>
 
-    <section class="block" id="replayBox" hidden>
-      <h2>Replay</h2>
-      <select id="repEp" aria-label="Recorded episode"></select>
-      <div class="rp-track" aria-hidden="true"><i id="repBar"></i></div>
-      <div class="rp-row">
-        <button class="btn" id="repPlay">Pause</button>
-        <button class="btn quiet" id="repRestart">Restart</button>
-        <div class="seg" role="group" aria-label="Playback speed">
-          <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
+    <!-- ================= SIGNALS ================= -->
+    <section class="view" data-view="signals" hidden>
+      <div class="row r2s">
+        <article class="panel"><header><h2>Vibration RMS</h2><span class="ph-meta">healthy band at the current speed</span></header><div class="chart"><canvas id="cRms2"></canvas></div></article>
+        <article class="panel"><header><h2 id="hfTitle">Bearing band</h2></header><div class="chart"><canvas id="cHf"></canvas></div></article>
+      </div>
+      <div class="row r2s">
+        <article class="panel"><header><h2 id="auxTitle">Temperature / current</h2></header><div class="chart"><canvas id="cAux"></canvas></div></article>
+        <article class="panel"><header><h2>Spectrum bands</h2><span class="ph-meta">energy per band, latest window (log)</span></header><div class="chart"><canvas id="cBands"></canvas></div></article>
+      </div>
+    </section>
+
+    <!-- ================= EVENTS ================= -->
+    <section class="view" data-view="events" hidden>
+      <article class="panel">
+        <header><h2>Episode history</h2><span class="ph-meta">this session</span></header>
+        <div class="tablewrap">
+          <table class="grid">
+            <thead><tr><th>Time</th><th>Episode</th><th>Machine / speed</th><th>Trigger</th><th>Test ordered</th><th>Diagnosis</th><th class="n">Conf.</th><th>Severity</th><th>Ground truth</th><th class="n">Duration</th></tr></thead>
+            <tbody id="histRows"><tr><td colspan="10" class="idle">No episodes yet.</td></tr></tbody>
+          </table>
         </div>
-      </div>
-      <p class="hint" id="repTime"></p>
+      </article>
+      <article class="panel">
+        <header><h2>AI reasoning log</h2><span class="ph-meta">every step Claude returned, newest first</span></header>
+        <div class="feed" id="feed"><p class="idle">Appears when a diagnosis starts.</p></div>
+      </article>
     </section>
 
-    <section class="block">
-      <h2>Ground truth</h2>
-      <p class="truthline" id="kvCond">—</p>
+    <!-- ================= INJECT (fallback, ?inject) ================= -->
+    <section class="view" data-view="inject" hidden>
+      <article class="panel injectp">
+        <header><h2>Inject a condition</h2><span class="ph-meta">fallback when the hardware buttons are unavailable</span></header>
+        <div class="form">
+          <label>Machine<select id="selSrc"></select></label>
+          <label>Condition<select id="selCond"></select></label>
+          <label>Operating point<select id="selOp"></select></label>
+          <p class="machine" id="machineDesc"></p>
+          <div class="btns">
+            <button class="btn primary" id="btnDeploy">Deploy to node</button>
+            <button class="btn" id="btnDiagnose" title="Start a diagnosis now, even if the gate has not fired">Diagnose now</button>
+            <button class="btn" id="btnReset">Reset episode</button>
+          </div>
+          <p class="hint" id="cmdHint">Commands reach the node on its next 2 s window.</p>
+        </div>
+      </article>
     </section>
+  </main>
+</div>
 
-    <details class="more">
-      <summary>Node details</summary>
-      <dl class="kv" id="nodeKv">
-        <dt>Machine</dt><dd id="kvSrc">—</dd>
-        <dt>Op point</dt><dd id="kvOp">—</dd>
-        <dt>Test</dt><dd id="kvTest">—</dd>
-        <dt>Replay</dt><dd id="kvReplay">—</dd>
-        <dt>Command</dt><dd id="kvAck">—</dd>
-        <dt>Firmware</dt><dd id="kvFw">—</dd>
-      </dl>
-    </details>
-    <a class="swap-link" id="modeLink" href="?replay">Watch a recording</a>
-  </aside>
-
-  <!-- ============ centre: the episode story and the live signal ============ -->
-  <section class="main">
-    <ol class="story" id="story">
-      <li class="stage" id="stDrift"><span class="k">Drift caught</span><b class="v">Watching</b><span class="s" id="streak"></span></li>
-      <li class="stage" id="stStep"><span class="k">AI step 1</span><b class="v">—</b><span class="s"></span></li>
-      <li class="stage test" id="stTest"><span class="k">Test ordered</span><b class="v">—</b><span class="s"></span></li>
-      <li class="stage" id="stDiag"><span class="k">Diagnosis</span><b class="v">—</b><span class="s"></span></li>
-    </ol>
-
-    <div class="trace">
-      <div class="head">
-        <h2>Vibration <span class="dim" id="rmsUnit"></span></h2>
-        <span class="pill" id="statePill">waiting</span>
-      </div>
-      <div class="chart"><canvas id="cRms"></canvas><div class="empty" id="emptyMsg">Connecting…</div></div>
-      <p class="legend">
-        <span><i class="sw line"></i>live</span>
-        <span><i class="sw band"></i>healthy band</span>
-        <span><i class="sw test"></i>AI test</span>
-        <span><i class="sw fire"></i>drift caught</span>
-      </p>
-    </div>
-
-    <div class="minis">
-      <div><h2 id="hfTitle">Bearing band</h2><div class="chart sm"><canvas id="cHf"></canvas></div></div>
-      <div><h2 id="auxTitle">Temperature</h2><div class="chart sm"><canvas id="cAux"></canvas></div></div>
-    </div>
-
-    <details class="more">
-      <summary>Gate scores</summary>
-      <div id="zbars" class="zbars"></div>
-    </details>
-  </section>
-
-  <!-- ============ right: machine, verdict, forecast ============ -->
-  <aside class="side">
-    <div class="motor" id="motor">
-      <span class="m3-test" id="motorTest" hidden>Test</span>
-      <div class="gauges">
-        <div class="g" id="gSpeed"><svg viewBox="0 0 64 36" aria-hidden="true"><path class="tr" d="M6 32a26 26 0 0 1 52 0"/><path class="fl" d="M6 32a26 26 0 0 1 52 0" pathLength="100"/></svg><b>—</b><span>rpm</span></div>
-        <div class="g" id="gVib"><svg viewBox="0 0 64 36" aria-hidden="true"><path class="tr" d="M6 32a26 26 0 0 1 52 0"/><path class="fl" d="M6 32a26 26 0 0 1 52 0" pathLength="100"/></svg><b>—</b><span>vibration</span></div>
-        <div class="g" id="gLoad"><svg viewBox="0 0 64 36" aria-hidden="true"><path class="tr" d="M6 32a26 26 0 0 1 52 0"/><path class="fl" d="M6 32a26 26 0 0 1 52 0" pathLength="100"/></svg><b>—</b><span>load</span></div>
-      </div>
-      <p class="m3-fallback">3D view needs WebGL.</p>
-    </div>
-
-    <div class="verdict" id="verdict">
-      <div class="vbody" id="verdictBody"><p class="idle">No diagnosis yet.</p></div>
-    </div>
-
-    <div class="fc-wrap">
-      <h2>Forecast</h2>
-      <div class="forecast" id="forecast" hidden></div>
-      <p class="idle" id="forecastEmpty">Cause odds appear when the AI starts.</p>
-    </div>
-
-    <details class="more">
-      <summary>AI reasoning</summary>
-      <div id="feed" class="feed"></div>
-    </details>
-  </aside>
-</main>
-
-<footer>
-  Data: Paderborn KAt (Lessmeier et al. 2016) · Zenodo 22039010 · Zenodo 4314249. PCCoE MDM IoT capstone · Mehul Rawat, Atharva Palande · Guide Prof. Kalpana Patil
-  <span class="dim" id="topicRoot"></span>
-</footer>
+<footer class="foot">Data: Paderborn KAt (Lessmeier et al. 2016) · Zenodo 22039010 · Zenodo 4314249 &nbsp;|&nbsp; PCCoE MDM IoT capstone · Mehul Rawat, Atharva Palande · Guide Prof. Kalpana Patil <span id="topicRoot"></span></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>

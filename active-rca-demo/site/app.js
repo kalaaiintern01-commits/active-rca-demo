@@ -1,5 +1,6 @@
-/* Active-RCA live dashboard - talks to the broker directly over MQTT/WSS.
-   With ?replay it plays a recorded episode (data/demo-episodes.json) through the same handlers instead. */
+/* Active-RCA condition monitor - talks to the broker directly over MQTT/WSS.
+   ?replay  plays a recorded episode (data/demo-episodes.json) through the same handlers.
+   ?inject  (or /inject/) opens the fallback Inject tab, for when the node's buttons are unavailable. */
 (() => {
   "use strict";
   const qs = new URLSearchParams(location.search);
@@ -10,51 +11,55 @@
   };
   const ROOT = `pccoe/arca/${CFG.site}/${CFG.device}`;
   const REPLAY = qs.has("replay");
-  const MAXPTS = 120;
+  const INJECT = qs.has("inject") || location.hash === "#inject";
+  const MAXPTS = 150;
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const fmt = (v, d = 3) => (v == null || Number.isNaN(v) ? "—" : Math.abs(v) >= 1000 ? v.toFixed(0) : Number(v).toPrecision(d));
+  const fmt = (v, d = 3) => (v == null || Number.isNaN(v) ? "—" : Math.abs(v) >= 1000 ? Number(v).toFixed(0) : Number(Number(v).toPrecision(d)).toString());
   const pretty = (c) => String(c || "").replace(/_/g, " ");
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const C = { ink: "#1d2733", mute: "#66768a", grid: "#e6eaee", ok: "#2e9e44", warn: "#e0a800", alarm: "#d2342b", test: "#1f6fd6", neutral: "#8fa0b2", sky: "#6b8fb3", sky2: "#a7bccf" };
 
-  // names for the verdict (long), the forecast rows (short) and the part the 3D view lights
   const NAMES = {
-    healthy: "Healthy", unknown: "Unknown cause", bearing_outer_race: "Outer-race bearing", bearing_inner_race: "Inner-race bearing",
-    bearing_rolling_element: "Rolling-element bearing", bearing: "Bearing fault", eccentricity: "Rotor eccentricity", unbalance: "Unbalance",
+    healthy: "Healthy", unknown: "Unknown cause", bearing_outer_race: "Outer-race bearing defect", bearing_inner_race: "Inner-race bearing defect",
+    bearing_rolling_element: "Rolling-element defect", bearing: "Bearing fault", eccentricity: "Rotor eccentricity", unbalance: "Unbalance",
     misalignment: "Misalignment", load_change: "Load change", sensor_mounting: "Sensor mounting", magnet_demagnetisation: "Magnet demagnetisation",
-    stator_winding: "Stator winding", thermal_drift_wear: "Thermal drift and wear", bearing_or_brush_wear: "Bearing or brush wear",
+    stator_winding: "Stator winding fault", thermal_drift_wear: "Thermal drift / wear", bearing_or_brush_wear: "Bearing or brush wear",
     electrical_overload: "Electrical overload", cooling_failure: "Cooling failure",
-  };
-  const SHORT = {
-    bearing_outer_race: "Outer race", bearing_inner_race: "Inner race", bearing_rolling_element: "Rolling element", bearing: "Bearing",
-    magnet_demagnetisation: "Magnets", eccentricity: "Eccentricity", sensor_mounting: "Sensor mount", thermal_drift_wear: "Thermal drift", bearing_or_brush_wear: "Bearing / brush",
-    electrical_overload: "Overload", stator_winding: "Stator winding", unknown: "Unknown",
   };
   const PART = {
     bearing_outer_race: "Drive-end bearing, outer race", bearing_inner_race: "Drive-end bearing, inner race",
     bearing_rolling_element: "Drive-end bearing, rolling elements", bearing: "Drive-end bearing", eccentricity: "Rotor, eccentric air gap",
     unbalance: "Rotor, unbalanced mass", magnet_demagnetisation: "Rotor magnets", stator_winding: "Stator winding",
     electrical_overload: "Stator winding, overload", thermal_drift_wear: "Frame, running hot", cooling_failure: "Fan and frame, cooling",
-    sensor_mounting: "Accelerometer mount", misalignment: "Shaft and coupling, misaligned", load_change: "Coupling, load side",
+    sensor_mounting: "Accelerometer mount", misalignment: "Shaft and coupling", load_change: "Coupling, load side",
     bearing_or_brush_wear: "Brushes and rear bearing",
   };
   const causeName = (c) => NAMES[c] || pretty(c);
-  const causeShort = (c) => SHORT[c] || causeName(c);
   const sevClass = (s) => (s === "alarm" ? "alarm" : s === "info" ? "ok" : "watch");
+  const level = (z) => (z == null || Number.isNaN(z) ? "na" : Math.abs(z) > 6 ? "alarm" : Math.abs(z) > 3 ? "warn" : "ok");
+  const LEVEL_TEXT = { ok: "Healthy", warn: "Warning", alarm: "Alarm", na: "n/a", test: "Test" };
+  const clockTime = (d = new Date()) => d.toLocaleTimeString("en-GB");
 
   $("devName").textContent = CFG.device;
-  $("topicRoot").textContent = REPLAY ? " · recorded replay, no broker" : ` · topics ${ROOT}/…`;
+  $("topicRoot").textContent = REPLAY ? " · recorded replay" : ` · ${ROOT}`;
+  const tick = () => ($("clock").textContent = clockTime());
+  tick(); setInterval(tick, 1000);
 
   let MAN = null;
-  let node = {};
-  let scn = null, curSrc = null, curOp = null;
-  let lastEp = null;
-  let nodeSeen = 0;
-  let gateState = null;
-  let markNext = null;
-  const testPhase = new Map();      // seq -> telemetry test tag, so gate windows can be split into settle / run
+  let scn = null, curSrc = null, curOp = null, gateState = null, markNext = null, lastEp = null, nodeSeen = 0, lastTel = null;
+  const testPhase = new Map();
 
-  // ------------------------------------------------------------------ 3D machine view (optional - the page works without it)
+  // ------------------------------------------------------------------ tabs (+ ?inject fallback)
+  function showTab(name) {
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.dataset.view !== name));
+    if (name !== "inject") requestAnimationFrame(() => charts.forEach((c) => { c.resize(); c.update("none"); }));
+  }
+  document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => showTab(t.dataset.tab)));
+  if (INJECT) { $("injectTab").hidden = false; showTab("inject"); }
+
+  // ------------------------------------------------------------------ 3D motor
   let motor = null;
   const mstate = { src: null, rpm: 0, state: "monitor", test: null, diag: null, level: 0, load: 0 };
   function setMotor(patch) {
@@ -62,279 +67,285 @@
     if (motor) motor.update(mstate);
     const mt = $("motorTest");
     mt.hidden = !mstate.test;
-    if (mstate.test) mt.textContent = `AI test · ${Math.round(mstate.test.rpm)} rpm`;
+    if (mstate.test) mt.textContent = `AI TEST · ${Math.round(mstate.test.rpm)} rpm`;
   }
-  // three live gauges on the machine view: speed, vibration (x healthy), load (current x healthy, or torque)
-  function gauge(id, frac, text, tone = "") {
-    const g = $(id);
-    g.className = "g " + tone;
-    g.querySelector(".fl").style.strokeDasharray = `${Math.round(Math.max(0, Math.min(1, frac || 0)) * 100)} 100`;
-    g.querySelector("b").textContent = text;
-  }
-  function maxRpm(src) { const o = srcInfo(src)?.ops || {}; return Math.max(1000, ...Object.values(o).map((x) => x.rpm || 0)) * 1.15; }
   import("./motor3d.js")
     .then((m) => { motor = m.createMotor($("motor")); motor.update(mstate); })
     .catch((e) => { console.warn("3D view unavailable:", e && e.message); $("motor").classList.add("no3d"); });
 
-  // ------------------------------------------------------------------ charts
-  const COL = { ink: "#e8f1f8", mute: "#8fb0cc", ok: "#3fd0a4", hot: "#ff6b4a", test: "#a98bff", sky2: "#7fb6e0", sky3: "#5b8db9" };
-  Chart.defaults.color = COL.mute;
-  Chart.defaults.font.family = "'Barlow Condensed', Barlow, system-ui, sans-serif";
-  Chart.defaults.font.size = 13;
-  Chart.defaults.font.weight = 600;
-  const grid = { color: "rgba(150,200,240,.07)" };
+  // ------------------------------------------------------------------ round gauges (SVG)
+  const GA = 120;                                    // sweep runs from -GA to +GA degrees around 12 o'clock
+  const pt = (a, r) => [100 + r * Math.sin((a * Math.PI) / 180), 100 - r * Math.cos((a * Math.PI) / 180)];
+  const arc = (a0, a1, r) => {
+    const [x0, y0] = pt(a0, r), [x1, y1] = pt(a1, r);
+    return `M${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)},${y1.toFixed(1)}`;
+  };
+  const tickLabel = (v) => (Math.abs(v) >= 100 ? String(Math.round(v)) : String(Number(v.toPrecision(2))));
+  function makeGauge(id, label) {
+    const el = $(id);
+    el.innerHTML = `<svg viewBox="0 0 200 154" role="img" aria-label="${esc(label)}"><circle class="face" cx="100" cy="100" r="92"/>
+      <path class="track" d="${arc(-GA, GA, 78)}"/><g class="zones"></g><g class="ticks"></g>
+      <line class="needle" x1="100" y1="100" x2="100" y2="34"/><circle class="hub" cx="100" cy="100" r="6"/>
+      <text class="val" x="100" y="130">—</text><text class="un" x="100" y="147"></text></svg><figcaption>${esc(label)}</figcaption>`;
+    const svg = el.querySelector("svg"), needle = svg.querySelector(".needle"), val = svg.querySelector(".val"), un = svg.querySelector(".un");
+    let key = "", ang = null;
+    return {
+      set({ min = 0, max = 1, zones = [], value = null, text, unit = "", na = false }) {
+        el.classList.toggle("na", na);
+        if (na) { val.textContent = "no sensor"; un.textContent = "on this machine"; return; }
+        const k = `${min}|${max}|${zones.map((z) => `${z.from.toFixed(3)}-${z.to.toFixed(3)}${z.c}`).join()}`;
+        if (k !== key) {
+          key = k;
+          ang = (v) => -GA + (2 * GA * (Math.min(max, Math.max(min, v)) - min)) / (max - min || 1);
+          svg.querySelector(".zones").innerHTML = zones.filter((z) => z.to > z.from).map((z) => `<path class="zone" stroke="${z.c}" d="${arc(ang(z.from), ang(z.to), 78)}"/>`).join("");
+          let t = "";
+          for (let i = 0; i <= 5; i++) {
+            const v = min + ((max - min) * i) / 5, a = ang(v);
+            const [x0, y0] = pt(a, 68), [x1, y1] = pt(a, 86), [xl, yl] = pt(a, 55);
+            t += `<line class="tick" x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"/><text class="tl" x="${xl.toFixed(1)}" y="${(yl + 3).toFixed(1)}">${tickLabel(v)}</text>`;
+          }
+          svg.querySelector(".ticks").innerHTML = t;
+        }
+        needle.style.transform = `rotate(${value == null ? -GA : ang(value)}deg)`;
+        val.textContent = text ?? fmt(value);
+        un.textContent = unit;
+      },
+    };
+  }
+  const gSpeed = makeGauge("gSpeed", "Shaft speed"), gVib = makeGauge("gVib", "Vibration"), gTemp = makeGauge("gTemp", "Temperature"), gCur = makeGauge("gCur", "Phase current");
+  [gSpeed, gVib, gTemp, gCur].forEach((g) => g.set({ value: null, text: "—" }));
+  // green inside the healthy μ±3σ band, amber out to 6σ, red beyond - same thresholds as the drift gate
+  function bandZones(mu, sd, min, max) {
+    const z = [], lo = Math.max(min, mu - 3 * sd), hi = Math.min(max, mu + 3 * sd), hi6 = Math.min(max, mu + 6 * sd), lo6 = Math.max(min, mu - 6 * sd);
+    if (lo6 > min) z.push({ from: min, to: lo6, c: C.alarm });
+    if (lo > lo6) z.push({ from: lo6, to: lo, c: C.warn });
+    z.push({ from: lo, to: hi, c: C.ok });
+    if (hi6 > hi) z.push({ from: hi, to: hi6, c: C.warn });
+    if (max > hi6) z.push({ from: hi6, to: max, c: C.alarm });
+    return z;
+  }
+  const nice = (v) => Number(v.toPrecision(2));
+  function maxRpm(src) { const o = MAN?.sources?.[src]?.ops || {}; return Math.max(1000, ...Object.values(o).map((x) => x.rpm || 0)) * 1.15; }
 
-  // violet shading over AI-test windows and dashed markers (gate fired, new scenario) drawn behind the lines
-  const zones = {
+  // ------------------------------------------------------------------ charts
+  Chart.defaults.color = C.mute;
+  Chart.defaults.font.family = "'IBM Plex Sans', 'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 11.5;
+  const grid = { color: C.grid };
+  const tooltip = { backgroundColor: "#1c2633", titleFont: { weight: 600 }, padding: 8, cornerRadius: 3 };
+  // test windows shaded blue, event marks as dashed lines ("DRIFT CAUGHT", "NEW CONDITION")
+  Chart.register({
     id: "zones",
     beforeDatasetsDraw(c) {
-      const meta = c.$meta || [];
+      const meta = c.$meta;
+      if (!meta || !meta.length || !c.chartArea) return;
       const { ctx, chartArea: a, scales: { x } } = c;
-      if (!a || !meta.length) return;
-      const step = meta.length > 1 ? x.getPixelForValue(1) - x.getPixelForValue(0) : 12;
-      const big = !c.$small;
+      const step = meta.length > 1 ? x.getPixelForValue(1) - x.getPixelForValue(0) : 10;
       ctx.save();
       for (let i = 0; i < meta.length;) {
         if (!meta[i]?.test) { i++; continue; }
         let j = i;
         while (j + 1 < meta.length && meta[j + 1]?.test) j++;
         const x0 = Math.max(a.left, x.getPixelForValue(i) - step / 2), x1 = Math.min(a.right, x.getPixelForValue(j) + step / 2);
-        ctx.fillStyle = "rgba(169,139,255,.11)";
+        ctx.fillStyle = "rgba(31,111,214,.09)";
         ctx.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
-        ctx.fillStyle = "rgba(169,139,255,.7)";
+        ctx.fillStyle = C.test;
         ctx.fillRect(x0, a.top, x1 - x0, 2);
-        if (big && x1 - x0 > 70) {
-          ctx.fillStyle = COL.test;
-          ctx.font = "700 14px 'Barlow Condensed'";
-          ctx.fillText(`TEST ${meta[i].test}`.toUpperCase(), x0 + 7, a.top + 18);
-        }
+        if (x1 - x0 > 90) { ctx.font = "600 11px 'IBM Plex Sans'"; ctx.fillText(`AI TEST ${meta[i].test}`, x0 + 5, a.top + 14); }
         i = j + 1;
       }
       meta.forEach((m, k) => {
         if (!m?.mark) return;
         const px = Math.max(a.left + 1, x.getPixelForValue(k));
-        ctx.strokeStyle = m.mark.color;
-        ctx.lineWidth = 1.25;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
-        ctx.setLineDash([]);
-        if (big && c.width > 560) {
-          ctx.fillStyle = m.mark.color;
-          ctx.font = "700 14px 'Barlow Condensed'";
+        ctx.strokeStyle = m.mark.color; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke(); ctx.setLineDash([]);
+        if (c.width > 380) {
+          ctx.fillStyle = m.mark.color; ctx.font = "600 11px 'IBM Plex Sans'";
           const w = ctx.measureText(m.mark.text).width;
-          const tx = px + 6 + w > a.right ? px - 6 - w : px + 6;
-          ctx.fillText(m.mark.text, tx, a.top + (m.mark.row || 2) * 18);
+          ctx.fillText(m.mark.text, px + 5 + w > a.right ? px - 5 - w : px + 5, a.top + 14 + (m.mark.row || 0) * 13);
         }
       });
       ctx.restore();
     },
-    // a soft glow under the live line so it reads on a projector
-    beforeDatasetDraw(c, { index }) {
-      if (index === 2 && !c.$small) { c.ctx.save(); c.ctx.shadowColor = "rgba(232,241,248,.35)"; c.ctx.shadowBlur = 8; }
-    },
-    afterDatasetDraw(c, { index }) { if (index === 2 && !c.$small) c.ctx.restore(); },
-  };
-  Chart.register(zones);
-
+  });
   const isTestSeg = (s) => !!s.chart.$meta?.[s.p1DataIndex]?.test;
-  function mkChart(el, sets, small) {
-    const c = new Chart($(el), {
+  function lineChart(id, sets) {
+    const c = new Chart($(id), {
       type: "line",
       data: { labels: [], datasets: sets },
       options: {
-        // new windows glide in instead of snapping, so a spike or a slow climb reads as motion
-        // only the horizontal slide is animated: values never tween, so nothing on screen is a fake spike
+        responsive: true, maintainAspectRatio: false, spanGaps: true,
+        // new points slide in along x only, so the trace scrolls rather than morphing
         animation: reduceMotion ? false : { duration: 650, easing: "easeOutQuart" },
         animations: { y: { duration: 0 }, colors: false, numbers: { properties: ["x"] } },
-        transitions: { active: { animation: { duration: 0 } } },
-        responsive: true, maintainAspectRatio: false, spanGaps: true,
         interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "rgba(11,26,46,.94)", borderColor: "#2b5680", borderWidth: 1, padding: 10, titleColor: COL.ink, bodyColor: "#c4d6e6",
-            bodyFont: { family: "Barlow", weight: 500, size: 13 }, callbacks: { title: (it) => `window #${it[0]?.label ?? ""}`, label: (c) => (c.raw == null ? null : `${c.dataset.label}: ${fmt(c.raw, 4)}`) },
-          },
-        },
-        scales: {
-          x: { grid: { display: false }, border: { color: "rgba(150,200,240,.18)" }, ticks: { maxTicksLimit: small ? 5 : 8, callback(v) { return "#" + this.getLabelForValue(v); } } },
-          y: { grid, border: { display: false }, ticks: { maxTicksLimit: small ? 4 : 6 } },
-        },
-        elements: { point: { radius: 0, hoverRadius: 4 }, line: { borderWidth: 2, tension: 0.3, capBezierPoints: true } },
+        plugins: { legend: { display: false }, tooltip: { ...tooltip, callbacks: { title: (it) => `window #${it[0]?.label}`, label: (k) => (k.raw == null ? null : `${k.dataset.label}: ${fmt(k.raw, 4)}`) } } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8, maxRotation: 0, callback(v) { return "#" + this.getLabelForValue(v); } } }, y: { grid, ticks: { maxTicksLimit: 6 } } },
+        elements: { point: { radius: 0, hoverRadius: 3 }, line: { borderWidth: 1.8, tension: 0.25 } },
       },
     });
     c.$meta = [];
-    c.$small = !!small;
     return c;
   }
   const bandSets = (label) => [
-    { label: "healthy +3σ", data: [], borderColor: "rgba(63,208,164,.42)", borderWidth: 1, backgroundColor: "rgba(63,208,164,.11)", fill: "+1", pointRadius: 0 },
-    { label: "healthy −3σ", data: [], borderColor: "rgba(63,208,164,.42)", borderWidth: 1, fill: false, pointRadius: 0 },
-    { label, data: [], borderColor: COL.ink, borderWidth: 2.4, fill: false, segment: { borderColor: (s) => (isTestSeg(s) ? COL.test : undefined) } },
+    { label: "healthy +3σ", data: [], borderColor: "rgba(46,158,68,.5)", borderWidth: 1, backgroundColor: "rgba(46,158,68,.11)", fill: "+1", pointRadius: 0 },
+    { label: "healthy −3σ", data: [], borderColor: "rgba(46,158,68,.5)", borderWidth: 1, fill: false, pointRadius: 0 },
+    { label, data: [], borderColor: C.ink, borderWidth: 2, fill: false, segment: { borderColor: (s) => (isTestSeg(s) ? C.test : undefined) } },
   ];
-  const cRms = mkChart("cRms", bandSets("rms"));
-  const cHf = mkChart("cHf", bandSets("band energy"), true);
-  const cAux = mkChart("cAux", [
-    { label: "a", data: [], borderColor: COL.ink, fill: false },
-    { label: "b", data: [], borderColor: COL.sky2, fill: false },
-    { label: "c", data: [], borderColor: COL.sky3, fill: false },
-  ], true);
-  const charts = [cRms, cHf, cAux];
+  const cRms = lineChart("cRms", bandSets("rms"));
+  const cRms2 = lineChart("cRms2", bandSets("rms"));
+  const cHf = lineChart("cHf", bandSets("band"));
+  const cAux = lineChart("cAux", [
+    { label: "a", data: [], borderColor: C.ink, fill: false },
+    { label: "b", data: [], borderColor: C.sky, fill: false },
+    { label: "c", data: [], borderColor: C.sky2, fill: false },
+  ]);
+  // current gets its own right-hand axis next to temperature (A vs °C)
+  cAux.options.scales.y1 = { position: "right", display: false, grid: { display: false }, ticks: { maxTicksLimit: 6, color: C.sky } };
+  const lines = [cRms, cRms2, cHf, cAux];
+  const cDev = new Chart($("cDev"), {
+    type: "bar",
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 2, barPercentage: 0.78, categoryPercentage: 0.9 }] },
+    options: {
+      indexAxis: "y", animation: reduceMotion ? false : { duration: 400 }, responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { ...tooltip, callbacks: { label: (k) => `|z| ${Number(k.raw).toFixed(1)}` } } },
+      scales: {
+        x: { grid, beginAtZero: true, suggestedMax: 8, ticks: { stepSize: 3 }, title: { display: true, text: "|z|  ·  3 warning  ·  6 alarm", font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { autoSkip: false, font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
+      },
+    },
+  });
+  const cBands = new Chart($("cBands"), {
+    type: "bar",
+    data: { labels: ["0–50 Hz", "50–200 Hz", "200–800 Hz", "0.8–2.5 kHz", "1–5 kHz"], datasets: [{ data: [], backgroundColor: C.sky, borderRadius: 2 }] },
+    options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip }, scales: { y: { type: "logarithmic", grid }, x: { grid: { display: false } } } },
+  });
+  const charts = [...lines, cDev, cBands];
 
-  function clearCharts() {
-    for (const c of charts) { c.data.labels = []; c.data.datasets.forEach((d) => (d.data = [])); c.$meta = []; c.update("none"); }
-  }
+  function clearCharts() { for (const c of lines) { c.data.labels = []; c.data.datasets.forEach((d) => (d.data = [])); c.$meta = []; c.update("none"); } }
   function push(c, seq, vals, meta) {
     c.data.labels.push(seq);
     c.data.datasets.forEach((d, i) => d.data.push(vals[i] ?? null));
     c.$meta.push(meta);
     if (c.data.labels.length > MAXPTS) { c.data.labels.shift(); c.data.datasets.forEach((d) => d.data.shift()); c.$meta.shift(); }
   }
-  function setAt(c, seq, i, v) {
-    const k = c.data.labels.indexOf(seq);
-    if (k >= 0) c.data.datasets[i].data[k] = v;
-  }
-  function markAt(seq, mark) {
-    for (const c of charts) {
-      const k = c.data.labels.indexOf(seq);
-      if (k >= 0) c.$meta[k] = { ...(c.$meta[k] || {}), mark };
-      c.update();
-    }
-  }
+  function setAt(c, seq, i, v) { const k = c.data.labels.indexOf(seq); if (k >= 0) c.data.datasets[i].data[k] = v; }
+  function markAt(seq, mark) { for (const c of lines) { const k = c.data.labels.indexOf(seq); if (k >= 0) c.$meta[k] = { ...(c.$meta[k] || {}), mark }; c.update("none"); } }
 
-  // ------------------------------------------------------------------ manifest + controls
-  fetch("data/manifest.json").then((r) => r.json()).then((m) => { MAN = m; fillSrc(); setMotor({}); }).catch(() => {
-    hint("data/manifest.json not found - controls disabled", "err");
-  });
+  // ------------------------------------------------------------------ manifest + the fallback inject form
+  fetch("data/manifest.json").then((r) => r.json()).then((m) => { MAN = m; fillSrc(); }).catch(() => hint("data/manifest.json could not be loaded.", "err"));
+  const srcInfo = (src) => MAN?.sources?.[src];
+  const opDesc = (src, op) => srcInfo(src)?.ops?.[op]?.desc || op;
+  const rpmOf = (src, op) => srcInfo(src)?.ops?.[op]?.rpm;
+  let touched = false, synced = false;
   function fillSrc() {
     const s = $("selSrc");
     s.innerHTML = Object.entries(MAN.sources).map(([k, v]) => `<option value="${k}">${k} · ${esc(v.name)}</option>`).join("");
-    s.onchange = fillCondOp;
+    s.onchange = () => { touched = true; fillCondOp(); };
     fillCondOp();
   }
   function fillCondOp() {
     const src = MAN.sources[$("selSrc").value];
     $("machineDesc").textContent = `${src.motor}. Sensors: ${src.sensors}.`;
-    const files = src.files;
     $("selCond").innerHTML = Object.entries(src.conds).map(([k, v]) => `<option value="${k}">${k} · ${esc(v)}</option>`).join("");
-    const fillOps = () => {
+    const healthy = Object.keys(src.truth || {}).find((c) => src.truth[c] === "healthy");
+    $("selCond").onchange = (e) => {
+      if (e) touched = true;
       const cond = $("selCond").value;
-      const healthy = Object.keys(src.truth || {}).find((c) => src.truth[c] === "healthy");
       $("selOp").innerHTML = Object.entries(src.ops).map(([k, v]) => {
-        const has = files[`${cond}_${k}`];
-        const scored = !healthy || files[`${healthy}_${k}`];
+        const has = src.files[`${cond}_${k}`], scored = !healthy || src.files[`${healthy}_${k}`];
         return `<option value="${k}" ${has ? "" : "disabled"}>${esc(v.desc)}${has ? (scored ? "" : " (no baseline - manual diagnose)") : " (no recording)"}</option>`;
       }).join("");
-      $("selOp").value = files[`${cond}_${src.default_op}`] ? src.default_op : Object.keys(src.ops).find((k) => files[`${cond}_${k}`]);
+      $("selOp").value = src.files[`${cond}_${src.default_op}`] ? src.default_op : Object.keys(src.ops).find((k) => src.files[`${cond}_${k}`]);
     };
-    $("selCond").onchange = fillOps;
-    fillOps();
+    $("selOp").onchange = () => (touched = true);
+    $("selCond").onchange();
+  }
+  // the form follows whatever the node is running until the operator changes it
+  function syncControls(t) {
+    if (synced || touched || !MAN || !srcInfo(t.src)) return;
+    synced = true;
+    $("selSrc").value = t.src; fillCondOp();
+    $("selCond").value = t.label; $("selCond").onchange();
+    if (srcInfo(t.src).ops?.[t.op]) $("selOp").value = t.op;
   }
   function hint(t, cls = "") { const h = $("cmdHint"); h.textContent = t; h.className = "hint " + cls; }
-
-  let client = null;
+  let client = null, deployTimer = 0;
   function send(leaf, obj) {
-    if (!client) { hint("Controls are off in replay.", "err"); return false; }
+    if (!client) { hint("Controls are off while a recording plays.", "err"); return false; }
     client.publish(`${ROOT}/${leaf}`, JSON.stringify(obj), { qos: 1 });
     return true;
   }
-  let deployTimer = 0;
-  function deployDone() { clearTimeout(deployTimer); const b = $("btnDeploy"); b.disabled = !client; b.textContent = "Deploy"; }
+  function deployDone() { clearTimeout(deployTimer); $("btnDeploy").disabled = false; }
   $("btnDeploy").onclick = () => {
     const cmd = { v: 1, cmd: "scenario", id: "ui-" + Date.now().toString(36), src: $("selSrc").value, cond: $("selCond").value, op: $("selOp").value };
     if (!send("cmd", cmd)) return;
-    hint(`Sent ${cmd.src} ${cmd.cond}… waiting for the node`);
-    const b = $("btnDeploy");
-    b.disabled = true; b.textContent = "Sending…";
-    clearTimeout(deployTimer);
-    deployTimer = setTimeout(deployDone, 20000);
+    hint(`Sent ${cmd.src} ${cmd.cond} at ${opDesc(cmd.src, cmd.op)}. Waiting for the node…`);
+    $("btnDeploy").disabled = true;
+    deployTimer = setTimeout(() => { deployDone(); hint("No reply from the node in 20 s. Is it online?", "err"); }, 20000);
   };
   $("btnDiagnose").onclick = () => { if (send("ctl", { cmd: "diagnose" })) hint("Diagnosis requested."); };
   $("btnReset").onclick = () => { if (send("ctl", { cmd: "reset" })) hint("Reset requested."); };
+  if (REPLAY) [$("btnDeploy"), $("btnDiagnose"), $("btnReset")].forEach((b) => (b.disabled = true));
 
-  const chip = (id, state, text) => { const c = $(id); c.className = "chip " + (state === true ? "on" : state === false ? "off" : state); c.lastChild.textContent = text; };
+  // ------------------------------------------------------------------ links + transport
+  const link = (id, state, text) => { const c = $(id); c.className = "link " + (state === true ? "on" : state === false ? "off" : state); c.lastElementChild.textContent = text; };
   let gotTel = false;
   const empty = (text) => { const e = $("emptyMsg"); e.textContent = text; e.hidden = !text; };
-
   function dispatch(leaf, m) {
     if (leaf === "telemetry") onTel(m);
     else if (leaf === "gate") onGate(m);
     else if (leaf === "rca") onRca(m);
     else if (leaf === "status") onStatus(m);
     else if (leaf === "alert") onAlert(m);
-    else if (leaf === "bridge") chip("chipBridge", m.online, m.online ? String(m.engine || "AI").replace("claude-subscription:", "claude ").replace(" (recorded)", "") : "AI offline");
+    else if (leaf === "bridge") link("chipBridge", !!m.online, m.online ? "AI · " + String(m.engine || "").replace("claude-subscription:", "Claude ").replace(" (recorded)", "") : "AI offline");
   }
 
-  // ------------------------------------------------------------------ live: mqtt
   function startLive() {
-    // The secure WebSocket to the public broker can take 10-20 s to open on some networks, so give
-    // each attempt 45 s and say what is happening instead of showing empty charts.
     client = mqtt.connect(CFG.broker, { clientId: "arca-ui-" + Math.random().toString(16).slice(2, 8), clean: true, reconnectPeriod: 2000, connectTimeout: 45000, keepalive: 30 });
     let connected = false, connectStart = Date.now(), connectedAt = 0;
-    client.on("connect", () => {
-      connected = true; connectedAt = Date.now();
-      chip("chipBroker", true, "broker");
-      client.subscribe(`${ROOT}/#`, { qos: 0 });
-      if (!gotTel) empty("Waiting for the node…");
+    const arrivals = [];
+    client.on("connect", () => { connected = true; connectedAt = Date.now(); link("chipBroker", true, "Broker"); client.subscribe(`${ROOT}/#`, { qos: 0 }); if (!gotTel) empty("Waiting for the node…"); });
+    client.on("reconnect", () => (connectStart = Date.now()));
+    client.on("close", () => { if (connected) link("chipBroker", false, "Broker"); connected = false; });
+    client.on("message", (topic, buf) => {
+      let m; try { m = JSON.parse(buf.toString()); } catch { return; }
+      const leaf = topic.slice(ROOT.length + 1);
+      if (leaf === "telemetry") { arrivals.push(Date.now()); if (arrivals.length > 20) arrivals.shift(); }
+      dispatch(leaf, m);
     });
-    client.on("reconnect", () => { connectStart = Date.now(); });
-    client.on("close", () => { if (connected) chip("chipBroker", false, "broker"); connected = false; });
-    client.on("error", (e) => console.warn("mqtt", e && e.message));
     setInterval(() => {
       if (!connected) {
         const s = Math.round((Date.now() - connectStart) / 1000);
-        chip("chipBroker", "wait", `broker ${s} s`);
-        if (!gotTel) empty(`Connecting… ${s} s`);
-      } else if (!gotTel && Date.now() - connectedAt > 20000) {
-        empty("No data yet. Is the Wokwi simulator running and visible?");
+        link("chipBroker", "wait", `Broker ${s}s`);
+        if (!gotTel) empty(`Connecting to the broker… ${s} s`);
+        return;
+      }
+      if (!gotTel && Date.now() - connectedAt > 20000) empty("No data yet. Is the node powered and on Wi-Fi?");
+      // silent for much longer than its usual cadence: say so instead of showing a frozen plot as live
+      const gaps = arrivals.slice(1).map((t, i) => t - arrivals[i]).sort((a, b) => a - b);
+      const limit = Math.min(90000, Math.max(25000, 4 * (gaps[gaps.length >> 1] || 2000)));
+      if (nodeSeen && Date.now() - nodeSeen > limit) {
+        const s = Math.round((Date.now() - nodeSeen) / 1000);
+        link("chipNode", "wait", `Node silent ${s}s`);
+        empty(`No data from the node for ${s} s. Check its power and Wi-Fi.`);
       }
     }, 1000);
-    client.on("message", (topic, buf) => {
-      let m; try { m = JSON.parse(buf.toString()); } catch { return; }
-      dispatch(topic.slice(ROOT.length + 1), m);
-    });
-    // The public broker delivers with jitter (gaps of 13-15 s between 5 s windows are normal), so the
-    // node only counts as silent after 4x its usual interval (at least 25 s).
-    setInterval(() => {
-      if (!nodeSeen) return;
-      const quiet = Date.now() - nodeSeen;
-      if (quiet > silenceLimit()) {
-        chip("chipNode", "wait", `node ${Math.round(quiet / 1000)} s`);
-        empty(`Node silent ${Math.round(quiet / 1000)} s. Keep the Wokwi tab visible.`);
-        silentShown = true;
-      }
-    }, 2000);
-  }
-  const arrivals = [];
-  let silentShown = false;
-  function silenceLimit() {
-    if (arrivals.length < 4) return 25000;
-    const d = arrivals.slice(1).map((t, i) => t - arrivals[i]).sort((a, b) => a - b);
-    return Math.min(90000, Math.max(25000, 4 * d[Math.floor(d.length / 2)]));
   }
 
-  // ------------------------------------------------------------------ replay: a recorded episode through the same handlers
   function startReplay() {
-    document.body.classList.add("is-replay");
     $("replayBox").hidden = false;
-    $("replayBadge").hidden = false;
     const ml = $("modeLink"); ml.textContent = "Back to live"; ml.href = "./";
-    chip("chipBroker", true, "recorded");
-    ["btnDeploy", "btnDiagnose", "btnReset"].forEach((id) => ($(id).disabled = true));
-    empty("Loading…");
+    link("chipBroker", true, "Recorded");
+    empty("Loading the recording…");
     const R = { eps: [], ep: null, i: 0, t: 0, speed: 1, playing: false, last: 0 };
     const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
     const ui = () => {
       const d = R.ep ? R.ep.duration_s : 0;
-      $("repBar").style.width = d ? `${Math.min(100, (R.t / d) * 100)}%` : "0";
       $("repPlay").textContent = R.playing ? "Pause" : R.ep && R.i >= R.ep.items.length ? "Play again" : "Play";
       $("repTime").textContent = R.ep ? `${mmss(Math.min(R.t, d))} / ${mmss(d)}` : "";
     };
-    const play = (k) => {
-      resetView();
-      R.ep = R.eps[k]; R.i = 0; R.t = 0; R.playing = true; R.last = performance.now();
-      ui();
-    };
+    const play = (k) => { resetView(); R.ep = R.eps[k]; R.i = 0; R.t = 0; R.playing = true; R.last = performance.now(); ui(); };
     fetch("data/demo-episodes.json").then((r) => r.json()).then((D) => {
       R.eps = D.episodes;
       const sel = $("repEp");
@@ -344,16 +355,9 @@
       sel.onchange = () => play(+sel.value);
       play(+sel.value);
     }).catch(() => empty("data/demo-episodes.json could not be loaded."));
-    $("repPlay").onclick = () => {
-      if (!R.ep) return;
-      if (R.i >= R.ep.items.length) { play(R.eps.indexOf(R.ep)); return; }
-      R.playing = !R.playing; R.last = performance.now(); ui();
-    };
-    $("repRestart").onclick = () => { if (R.ep) play(R.eps.indexOf(R.ep)); };
-    document.querySelectorAll(".seg button").forEach((b) => (b.onclick = () => {
-      R.speed = +b.dataset.speed;
-      document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    }));
+    $("repPlay").onclick = () => { if (!R.ep) return; if (R.i >= R.ep.items.length) return play(R.eps.indexOf(R.ep)); R.playing = !R.playing; R.last = performance.now(); ui(); };
+    $("repRestart").onclick = () => R.ep && play(R.eps.indexOf(R.ep));
+    document.querySelectorAll(".seg button").forEach((b) => (b.onclick = () => { R.speed = +b.dataset.speed; document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); }));
     setInterval(() => {
       const now = performance.now();
       if (R.playing && R.ep) {
@@ -369,357 +373,244 @@
 
   function resetView() {
     clearCharts();
-    $("feed").innerHTML = "";
-    EPS.clear();
-    lastEp = null; scn = null; curSrc = null; curOp = null; gateState = null; markNext = null; synced = false; gotTel = false;
-    lastPct = null;
+    scn = null; curSrc = null; curOp = null; gateState = null; markNext = null; gotTel = false; lastTel = null;
     testPhase.clear();
-    verdictIdle("No diagnosis yet.");
-    storyReset();
-    base = {};
-    $("forecast").hidden = true; $("forecast").innerHTML = ""; $("forecastEmpty").hidden = false;
-    $("zbars").innerHTML = "";
-    $("topEp").textContent = "";
-    const st = $("statePill"); st.textContent = "waiting"; st.className = "pill";
-    setMotor({ diag: null, test: null, state: "monitor", level: 0 });
+    hist.length = 0;
+    $("histRows").innerHTML = `<tr><td colspan="10" class="idle">No episodes yet.</td></tr>`;
+    $("evCount").hidden = true;
+    $("feed").innerHTML = `<p class="idle">Appears when a diagnosis starts.</p>`;
+    clearEpisode();
+    setMotor({ test: null, state: "monitor", level: 0 });
   }
 
-  // ------------------------------------------------------------------ handlers
-  function srcInfo(src) { return MAN?.sources?.[src]; }
-  function opDesc(src, op) { return srcInfo(src)?.ops?.[op]?.desc || op; }
-  function rpmOf(src, op) { return srcInfo(src)?.ops?.[op]?.rpm; }
-
-  let synced = false, touched = false;
-  ["selSrc", "selCond", "selOp"].forEach((id) => $(id).addEventListener("change", () => (touched = true)));
-  function syncControls(t) {               // start the inject panel on whatever the node is running
-    if (synced || touched || !MAN) return;
-    synced = true;
-    $("selSrc").value = t.src; fillCondOp();
-    $("selCond").value = t.label; $("selCond").onchange();
-    if (srcInfo(t.src)?.ops?.[t.op]) $("selOp").value = t.op;
-  }
-
+  // ------------------------------------------------------------------ telemetry
   function onTel(t) {
     nodeSeen = Date.now();
-    arrivals.push(nodeSeen); if (arrivals.length > 20) arrivals.shift();
-    if (!gotTel || silentShown) { gotTel = true; silentShown = false; empty(""); }
+    if (!gotTel || !$("emptyMsg").hidden) { gotTel = true; empty(""); }
     if (!t.test) syncControls(t);
-    chip("chipNode", true, `node · ${t.fw || ""}`);
-    // only a different machine gets a fresh plot: a new condition or speed on the same motor continues
-    // the same trace, so the change (a jump, or a slow climb) stays visible against what came before
+    link("chipNode", true, `Node · ${t.fw || ""}`);
+    // only a different machine gets a fresh plot; a new condition on the same motor continues the trace
     if (curSrc !== null && t.src !== curSrc) clearCharts();
     curSrc = t.src;
     if (!t.test) curOp = t.op;
-    if (scn !== null && t.scn !== scn) { markNext = { color: COL.mute, text: "NEW SCENARIO", row: 1 }; clearEpisode(); }
+    if (scn !== null && t.scn !== scn) { markNext = { color: C.mute, text: "NEW CONDITION", row: 0 }; clearEpisode(); }
     scn = t.scn;
-    if (t.test) { testPhase.set(t.seq, t.test); if (testPhase.size > 60) testPhase.delete(testPhase.keys().next().value); }
+    if (t.test) { testPhase.set(t.seq, t.test); if (testPhase.size > 80) testPhase.delete(testPhase.keys().next().value); }
+    lastTel = t;
     const s = srcInfo(t.src);
-    const unit = t.vib.cal_ok ? "m/s²" : "units";
-    $("rmsUnit").textContent = `rms ${unit}`;
-    const hasHf = t.spec.bhf != null;
-    $("hfTitle").textContent = hasHf ? "Bearing band 1–5 kHz" : "Band 0.8–2.5 kHz";
-    const hf = hasHf ? t.spec.bhf : t.spec.b3;
     const rpm = rpmOf(t.src, t.op) || Math.round(t.rpm.avg);
+    const hasHf = t.spec.bhf != null;
     const meta = { test: t.test ? `${t.test.id} · ${rpm} rpm` : null };
     if (markNext) { meta.mark = markNext; markNext = null; }
     push(cRms, t.seq, [null, null, t.vib.rms_ms2], meta);
-    push(cHf, t.seq, [null, null, hf], { ...meta, mark: undefined });
-    cHf.data.datasets[2].label = hasHf ? "bhf" : "b3";
-    let aux;
-    if (t.temp.valid) {
-      $("auxTitle").textContent = "Temperature °C";
-      aux = [t.temp.c, null, null];
-      cAux.data.datasets[0].label = "temp °C";
+    push(cRms2, t.seq, [null, null, t.vib.rms_ms2], meta);
+    push(cHf, t.seq, [null, null, hasHf ? t.spec.bhf : t.spec.b3], { test: meta.test });
+    $("hfTitle").textContent = hasHf ? "Bearing band 1–5 kHz" : "Band 0.8–2.5 kHz";
+    if (t.temp.valid || t.cur.valid) {
+      push(cAux, t.seq, [t.temp.valid ? t.temp.c : null, t.cur.valid ? t.cur.rms_a : null, null], { test: meta.test });
+      cAux.data.datasets[0].label = "temp °C"; cAux.data.datasets[1].label = "current A";
+      cAux.data.datasets[1].yAxisID = "y1"; cAux.options.scales.y1.display = !!t.cur.valid;
+      $("auxTitle").textContent = "Temperature °C · current A";
     } else {
-      $("auxTitle").textContent = "Axes x · y · z";
-      aux = [t.vib.x_rms, t.vib.y_rms, t.vib.z_rms];
-      cAux.data.datasets[0].label = "x"; cAux.data.datasets[1].label = "y"; cAux.data.datasets[2].label = "z";
+      push(cAux, t.seq, [t.vib.x_rms, t.vib.y_rms, t.vib.z_rms], { test: meta.test });
+      ["x", "y", "z"].forEach((a, i) => (cAux.data.datasets[i].label = a + " rms"));
+      cAux.data.datasets[1].yAxisID = "y"; cAux.options.scales.y1.display = false;
+      $("auxTitle").textContent = "Vibration per axis (x · y · z rms)";
     }
-    push(cAux, t.seq, aux, { test: meta.test });
-    charts.forEach((c) => c.update());
-    node.lastTel = t;
+    lines.forEach((c) => c.update(c.canvas.offsetParent ? undefined : "none"));   // charts on a hidden tab skip the slide-in
+    cBands.data.datasets[0].data = [t.spec.b0, t.spec.b1, t.spec.b2, t.spec.b3, hasHf ? t.spec.bhf : null];
+    cBands.update("none");
 
-    $("topMachine").textContent = t.src;
-    $("topOp").textContent = `${rpm} rpm`;
-    gauge("gSpeed", t.rpm.avg / maxRpm(t.src), String(Math.round(t.rpm.avg)), t.test ? "tst" : "");
-    if (!t.cur.valid) {
-      const tq = /([\d.]+) N\.m/.exec(opDesc(t.src, t.op));
-      gauge("gLoad", tq ? +tq[1] / 1 : 0, tq ? `${tq[1]} N·m` : "n/a", tq ? "" : "off");
-      if (tq) setMotor({ load: Math.min(1, +tq[1]) });
-    }
-
-    $("kvSrc").textContent = s ? `${t.src} · ${s.name}` : t.src;
-    $("kvCond").innerHTML = `<span class="truth">${esc(t.label)}</span> ${esc(s?.conds?.[t.label] || "")}<span class="dim">hidden from the AI</span>`;
-    $("kvOp").textContent = `${t.op} · ${opDesc(t.src, t.op)} · ${fmt(t.rpm.avg, 4)} rpm`;
-    $("kvTest").textContent = t.test ? `${t.test.id} · ${t.test.phase} · ${t.test.left} left` : "—";
-    $("kvReplay").textContent = t.replay ? `${(t.replay.file || "").split("/").pop()}${t.replay.win != null ? ` · window ${t.replay.win + 1}/${t.replay.of || "?"}` : ""}` : "—";
-    $("kvFw").textContent = `${t.fw || "?"} · ${t.win.sample_hz} Hz · seq ${t.seq}`;
+    $("rmsUnit").textContent = `rms ${t.vib.cal_ok ? "m/s²" : "units"}`;
+    $("topOp").textContent = `${t.src} · ${rpm} rpm${t.test ? " · AI test" : ""}`;
+    $("assetSrc").textContent = s ? `${t.src} · ${s.name}` : t.src;
+    $("aMachine").textContent = s?.motor || t.src;
+    $("aOp").textContent = `${opDesc(t.src, t.op)}${t.test ? " (AI test)" : ""}`;
+    $("aSensors").textContent = s?.sensors || "—";
+    $("kvCond").innerHTML = `<b>${esc(t.label)}</b> ${esc(s?.conds?.[t.label] || "")}`;
+    $("kvFw").textContent = t.fw || "—";
+    if (t.net?.rssi != null) $("kvRssi").textContent = `${t.net.rssi} dBm`;
+    if (t.uptime_s != null) $("kvUp").textContent = upText(t.uptime_s);
+    $("kvWin").textContent = `#${t.seq} · ${t.win.sample_hz / 1000} kHz`;
+    $("kvReplay").textContent = t.replay ? (t.replay.file || "").split("/").pop().replace(/\.bin$/, "") : "—";
+    document.querySelectorAll("#assetTree .src").forEach((li) => li.classList.toggle("active", li.dataset.src === t.src));
+    const top = nice(maxRpm(t.src));
+    gSpeed.set({ min: 0, max: top, zones: [{ from: 0, to: top, c: t.test ? C.test : C.neutral }], value: t.rpm.avg, text: String(Math.round(t.rpm.avg)), unit: t.test ? "rpm · AI test" : "rpm" });
     setMotor({ src: t.src, rpm: t.rpm.avg, test: t.test ? { rpm: t.rpm.avg } : null });
   }
+  const upText = (s) => (s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min` : `${Math.floor(s / 60)} min ${s % 60} s`);
 
-  // ------------------------------------------------------------------ the episode story: drift caught -> AI step -> test -> diagnosis
-  let storyEp = null;
-  function stage(id, state, v, sub) {
-    const el = $(id);
-    el.className = "stage" + (id === "stTest" ? " test" : "") + (state ? " " + state : "");
-    if (v != null) el.querySelector(".v").textContent = v;
-    if (sub != null) el.querySelector(".s").textContent = sub;
-  }
-  function storyReset() {
-    storyEp = null;
-    stage("stDrift", "", "Watching", "");
-    $("stStep").querySelector(".k").textContent = "AI step 1";
-    stage("stStep", "", "—", "");
-    stage("stTest", "", "—", "");
-    stage("stDiag", "", "—", "");
-  }
-  storyReset();
-  const topLine = (d) => { const c = d.causes.slice().sort((a, b) => b.p - a.p)[0]; return [c, `${causeShort(c.cause)} ${Math.round(c.p * 100)}%`]; };
+  // ------------------------------------------------------------------ gate: health bars, gauges, conditions, deviation
+  const STATE_TEXT = { monitor: "MONITORING", diagnosing: "DIAGNOSING", testing: "AI TEST RUNNING", latched: "ALARM LATCHED" };
+  const maxAbs = (...v) => { const f = v.filter((x) => x != null); return f.length ? f.reduce((m, x) => (Math.abs(x) > Math.abs(m) ? x : m)) : null; };
+  const HEALTH = [
+    { name: "Vibration level", get: (z) => z.rms },
+    { name: "Bearing band", get: (z) => z.bhf ?? z.b3 },
+    { name: "Impacts", get: (z) => maxAbs(z.kurt, z.crest) },
+    { name: "Low frequency", get: (z) => maxAbs(z.b0, z.b1) },
+    { name: "Mid band", get: (z) => z.b2 },
+    { name: "Motor current", get: (z) => z.cur_rms },
+    { name: "Temperature", get: (z) => z.temp },
+  ];
+  // bar length: each third of the track is one zone (0-3σ healthy, 3-6σ warning, 6σ+ alarm)
+  const zw = (z) => { const a = Math.abs(z); return a <= 3 ? (a / 3) * 33.3 : a <= 6 ? 33.3 + ((a - 3) / 3) * 33.3 : Math.min(100, 66.6 + ((a - 6) / 6) * 33.4); };
+  const TAGS = [
+    { k: "rms", tag: "VIB.RMS", d: "Vibration RMS", v: (t) => t.vib.rms_ms2, mu: "rms" },
+    { k: "crest", tag: "VIB.CREST", d: "Crest factor", v: (t) => t.vib.crest },
+    { k: "kurt", tag: "VIB.KURT", d: "Kurtosis", v: (t) => t.spec.kurt },
+    { k: "b0", tag: "SPEC.B0", d: "Band 0–50 Hz", v: (t) => t.spec.b0 },
+    { k: "b1", tag: "SPEC.B1", d: "Band 50–200 Hz", v: (t) => t.spec.b1 },
+    { k: "b2", tag: "SPEC.B2", d: "Band 200–800 Hz", v: (t) => t.spec.b2 },
+    { k: "b3", tag: "SPEC.B3", d: "Band 0.8–2.5 kHz", v: (t) => t.spec.b3, mu: "b3" },
+    { k: "bhf", tag: "SPEC.BHF", d: "Bearing band 1–5 kHz", v: (t) => t.spec.bhf, mu: "bhf" },
+    { k: "cur_rms", tag: "CUR.RMS", d: "Phase current (A)", v: (t) => (t.cur.valid ? t.cur.rms_a : null), mu: "cur_rms" },
+    { k: "temp", tag: "TEMP", d: "Motor temperature (°C)", v: (t) => (t.temp.valid ? t.temp.c : null), mu: "temp" },
+    { k: null, tag: "SPEED", d: "Shaft speed (rpm)", v: (t) => t.rpm.avg },
+  ];
+  const sgn = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1);
 
-  const STATE_TEXT = { monitor: "monitoring", diagnosing: "AI thinking", testing: "AI test", latched: "alarm" };
-  let base = {};
   function onGate(g) {
-    const b = g.base || {};
+    const b = g.base || {}, z = g.z || {}, f = g.feats || {};
     const band = (k) => (b[k] ? [b[k][0] + 3 * b[k][1], Math.max(0, b[k][0] - 3 * b[k][1])] : [null, null]);
     const [ru, rl] = band("rms");
-    setAt(cRms, g.seq, 0, ru); setAt(cRms, g.seq, 1, rl);
-    const hfKey = b.bhf ? "bhf" : "b3";
-    const [hu, hl] = band(hfKey);
-    setAt(cHf, g.seq, 0, hu); setAt(cHf, g.seq, 1, hl);
-    cRms.update(); cHf.update();
+    for (const c of [cRms, cRms2]) { setAt(c, g.seq, 0, ru); setAt(c, g.seq, 1, rl); c.update("none"); }
+    const [hu, hl] = band(b.bhf ? "bhf" : "b3");
+    setAt(cHf, g.seq, 0, hu); setAt(cHf, g.seq, 1, hl); cHf.update("none");
 
-    const fired = g.state !== "monitor" && gateState === "monitor" && g.episode;
-    if (fired) {
-      markAt(g.seq, { color: COL.hot, text: `DRIFT CAUGHT · ${g.episode}`, row: 2 });
-      storyEp = g.episode;
-      stage("stDrift", "done hot", `Window #${g.seq}`, (g.flagged || []).slice(0, 3).join(" · ") || "manual start");
-      stage("stStep", "live", "Thinking…", "");
-    }
-    if (g.state === "monitor" && !g.episode && storyEp) storyReset();     // re-armed
+    if (g.state !== "monitor" && gateState === "monitor" && g.episode) markAt(g.seq, { color: C.alarm, text: `DRIFT CAUGHT · ${g.episode}`, row: 1 });
     gateState = g.state;
-    const st = $("statePill"); st.textContent = STATE_TEXT[g.state] || g.state; st.className = "pill " + g.state;
-    $("topEp").textContent = g.episode || "";
+    const st = $("statePill"); st.textContent = STATE_TEXT[g.state] || String(g.state).toUpperCase(); st.className = "state " + g.state;
+    const dotCls = g.state === "latched" ? "alarm" : g.state === "testing" ? "test" : g.state === "diagnosing" ? "warn" : "ok";
+    $("treeDot").className = "dot " + dotCls;
+    document.querySelectorAll("#assetTree .src").forEach((li) => (li.querySelector(".dot").className = "dot" + (li.classList.contains("active") ? " " + dotCls : "")));
+    $("streak").textContent = g.test ? `AI test window · ${g.test}` : g.state === "monitor" ? `gate streak ${Math.min(3, g.streak || 0)} / 3` : `episode ${g.episode || ""}`;
 
-    if (!storyEp && g.state === "monitor") {
-      const n = Math.min(3, g.streak || 0);
-      if (!b.rms) stage("stDrift", "warm", "No baseline", "use Diagnose");
-      else stage("stDrift", n ? "warm" : "", n ? "Rising" : "Watching", null);
-      if (b.rms) $("streak").innerHTML = `<i class="pip ${n > 0 ? "on" : ""}"></i><i class="pip ${n > 1 ? "on" : ""}"></i><i class="pip ${n > 2 ? "on" : ""}"></i>`;
-    }
-
-    const z = g.z || {};
-    $("zbars").innerHTML = Object.entries(z).map(([k, v]) => {
-      const cl = Math.max(-12, Math.min(12, v));
-      const w = (Math.abs(cl) / 12) * 50;
-      const left = cl >= 0 ? 50 : 50 - w;
-      const tone = g.test ? "tst" : Math.abs(v) > 6 ? "hot" : Math.abs(v) > 3 ? "warm" : "";
-      return `<span class="n">${esc(k.replace("_rms", ""))}</span><div class="zt"><span class="mid"></span><span class="lim" style="left:${50 - 12.5}%"></span><span class="lim" style="left:${50 + 12.5}%"></span><span class="bar ${tone}" style="left:${left}%;width:${w}%"></span></div><span class="v ${tone}">${v > 0 ? "+" : ""}${v.toFixed(1)}</span>`;
+    $("healthRows").innerHTML = HEALTH.map((h) => {
+      const v = h.get(z);
+      if (v == null) return `<div class="hrow na"><span class="hn">${h.name}</span><div class="seg3"><i></i><i></i><i></i></div><span class="zv">n/a</span></div>`;
+      const lv = g.test ? "test" : level(v);
+      return `<div class="hrow" title="${h.name}: ${LEVEL_TEXT[level(v)]}"><span class="hn">${h.name}</span><div class="seg3"><i></i><i></i><i></i><span class="fill ${lv}" style="width:${Math.max(2, zw(v)).toFixed(1)}%"></span></div><span class="zv">${sgn(v)}</span></div>`;
     }).join("");
 
-    // gauges: vibration and load as multiples of healthy at the operating point the window ran at
-    const f = g.feats || {};
-    const zr = Math.abs(z.rms || 0);
+    // gauges scaled around the healthy baseline at the current speed
+    const vibUnit = lastTel?.vib?.cal_ok === false ? "rms units" : "m/s² rms";
     if (b.rms && f.rms != null) {
-      const r = f.rms / b.rms[0];
-      gauge("gVib", Math.min(1, r / 3), `×${r.toFixed(2)}`, g.test ? "tst" : zr > 6 ? "hot" : zr > 3 ? "warm" : "ok");
+      const [mu, sd] = b.rms, max = nice(Math.max(mu + 9 * sd, f.rms * 1.15, mu * 1.6));
+      gVib.set({ min: 0, max, zones: bandZones(mu, sd, 0, max), value: f.rms, text: fmt(f.rms), unit: vibUnit });
+    } else if (f.rms != null) gVib.set({ min: 0, max: nice(f.rms * 2), value: f.rms, text: fmt(f.rms), unit: `${vibUnit} · no baseline` });
+    if (f.temp != null && b.temp) {
+      const [mu, sd] = b.temp, lo = Math.floor(mu - 15), hi = Math.ceil(Math.max(mu + 25, f.temp + 3));
+      gTemp.set({ min: lo, max: hi, zones: bandZones(mu, sd, lo, hi), value: f.temp, text: f.temp.toFixed(1), unit: "°C" });
+    } else gTemp.set({ na: true });
+    if (f.cur_rms != null && b.cur_rms) {
+      const [mu, sd] = b.cur_rms, hi = nice(Math.max(mu * 2, f.cur_rms * 1.2));
+      gCur.set({ min: 0, max: hi, zones: bandZones(mu, sd, 0, hi), value: f.cur_rms, text: fmt(f.cur_rms), unit: "A rms" });
+      setMotor({ load: Math.min(1, f.cur_rms / (2 * mu)) });
+    } else gCur.set({ na: true });
+    $("gaugeMeta").textContent = `window #${g.seq}${g.test ? " · AI test" : ""}`;
+
+    const t = lastTel;
+    if (t) {
+      $("condRows").innerHTML = TAGS.map((r) => {
+        const val = r.v(t), zz = r.k ? z[r.k] : null, mu = r.mu && b[r.mu] ? b[r.mu][0] : null;
+        if (val == null && zz == null) return "";
+        const lv = r.k == null ? "na" : g.test && zz != null ? "test" : level(zz);
+        const chip = `<span class="chip ${lv}">${r.k == null ? "info" : LEVEL_TEXT[lv]}</span>`;
+        return `<tr><td class="tagc">${esc(CFG.device)}.${r.tag}</td><td>${r.d}</td><td class="n">${fmt(val, 4)}</td><td class="n">${fmt(mu, 4)}</td><td class="n">${zz == null ? "—" : sgn(zz)}</td><td>${chip}</td></tr>`;
+      }).join("");
+      $("condMeta").textContent = `${clockTime()} · window #${g.seq}`;
     }
-    if (b.cur_rms && f.cur_rms != null) {
-      const r = f.cur_rms / b.cur_rms[0];
-      gauge("gLoad", Math.min(1, r / 2), `×${r.toFixed(2)}`, g.test ? "tst" : Math.abs(r - 1) > 0.25 ? "warm" : "");
-      setMotor({ load: Math.min(1, r / 2) });
-    }
-    if (g.test) onTestWindow(g, hfKey);
+
+    const ent = Object.entries(z).filter(([, v]) => v != null).map(([k, v]) => [k, Math.abs(v)]).sort((a, c) => c[1] - a[1]);
+    cDev.data.labels = ent.map((e) => e[0]);
+    cDev.data.datasets[0].data = ent.map((e) => +e[1].toFixed(2));
+    cDev.data.datasets[0].backgroundColor = ent.map((e) => (g.test ? C.test : e[1] > 6 ? C.alarm : e[1] > 3 ? C.warn : C.ok));
+    cDev.update();
+
+    if (g.test) onTestWindow(g, b.bhf ? "bhf" : "b3");
     let zmax = 0;
-    for (const v of Object.values(z)) zmax = Math.max(zmax, Math.abs(v));
+    for (const v of Object.values(z)) if (v != null) zmax = Math.max(zmax, Math.abs(v));
     setMotor({ state: g.state, level: Math.min(1, zmax / 10) });
   }
 
-  // average the test windows against the healthy baseline at the test's own operating point
+  // test observations as ratios against the healthy baseline at the test speed
   function onTestWindow(g, hfKey) {
     const E = epRec(g.episode || lastEp);
     if (!E) return;
     const T = E.tests[g.test] || (E.tests[g.test] = { id: g.test, op: g.op, hold_s: null, n: 0, sum: {}, done: false });
     T.op = g.op;
-    const tag = testPhase.get(g.seq);
-    const b = g.base || {}, f = g.feats || {};
+    const tag = testPhase.get(g.seq), b = g.base || {}, f = g.feats || {};
     if (!tag || tag.phase === "run") {
       T.n++;
-      for (const [k, key] of [["hf", hfKey], ["rms", "rms"], ["cur", "cur_rms"]]) {
-        if (b[key] && f[key] != null && b[key][0]) T.sum[k] = (T.sum[k] || 0) + f[key] / b[key][0];
-      }
+      for (const [k, key] of [["hf", hfKey], ["rms", "rms"]]) if (b[key] && f[key] != null && b[key][0]) T.sum[k] = (T.sum[k] || 0) + f[key] / b[key][0];
       T.hfKey = hfKey;
     }
-    const total = T.hold_s ? Math.round(T.hold_s / 2) : null;
-    stage("stTest", "live", null, T.n ? `window ${T.n}${total ? ` / ${total}` : ""}` : "settling");
-    updateObs(E, T);
+    renderTestBar(E, T);
+  }
+  function renderTestBar(E, T) {
+    const total = T.hold_s ? Math.round(T.hold_s / 2) : 10;
+    const rpm = rpmOf(E.src, T.op);
+    const avg = (k) => (T.n && T.sum[k] ? (T.sum[k] / T.n).toFixed(2) : null);
+    const bar = $("testBar");
+    bar.hidden = false;
+    bar.innerHTML = `<div><b>AI-ordered test ${esc(T.id)}</b> · ${rpm ? `${rpm} rpm` : esc(T.op)}${T.hold_s ? ` for ${T.hold_s} s` : ""} · ${T.done ? "done" : T.n ? `window ${Math.min(T.n, total)} of ${total}` : "settling"}${avg("rms") ? ` · rms ×${avg("rms")}` : ""}${avg("hf") ? ` · ${T.hfKey === "bhf" ? "bearing band" : "b3"} ×${avg("hf")}` : ""}</div>
+      <div class="tprog"><i style="width:${T.done ? 100 : Math.min(100, (T.n / total) * 100)}%"></i></div>`;
   }
 
   function onStatus(s) {
-    if (s.online === false) { chip("chipNode", false, "node"); return; }
+    if (s.online === false) { link("chipNode", false, "Node offline"); return; }
     nodeSeen = Date.now();
-    if (s.ack && s.ack.id && s.ack.id.startsWith("ui-")) deployDone();
-    if (s.ack && s.ack.id && s.ack.id.startsWith("ui-")) hint(`${s.ack.ok ? "Accepted" : "Rejected"}: ${s.ack.msg}`, s.ack.ok ? "ok" : "err");
-    $("kvAck").textContent = s.ack?.id ? `${s.ack.id} · ${s.ack.ok ? "ok" : "rejected"} · ${s.ack.msg}` : "—";
-    if (s.test) $("kvTest").textContent = `${s.test.id} → ${s.test.op} · ${s.test.done}/${s.test.hold}`;
+    if (s.ack && s.ack.id && s.ack.id.startsWith("ui-")) { deployDone(); hint(`${s.ack.ok ? "Node accepted" : "Node rejected"}: ${s.ack.msg}`, s.ack.ok ? "ok" : "err"); }
+    if (s.ack?.id) $("kvAck").textContent = `${s.ack.id} · ${s.ack.ok ? "ok" : "rejected"}`;
+    if (s.rssi != null) $("kvRssi").textContent = `${s.rssi} dBm`;
+    if (s.uptime_s != null) $("kvUp").textContent = upText(s.uptime_s);
+    if (s.fw) $("kvFw").textContent = s.fw;
   }
 
-  // retained summary of the last finished episode - keeps the verdict on screen after a page refresh
-  // drop the previous episode's result from the story line, verdict, forecast and 3D highlight (the log keeps it)
-  function clearEpisode() {
-    lastEp = null; lastPct = null;
-    EPS.clear();
-    storyReset();
-    verdictIdle("No diagnosis yet.");
-    $("forecast").hidden = true; $("forecast").innerHTML = ""; $("forecastEmpty").hidden = false;
-    setMotor({ diag: null });
-  }
+  // retained summary of the last episode - keeps the verdict on screen after a page refresh
   function onAlert(a) {
     if (!a) return;
-    if (a.state === "monitor" && !a.cause) {
-      if (lastEp || mstate.diag || $("verdict").className !== "verdict") clearEpisode();
-      return;
-    }
+    if (a.state === "monitor" && !a.cause) { if (lastEp || mstate.diag) clearEpisode(); return; }
     if (lastEp || !a.cause) return;
-    const final = a.state === "done";
+    const final = a.state === "done", sev = sevClass(a.severity);
     setMotor({ diag: { cause: a.cause, p: a.p || 0, severity: a.severity, final, label: PART[a.cause] || causeName(a.cause) } });
-    const sev = sevClass(a.severity);
-    if (final) stage("stDiag", `done sev-${sev}`, `${causeShort(a.cause)} ${Math.round((a.p || 0) * 100)}%`, `last result · ${a.ep}`);
-    $("verdict").className = `verdict sev-${sev}`;
-    $("verdictBody").innerHTML = `
-      <div class="v-top"><b class="v-pct">${Math.round((a.p || 0) * 100)}<small>%</small></b>
-        <div class="v-side"><span class="sev ${sev}">${esc(a.severity)}</span><span class="v-state">${final ? "last result" : "test running"} · ${esc(a.ep)}</span></div></div>
-      <h3 class="v-cause">${esc(causeName(a.cause))}</h3>`;
+    $("verdict").innerHTML = `<div class="vrow"><div class="vbig">${Math.round((a.p || 0) * 100)}<small>%</small></div><div class="vmain">
+      <div class="vcause">${esc(causeName(a.cause))}</div><div class="vsub"><span class="sevb ${sev}">${esc(a.severity)}</span> ${final ? "last result" : "test running"} · ${esc(a.ep)}</div></div></div>`;
+    $("diagMeta").textContent = a.ep || "—";
   }
 
-  // ------------------------------------------------------------------ episodes: forecast strip and verdict
+  // ------------------------------------------------------------------ episodes: verdict, ranking, history, log
   const EPS = new Map();
-  function epRec(id) {
-    if (!id) return null;
-    if (!EPS.has(id)) EPS.set(id, { id, src: curSrc, op: curOp, steps: [], tests: {}, shown: 0 });
-    return EPS.get(id);
-  }
-  const pmap = (s) => Object.fromEntries((s?.causes || []).map((c) => [c.cause, c.p]));
-  const top4 = (s) => s.causes.slice().sort((a, b) => b.p - a.p).slice(0, 4);
-
-  function stepCol(E, s, i) {
-    const prev = i > 0 ? E.steps[i - 1] : null;
-    const pm = pmap(prev);
-    const rows = top4(s);
-    let moved = null;
-    if (prev) moved = rows.reduce((m, c) => (Math.abs(c.p - (pm[c.cause] ?? 0)) > Math.abs(m.p - (pm[m.cause] ?? 0)) ? c : m), rows[0]).cause;
-    const rpm = rpmOf(E.src, s.op);
-    const head = i === 0 ? `Step 1${rpm ? ` · ${rpm} rpm` : ""}` : `Step ${s.step}`;
-    return `<div class="fc-col fc-step sev-${sevClass(s.severity)}" data-step="${i}"><h4>${head}</h4>${rows.map((c, k) => {
-      const p = Math.round(c.p * 100);
-      const d = prev ? p - Math.round((pm[c.cause] ?? 0) * 100) : 0;
-      return `<div class="fc-row ${k === 0 ? "lead" : ""} ${c.cause === moved ? "lit" : ""}" data-cause="${esc(c.cause)}" title="${esc(causeName(c.cause))}">
-        <span class="fc-n">${esc(causeShort(c.cause))}</span><span class="fc-p"><b data-to="${p}">${p}</b>${prev && d ? `<em>${d > 0 ? "+" : "−"}${Math.abs(d)}</em>` : ""}</span>
-        <span class="fc-bar"><i style="--w:${p}%"></i></span></div>`;
-    }).join("")}</div>`;
-  }
-  function obsCol(E, T) {
-    const rpm = rpmOf(E.src, T.op) || "—";
-    const avg = (k) => (T.n && T.sum[k] ? (T.sum[k] / T.n).toFixed(2) : null);
-    const hf = avg("hf"), rms = avg("rms");
-    return `<div class="fc-col fc-obs ${T.done ? "" : "live"}" id="obs-${esc(T.id)}"><h4>Test</h4>
-      <b class="fc-rpm">${rpm}</b><span class="fc-u">rpm</span>
-      <div class="fc-ratio">${hf ? `<span>${T.hfKey === "bhf" ? "hf" : "b3"} ×${hf}</span>` : ""}${rms ? `<span>rms ×${rms}</span>` : ""}</div></div>`;
-  }
-  const waitCol = (n) => `<div class="fc-col fc-wait"><h4>Step ${n}</h4><p>waiting…</p></div>`;
-
-  function renderStrip(E) {
-    const host = $("forecast");
-    const cols = [], tpl = [];
-    E.steps.forEach((s, i) => {
-      cols.push(stepCol(E, s, i)); tpl.push("minmax(120px, 1fr)");
-      if (s.test && E.tests[s.test.id]) {
-        cols.push(obsCol(E, E.tests[s.test.id])); tpl.push("minmax(80px, 92px)");
-        if (i === E.steps.length - 1 && !s.final) { cols.push(waitCol(s.step + 1)); tpl.push("minmax(120px, 1fr)"); }
-      }
-    });
-    host.style.gridTemplateColumns = tpl.join(" ");
-    host.innerHTML = cols.join("");
-    host.hidden = false;
-    $("forecastEmpty").hidden = true;
-    if (E.steps.length > E.shown) {
-      const k = E.steps.length - 1;
-      E.shown = E.steps.length;
-      const col = host.querySelector(`[data-step="${k}"]`);
-      if (k > 0) rerank(col, E.steps[k - 1]);
-      else if (!reduceMotion) col.classList.add("enter");
-    }
-    if (host.scrollWidth > host.clientWidth + 2) host.scrollLeft = host.scrollWidth;
-  }
-  function updateObs(E, T) {
-    const el = document.getElementById(`obs-${T.id}`);
-    if (el) el.outerHTML = obsCol(E, T);
-  }
-  // the signature moment: the new step starts from the previous odds and order, then settles into the revision
-  function rerank(col, prev) {
-    if (!col || reduceMotion) return;
-    const rows = [...col.querySelectorAll(".fc-row")];
-    if (!rows.length) return;
-    const pm = pmap(prev);
-    const order = top4(prev).map((c) => c.cause);
-    const h = rows.length > 1 ? rows[1].offsetTop - rows[0].offsetTop : rows[0].offsetHeight;
-    rows.forEach((row, n) => {
-      const c = row.dataset.cause;
-      const oi = order.indexOf(c);
-      row.style.transition = "none";
-      row.style.transform = `translateY(${((oi >= 0 ? oi : rows.length) - n) * h}px)`;
-      if (oi < 0) row.style.opacity = "0";
-      const bar = row.querySelector(".fc-bar i");
-      bar.style.transition = "none";
-      bar.style.setProperty("--w", `${Math.round((pm[c] ?? 0) * 100)}%`);
-      const num = row.querySelector(".fc-p b");
-      countUp(num, Math.round((pm[c] ?? 0) * 100), +num.dataset.to, 1100, 200);
-    });
-    void col.offsetHeight;
-    requestAnimationFrame(() => rows.forEach((row) => {
-      row.style.transition = ""; row.style.transform = ""; row.style.opacity = "";
-      const bar = row.querySelector(".fc-bar i");
-      bar.style.transition = "";
-      bar.style.setProperty("--w", `${row.querySelector(".fc-p b").dataset.to}%`);
-    }));
-  }
-  function countUp(el, from, to, ms = 900, delay = 0) {
-    if (!el) return;
-    if (reduceMotion || from == null || from === to) { el.textContent = to; return; }
-    el.textContent = from;
-    const t0 = performance.now() + delay;
-    const tick = (now) => {
-      const k = Math.max(0, Math.min(1, (now - t0) / ms));
-      el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 4)));
-      if (k < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }
-
-  function causesHtml(causes) {
-    return (causes || []).slice(0, 4).map((c) => `<div class="cause"><span>${esc(causeName(c.cause))}</span><span class="pv">${Math.round(c.p * 100)}%</span><span class="pb"><i style="width:${Math.round(c.p * 100)}%"></i></span></div>`).join("");
+  const hist = [];
+  function epRec(id) { if (!id) return null; if (!EPS.has(id)) EPS.set(id, { id, src: curSrc, op: curOp, steps: [], tests: {} }); return EPS.get(id); }
+  function clearEpisode() {
+    lastEp = null;
+    EPS.clear();
+    $("verdict").innerHTML = `<p class="idle">No diagnosis. The machine is being monitored.</p>`;
+    $("rank").innerHTML = `<p class="idle">Appears when a diagnosis starts.</p>`;
+    $("testBar").hidden = true;
+    $("diagMeta").textContent = "—";
+    setMotor({ diag: null });
   }
 
   function onRca(r) {
+    const d = r.diagnosis, dec = r.decision || {};
     const feed = $("feed");
+    if (feed.querySelector(".idle")) feed.innerHTML = "";
     if (r.episode !== lastEp) {
       lastEp = r.episode;
       const sep = document.createElement("div");
       sep.className = "epsep";
-      sep.textContent = `Episode ${r.episode} · ${r.src || ""} @ ${r.op ? opDesc(r.src, r.op) : ""}`;
+      sep.textContent = `${clockTime()} · Episode ${r.episode} · ${r.src || ""} at ${r.op ? opDesc(r.src, r.op) : "?"} · trigger: ${r.trigger || "?"}`;
       feed.prepend(sep);
     }
-    const d = r.diagnosis;
-    const dec = r.decision || {};
     const el = document.createElement("div");
-    el.className = "step" + (dec.final ? " final" : "");
-    if (!d) {
-      el.innerHTML = `<div class="meta"><span>${esc(r.episode)} · ${esc(dec.why)}</span></div><p>${esc(dec.error || "")}</p>`;
-    } else {
-      const test = dec.test ? `<div class="nexttest"><b>Test ordered</b> ${esc(opDesc(r.src, dec.test.op))} for ${dec.test.hold_s} s<br><span class="dim">${esc(d.test_rationale)}</span></div>` : "";
-      el.innerHTML = `<div class="meta"><span>Step ${r.step} · ${esc(r.engine)}</span><span>${r.latency_s ?? "?"} s</span></div>
-        <p>${esc(d.summary)}</p>${causesHtml(d.causes)}
-        <details><summary>Evidence</summary><ul>${d.causes.map((c) => `<li><b>${esc(causeName(c.cause))}</b>: ${esc(c.evidence)}</li>`).join("")}</ul></details>
-        ${test}`;
+    el.className = "step";
+    if (!d) el.innerHTML = `<div class="meta"><span><b>${esc(r.episode)}</b> · ${esc(dec.why)}</span></div><p>${esc(dec.error || "")}</p>`;
+    else {
+      el.innerHTML = `<div class="meta"><span><b>Step ${r.step}</b> · ${esc(String(r.engine || "").replace("claude-subscription:", "Claude "))}</span><span>${r.latency_s ?? "?"} s</span></div><p>${esc(d.summary)}</p>
+        <details><summary>Evidence cited</summary><ul>${d.causes.map((c) => `<li><b>${esc(causeName(c.cause))} ${Math.round(c.p * 100)}%</b>: ${esc(c.evidence)}</li>`).join("")}</ul></details>
+        ${dec.test ? `<div class="nexttest"><b>Test ordered:</b> ${esc(opDesc(r.src, dec.test.op))} for ${dec.test.hold_s} s. ${esc(d.test_rationale)}</div>` : ""}`;
     }
     const sepEl = feed.querySelector(".epsep");
     sepEl ? sepEl.after(el) : feed.prepend(el);
@@ -729,63 +620,49 @@
     E.src = r.src || E.src; E.op = r.op || E.op;
     const prevStep = E.steps[E.steps.length - 1];
     const prevTest = prevStep?.test && E.tests[prevStep.test.id];
-    if (prevTest) prevTest.done = true;
-    const st = { step: r.step, causes: d.causes, severity: d.severity, test: dec.test || null, final: !!dec.final, op: r.op };
+    if (prevTest) { prevTest.done = true; renderTestBar(E, prevTest); }
+    const st = { step: r.step, causes: d.causes.slice().sort((a, b) => b.p - a.p), severity: d.severity, test: dec.test || null, final: !!dec.final };
     const at = E.steps.findIndex((x) => x.step === r.step);
     if (at >= 0) E.steps[at] = st; else E.steps.push(st);
     if (dec.test) {
       const T = E.tests[dec.test.id] || (E.tests[dec.test.id] = { id: dec.test.id, n: 0, sum: {}, done: false });
       T.op = dec.test.op; T.hold_s = dec.test.hold_s;
+      renderTestBar(E, T);
     }
-    renderStrip(E);
-    renderVerdict(r, E);
-    const pill = $("statePill");
-    const ps = dec.final ? "latched" : dec.test ? "testing" : "diagnosing";
-    pill.textContent = STATE_TEXT[ps]; pill.className = "pill " + ps;
 
-    // story
-    if (storyEp !== r.episode) { storyEp = r.episode; stage("stDrift", "done hot", "Episode " + r.episode, r.trigger === "gate" ? "" : "manual start"); }
-    const [, line] = topLine(d);
-    $("stStep").querySelector(".k").textContent = `AI step ${r.step}`;
-    stage("stStep", "done", line, `${r.latency_s ?? "?"} s`);
-    if (prevTest) {
-      const hf = prevTest.n && prevTest.sum.hf ? `${prevTest.hfKey === "bhf" ? "hf" : "b3"} ×${(prevTest.sum.hf / prevTest.n).toFixed(2)}` : "done";
-      stage("stTest", "done", null, hf);
-    }
-    if (dec.test) stage("stTest", "live", `${rpmOf(r.src, dec.test.op) || dec.test.op} rpm · ${dec.test.hold_s} s`, "starting");
-    if (dec.final) {
-      const sev = sevClass(d.severity);
-      stage("stDiag", `done sev-${sev}`, line, r.truth ? (r.truth.correct ? `truth ${r.truth.label} · match` : `truth ${r.truth.label} · differs`) : d.severity);
-      if (!r.tests?.length && !prevTest) stage("stTest", "skip", "None needed", "");
-    } else stage("stDiag", "live", "Pending", "");
-  }
-
-  let lastPct = null;
-  function verdictIdle(text) {
-    $("verdict").className = "verdict";
-    $("verdictBody").innerHTML = `<p class="idle">${esc(text)}</p>`;
-  }
-  function renderVerdict(r, E) {
-    const d = r.diagnosis, dec = r.decision || {}, top = d.causes.slice().sort((a, b) => b.p - a.p)[0];
-    const sev = sevClass(d.severity);
-    const pct = Math.round(top.p * 100);
-    const prev = E.steps.length > 1 ? E.steps[E.steps.length - 2] : null;
-    const prevP = prev ? pmap(prev)[top.cause] : null;
+    const top = st.causes[0], sev = sevClass(d.severity), pct = Math.round(top.p * 100);
+    const idx = E.steps.indexOf(st);
+    const prev = idx > 0 ? E.steps[idx - 1] : null;
+    const prevP = prev ? (prev.causes.find((c) => c.cause === top.cause)?.p ?? 0) : null;
     const truth = r.truth;
-    $("verdict").className = `verdict sev-${sev}`;
-    const body = $("verdictBody");
-    body.innerHTML = `
-      <div class="v-top"><b class="v-pct"><span id="vNum">${pct}</span><small>%</small></b>
-        <div class="v-side"><span class="sev ${sev}">${esc(d.severity)}</span><span class="v-state">${dec.final ? "final" : "provisional"}</span></div></div>
-      <h3 class="v-cause">${esc(causeName(top.cause))}</h3>
-      <p class="v-meta">${prevP != null ? `<span class="v-move">${Math.round(prevP * 100)}% → ${pct}% after the test</span>` : `<span>testing before it commits</span>`}${truth ? `<span class="${truth.correct ? "ok" : "no"}">truth ${esc(truth.label)} · ${truth.correct ? "match" : "differs"}</span>` : ""}</p>
-      <p class="v-action" title="${esc(d.action)}">${esc(d.action)}</p>`;
-    if (!reduceMotion) { body.classList.remove("enter"); void body.offsetWidth; body.classList.add("enter"); }
-    countUp($("vNum"), prevP != null ? Math.round(prevP * 100) : lastPct, pct, 1100, 200);
-    lastPct = pct;
+    $("verdict").innerHTML = `<div class="vrow"><div class="vbig">${pct}<small>%</small></div><div class="vmain">
+        <div class="vcause">${esc(causeName(top.cause))}</div>
+        <div class="vsub"><span class="sevb ${sev}">${esc(d.severity)}</span> ${dec.final ? "final" : "provisional, test running"}${prevP != null ? ` · ${Math.round(prevP * 100)}% → ${pct}% after the test` : ""}</div></div></div>
+      ${d.action ? `<p class="vaction">${esc(d.action)}</p>` : ""}
+      ${truth ? `<p class="vtruth">Injected <b>${esc(truth.label)}</b> (${esc(causeName(truth.cause))}): ${truth.correct ? '<span class="ok">diagnosis correct</span>' : '<span class="no">diagnosis differs</span>'}</p>` : ""}`;
+    $("diagMeta").textContent = `${r.episode} · step ${r.step} · ${r.latency_s ?? "?"} s`;
+
+    // previous step drawn as a ghost bar behind the current one
+    const pm = Object.fromEntries((prev?.causes || []).map((c) => [c.cause, c.p]));
+    $("rank").innerHTML = st.causes.slice(0, 5).map((c, k) => `<div class="rk ${k === 0 ? "top " + sev : ""}"><span class="rn" title="${esc(causeName(c.cause))}">${esc(causeName(c.cause))}</span>
+        <span class="rb">${prev ? `<i class="prev" style="width:${Math.round((pm[c.cause] || 0) * 100)}%"></i>` : ""}<i class="now" style="width:${Math.round(c.p * 100)}%"></i></span>
+        <span class="rp">${Math.round(c.p * 100)}%</span></div>`).join("")
+      + (prev ? `<div class="rkey"><span><i style="background:#c9d2db"></i>step ${prev.step}</span><span><i style="background:var(--sel)"></i>step ${st.step}</span></div>` : "");
+
     setMotor({ diag: { cause: top.cause, p: top.p, severity: d.severity, final: !!dec.final, label: PART[top.cause] || causeName(top.cause) } });
+
+    if (dec.final) {
+      hist.unshift({ t: new Date(), r, top, sev });
+      $("evCount").hidden = false; $("evCount").textContent = hist.length;
+      $("histRows").innerHTML = hist.map(({ t, r: x, top: tp, sev: sv }) => {
+        const tests = (x.tests || []).map((tt) => `${rpmOf(x.src, tt.op) || tt.op} rpm`).join(", ") || "none";
+        const tr = x.truth;
+        return `<tr><td class="n">${clockTime(t)}</td><td>${esc(x.episode)}</td><td>${esc(x.src)} · ${rpmOf(x.src, x.op) || esc(x.op)} rpm</td><td>${esc(x.trigger || "")}</td>
+          <td>${tests}</td><td>${esc(causeName(tp.cause))}</td><td class="n">${Math.round(tp.p * 100)}%</td><td><span class="chip ${sv === "watch" ? "warn" : sv}">${esc(x.diagnosis.severity)}</span></td>
+          <td>${tr ? `${esc(tr.label)} <span class="chip ${tr.correct ? "ok" : "alarm"}">${tr.correct ? "match" : "differs"}</span>` : "—"}</td><td class="n">${x.duration_s ?? "?"} s</td></tr>`;
+      }).join("");
+    }
   }
 
-  setMotor({});
   if (REPLAY) startReplay(); else startLive();
 })();
