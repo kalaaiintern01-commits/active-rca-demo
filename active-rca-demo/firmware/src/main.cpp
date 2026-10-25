@@ -292,7 +292,10 @@ static void pollButtons() {
 }
 
 // called from every wait loop so commands, keepalives and buttons never stall behind a download
+static uint32_t pubLedOffAt = 0;   // PUB LED stays lit ~200 ms per window, switched off in service()
+
 static void service() {
+  if (pubLedOffAt && (int32_t)(millis() - pubLedOffAt) >= 0) { digitalWrite(PIN_LED_PUB, LOW); pubLedOffAt = 0; }
   if (mqtt.connected()) mqtt.loop();
   if (statusDirty) publishStatus();
   pollButtons();
@@ -462,6 +465,7 @@ static void publishTelemetry() {
             mqtt.publish(TOPIC_TELEMETRY, (const uint8_t *)buf, len, false);
   if (!ok) pubFails++;
   digitalWrite(PIN_LED_PUB, HIGH);
+  pubLedOffAt = millis() + 200;
   Serial.printf("[pub] #%lu %s %s %s rms=%.3f%s %s len=%u heap=%uk%s\n", (unsigned long)seq, s.id,
                 s.conds[scn.cond], s.ops[rp.op], feat.rms, (hdr.flags & 1) ? "m/s2" : "au",
                 lastWinPhase ? lastWinPhase : "", (unsigned)len, ESP.getFreeHeap() / 1024, ok ? "" : " FAIL");
@@ -552,6 +556,15 @@ void setup() {
   pinMode(PIN_LED_PUB, OUTPUT);
   pinMode(PIN_LED_TEST, OUTPUT);
   pinMode(PIN_LED_ALARM, OUTPUT);
+  // lamp test: green, blue, red one at a time, then all three - a dark LED here is a wiring fault
+  {
+    const uint8_t leds[3] = {PIN_LED_PUB, PIN_LED_TEST, PIN_LED_ALARM};
+    for (uint8_t p : leds) { digitalWrite(p, HIGH); delay(350); digitalWrite(p, LOW); }
+    for (uint8_t p : leds) digitalWrite(p, HIGH);
+    delay(600);
+    for (uint8_t p : leds) digitalWrite(p, LOW);
+    Serial.println("[led] lamp test done: PUB green, TEST blue, ALARM red");
+  }
 
   Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
   Wire.setClock(400000);
@@ -647,5 +660,4 @@ void loop() {
   }
   drawOled();
   delay(30);
-  digitalWrite(PIN_LED_PUB, LOW);
 }
