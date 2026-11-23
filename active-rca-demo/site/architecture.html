@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active-RCA Architecture</title>
+<meta name="description" content="System architecture of Active-RCA: ESP32 edge node, MQTT broker, drift-gated bridge, Claude reasoning and the live dashboard.">
+<meta name="theme-color" content="#1c2633">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c2633'/%3E%3Cpath d='M6 22a10 10 0 0 1 20 0' fill='none' stroke='%23e8edf2' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 22l6-7' stroke='%232e9e44' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Same palette as the dashboard: greys carry structure, colour marks the path a message takes. */
+:root {
+  --bg: #e6e9ed; --panel: #ffffff; --strip: #f3f5f7; --line: #cfd6dd; --line2: #b9c3cc;
+  --ink: #1d2733; --ink2: #3c4a58; --mute: #66768a; --bar: #1c2633; --sel: #0b5cad;
+  --ok: #2e9e44; --warn: #c98f00; --alarm: #d2342b; --test: #1f6fd6; --ai: #c25a1c;
+  --box: #f7f9fb; --boxai: #fff4ec; --boxok: #eef7f0;
+  --f: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --fm: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161c; --panel: #18202a; --strip: #1d2631; --line: #2c3845; --line2: #3a4858;
+    --ink: #e6ecf2; --ink2: #b8c4d0; --mute: #8696a8; --bar: #0c1117; --sel: #4b9be8;
+    --ok: #4cc265; --warn: #e6b12e; --alarm: #ef5b52; --test: #5b9cf0; --ai: #ec8a4f;
+    --box: #1d2631; --boxai: #2a2119; --boxok: #182a1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161c; --panel: #18202a; --strip: #1d2631; --line: #2c3845; --line2: #3a4858;
+  --ink: #e6ecf2; --ink2: #b8c4d0; --mute: #8696a8; --bar: #0c1117; --sel: #4b9be8;
+  --ok: #4cc265; --warn: #e6b12e; --alarm: #ef5b52; --test: #5b9cf0; --ai: #ec8a4f;
+  --box: #1d2631; --boxai: #2a2119; --boxok: #182a1f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 15px/1.55 var(--f); }
+a { color: var(--sel); }
+code, .mono { font-family: var(--fm); font-size: .9em; }
+
+.appbar { display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 48px; background: var(--bar); color: #e8edf2; border-bottom: 3px solid var(--sel); }
+.appbar svg { width: 22px; height: 22px; fill: none; stroke: #e8edf2; stroke-width: 3; stroke-linecap: round; }
+.appbar svg .needle { stroke: #2e9e44; }
+.appbar b { letter-spacing: .06em; }
+.appbar a { margin-left: auto; color: #c9d6e3; font-size: 13px; text-decoration: none; border: 1px solid #3a4a5c; border-radius: 4px; padding: 4px 10px; }
+.appbar a:hover { background: #263445; }
+
+main { max-width: 1300px; margin: 0 auto; padding: 28px 16px 48px; }
+.eyebrow { font: 500 12px var(--fm); letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin: 0 0 6px; }
+h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.15; margin: 0 0 10px; }
+.lede { max-width: 760px; color: var(--ink2); margin: 0 0 24px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+.diagram { overflow-x: auto; padding: 12px; }
+.diagram svg { display: block; min-width: 980px; width: 100%; height: auto; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 4px 0; font-size: 13px; color: var(--ink2); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { display: inline-block; width: 26px; height: 0; border-top: 2.5px solid; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr)); gap: 16px; margin-top: 16px; }
+ol.steps { margin: 0; padding-left: 22px; }
+ol.steps li { margin: 0 0 8px; color: var(--ink2); }
+ol.steps b { color: var(--ink); }
+.card { min-width: 0; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--mute); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+td:first-child { font-family: var(--fm); white-space: nowrap; }
+footer { margin-top: 28px; color: var(--mute); font-size: 13px; }
+
+/* diagram */
+.d-box { fill: var(--box); stroke: var(--line2); stroke-width: 1.4; }
+.d-ai { fill: var(--boxai); stroke: var(--ai); }
+.d-ok { fill: var(--boxok); stroke: var(--ok); }
+.d-plan { fill: none; stroke: var(--mute); stroke-dasharray: 6 5; }
+.d-t { fill: var(--ink); font: 600 14px var(--f); }
+.d-k { fill: var(--mute); font: 500 10.5px var(--fm); letter-spacing: .08em; }
+.d-s { fill: var(--ink2); font: 12px var(--f); }
+.d-m { fill: var(--ink2); font: 11px var(--fm); }
+.d-l { font: 500 11px var(--fm); }
+.d-inner { fill: var(--panel); stroke: var(--line); }
+.w-data { stroke: var(--ink2); fill: none; stroke-width: 2; }
+.w-up { stroke: var(--ok); fill: none; stroke-width: 2.2; }
+.w-down { stroke: var(--test); fill: none; stroke-width: 2.2; }
+.w-ai { stroke: var(--ai); fill: none; stroke-width: 2.2; }
+.w-plan { stroke: var(--mute); fill: none; stroke-width: 2; stroke-dasharray: 6 5; }
+.c-data { fill: var(--ink2); } .c-up { fill: var(--ok); } .c-down { fill: var(--test); } .c-ai { fill: var(--ai); } .c-plan { fill: var(--mute); }
+</style>
+</head>
+<body>
+<header class="appbar">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 22a10 10 0 0 1 20 0" /><path class="needle" d="M16 22l6-7" /></svg>
+  <span><b>ACTIVE-RCA</b> Architecture</span>
+  <a href="./">Live dashboard →</a>
+</header>
+
+<main>
+  <p class="eyebrow">MOTOR-01 · PCCoE B.Tech MDM IoT</p>
+  <h1>How Active-RCA is wired</h1>
+  <p class="lede">An ESP32 edge node turns motor vibration into 18 features per 2-second window and publishes them over MQTT.
+  A bridge on the laptop checks every window against healthy baselines. When the machine drifts out of its band, Claude
+  is asked for the root cause and may order an <b>active test</b>: the node runs at another speed or load, the result
+  comes back as new evidence, and Claude commits to a diagnosis. The dashboard watches all of it live.</p>
+
+  <section class="card diagram" aria-label="Architecture diagram">
+    <svg viewBox="0 0 1300 720" role="img" aria-labelledby="dgTitle">
+      <title id="dgTitle">Data path from GitHub Pages through the ESP32 node, the HiveMQ broker, the bridge and Claude, with the dashboard, the training pipeline and the live sensor rig</title>
+      <defs>
+        <marker id="a-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="c-data"/></marker>
+        <marker id="a-up" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="c-up"/></marker>
+        <marker id="a-down" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="c-down"/></marker>
+        <marker id="a-ai" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="c-ai"/></marker>
+        <marker id="a-plan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="c-plan"/></marker>
+      </defs>
+
+      <!-- ============ 1 GitHub Pages -->
+      <rect class="d-box" x="20" y="60" width="180" height="190" rx="8"/>
+      <text class="d-k" x="34" y="84">STORAGE</text>
+      <text class="d-t" x="34" y="106">GitHub Pages</text>
+      <text class="d-s" x="34" y="132">Replay slices</text>
+      <text class="d-m" x="34" y="150">data/&lt;src&gt;/*.bin</text>
+      <text class="d-s" x="34" y="176">S1 Paderborn</text>
+      <text class="d-s" x="34" y="194">S2 CubeMars</text>
+      <text class="d-s" x="34" y="212">S3 CARTIF</text>
+      <text class="d-s" x="34" y="236">+ this dashboard</text>
+
+      <!-- ============ 2 Edge node -->
+      <rect class="d-box" x="250" y="40" width="240" height="230" rx="8"/>
+      <text class="d-k" x="264" y="64">EDGE NODE · MOTOR-01</text>
+      <text class="d-t" x="264" y="86">ESP32-WROOM-32</text>
+      <text class="d-m" x="264" y="104">firmware arca-1.1.0</text>
+      <text class="d-s" x="264" y="128">Fetches 1 window per 2 s</text>
+      <text class="d-s" x="264" y="146">18 features, same maths</text>
+      <text class="d-s" x="264" y="164">as training (C++ ≡ Python)</text>
+      <rect class="d-inner" x="264" y="176" width="212" height="82" rx="5"/>
+      <text class="d-s" x="274" y="194">OLED status screen</text>
+      <text class="d-s" x="274" y="212">FAULT / SOURCE buttons</text>
+      <text class="d-s" x="274" y="230">LEDs: PUB · TEST · ALARM</text>
+      <text class="d-m" x="274" y="249">Wokwi sim or DevKit board</text>
+
+      <!-- ============ 3 Broker -->
+      <rect class="d-box" x="580" y="60" width="180" height="190" rx="8"/>
+      <text class="d-k" x="594" y="84">MESSAGING</text>
+      <text class="d-t" x="594" y="106">HiveMQ broker</text>
+      <text class="d-m" x="594" y="124">broker.hivemq.com</text>
+      <text class="d-m" x="594" y="148">pccoe/arca/add1f2/</text>
+      <text class="d-m" x="594" y="164">MOTOR-01/…</text>
+      <text class="d-s" x="594" y="188">MQTT :1883 (sim)</text>
+      <text class="d-s" x="594" y="206">MQTT TLS :8883 (board)</text>
+      <text class="d-s" x="594" y="224">WSS :8884 (browser)</text>
+
+      <!-- ============ 4 Bridge -->
+      <rect class="d-box" x="850" y="40" width="220" height="230" rx="8"/>
+      <text class="d-k" x="864" y="64">REASONING LAYER · LAPTOP</text>
+      <text class="d-t" x="864" y="86">Bridge</text>
+      <text class="d-m" x="864" y="104">bridge/arca_bridge.py</text>
+      <rect class="d-inner" x="864" y="116" width="192" height="26" rx="4"/><text class="d-s" x="874" y="134">1 Schema check (v1.1)</text>
+      <rect class="d-inner" x="864" y="148" width="192" height="26" rx="4"/><text class="d-s" x="874" y="166">2 Drift gate: 3 windows &gt; 3σ</text>
+      <rect class="d-inner" x="864" y="180" width="192" height="26" rx="4"/><text class="d-s" x="874" y="198">3 Episode evidence (no label)</text>
+      <rect class="d-inner" x="864" y="212" width="192" height="26" rx="4"/><text class="d-s" x="874" y="230">4 Diagnosis or next test</text>
+      <text class="d-m" x="864" y="260">≤ 4 Claude calls per episode</text>
+
+      <!-- ============ 5 Claude -->
+      <rect class="d-box d-ai" x="1165" y="70" width="115" height="170" rx="8"/>
+      <text class="d-k" x="1177" y="94" style="fill:var(--ai)">LLM</text>
+      <text class="d-t" x="1177" y="116">Claude</text>
+      <text class="d-s" x="1177" y="138">Opus, via the</text>
+      <text class="d-s" x="1177" y="155">Claude Code</text>
+      <text class="d-s" x="1177" y="172">subscription</text>
+      <text class="d-m" x="1177" y="196">claude -p</text>
+      <text class="d-m" x="1177" y="214">pdm.rca.v1</text>
+      <text class="d-m" x="1177" y="230">JSON schema</text>
+
+      <!-- Pages -> node -->
+      <path class="w-data" d="M200 155 H248" marker-end="url(#a-data)"/>
+      <text class="d-l" x="224" y="146" text-anchor="middle" style="fill:var(--ink2)">HTTPS</text>
+      <text class="d-l" x="224" y="172" text-anchor="middle" style="fill:var(--ink2)">Range</text>
+
+      <!-- node <-> broker -->
+      <path class="w-up" d="M490 120 H578" marker-end="url(#a-up)"/>
+      <text class="d-l" x="535" y="112" text-anchor="middle" style="fill:var(--ok)">telemetry</text>
+      <text class="d-l" x="535" y="138" text-anchor="middle" style="fill:var(--ok)">status</text>
+      <path class="w-down" d="M578 200 H492" marker-end="url(#a-down)"/>
+      <text class="d-l" x="535" y="192" text-anchor="middle" style="fill:var(--test)">cmd</text>
+      <text class="d-l" x="535" y="218" text-anchor="middle" style="fill:var(--test)">alert</text>
+
+      <!-- broker <-> bridge -->
+      <path class="w-up" d="M760 120 H848" marker-end="url(#a-up)"/>
+      <text class="d-l" x="805" y="104" text-anchor="middle" style="fill:var(--ok)">telemetry</text>
+      <text class="d-l" x="805" y="138" text-anchor="middle" style="fill:var(--ok)">status · ctl</text>
+      <path class="w-down" d="M848 200 H762" marker-end="url(#a-down)"/>
+      <text class="d-l" x="805" y="186" text-anchor="middle" style="fill:var(--test)">gate · rca</text>
+      <text class="d-l" x="805" y="218" text-anchor="middle" style="fill:var(--test)">cmd · alert</text>
+
+      <!-- bridge <-> Claude -->
+      <path class="w-ai" d="M1070 125 H1163" marker-end="url(#a-ai)"/>
+      <path class="w-ai" d="M1163 185 H1072" marker-end="url(#a-ai)"/>
+      <text class="d-l" x="1117" y="114" text-anchor="middle" style="fill:var(--ai)">evidence</text>
+      <text class="d-l" x="1117" y="202" text-anchor="middle" style="fill:var(--ai)">cause, p, test</text>
+
+      <!-- ============ Dashboard -->
+      <rect class="d-box d-ok" x="580" y="340" width="490" height="130" rx="8"/>
+      <text class="d-k" x="596" y="364" style="fill:var(--ok)">OPERATOR · BROWSER</text>
+      <text class="d-t" x="596" y="386">Live dashboard</text>
+      <text class="d-m" x="740" y="386">served from GitHub Pages</text>
+      <text class="d-s" x="596" y="410">Vibration RMS against the healthy band, gate z-scores, temperature</text>
+      <text class="d-s" x="596" y="428">Current diagnosis and Claude's reasoning log with cited evidence</text>
+      <text class="d-s" x="596" y="446">Inject a fault, Diagnose now, Reset episode (label never reaches Claude)</text>
+      <path class="w-down" d="M640 252 V338" marker-end="url(#a-down)"/>
+      <path class="w-up" d="M700 338 V252" marker-end="url(#a-up)"/>
+      <text class="d-l" x="632" y="290" text-anchor="end" style="fill:var(--test)">all topics</text>
+      <text class="d-l" x="632" y="304" text-anchor="end" style="fill:var(--test)">over WSS</text>
+      <text class="d-l" x="708" y="290" style="fill:var(--ok)">cmd (inject)</text>
+      <text class="d-l" x="708" y="304" style="fill:var(--ok)">ctl (diagnose, reset)</text>
+
+      <!-- ============ Live rig (in build) -->
+      <rect class="d-box d-plan" x="250" y="340" width="240" height="160" rx="8"/>
+      <text class="d-k" x="264" y="364">LIVE RIG · IN BUILD</text>
+      <text class="d-t" x="264" y="386">775 DC motor, 12 V</text>
+      <text class="d-s" x="264" y="410">ADXL345 vibration (SPI)</text>
+      <text class="d-s" x="264" y="428">DS18B20 temperature</text>
+      <text class="d-s" x="264" y="446">LM393 Hall speed</text>
+      <text class="d-s" x="264" y="464">INA219 current · BTS7960 drive</text>
+      <text class="d-m" x="264" y="488">real windows replace replay</text>
+      <path class="w-plan" d="M370 338 V272" marker-end="url(#a-plan)"/>
+
+      <!-- ============ Training (offline) -->
+      <rect class="d-box" x="20" y="550" width="740" height="150" rx="8"/>
+      <text class="d-k" x="36" y="574">OFFLINE · ONCE</text>
+      <text class="d-t" x="36" y="596">Training pipeline</text>
+      <text class="d-m" x="180" y="596">training/build_dataset.py</text>
+      <rect class="d-inner" x="36" y="610" width="200" height="74" rx="5"/>
+      <text class="d-s" x="48" y="630">Recorded datasets</text>
+      <text class="d-m" x="48" y="650">data/*.csv</text>
+      <text class="d-s" x="48" y="670">3 motors, train/replay split</text>
+      <path class="w-data" d="M236 647 H282" marker-end="url(#a-data)"/>
+      <rect class="d-inner" x="284" y="610" width="200" height="74" rx="5"/>
+      <text class="d-s" x="296" y="630">2 s windows</text>
+      <text class="d-s" x="296" y="650">18 features each</text>
+      <text class="d-m" x="296" y="670">common/pdmfeat.py</text>
+      <path class="w-data" d="M484 647 H530" marker-end="url(#a-data)"/>
+      <rect class="d-inner" x="532" y="610" width="214" height="74" rx="5"/>
+      <text class="d-s" x="544" y="630">Healthy baselines (mean, σ)</text>
+      <text class="d-s" x="544" y="650">Fault signature library</text>
+      <text class="d-m" x="544" y="670">bridge/model/*.json</text>
+
+      <!-- training -> Pages (slices) and -> bridge (model) -->
+      <path class="w-data" d="M110 548 V252" marker-end="url(#a-data)"/>
+      <text class="d-l" x="118" y="400" style="fill:var(--ink2)">replay</text>
+      <text class="d-l" x="118" y="414" style="fill:var(--ink2)">slices</text>
+      <path class="w-data" d="M760 640 H1150 V290 H960 V272" marker-end="url(#a-data)"/>
+      <text class="d-l" x="1142" y="520" text-anchor="end" style="fill:var(--ink2)">baselines +</text>
+      <text class="d-l" x="1142" y="534" text-anchor="end" style="fill:var(--ink2)">signatures</text>
+    </svg>
+    <div class="legend">
+      <span><i style="border-color:var(--ok)"></i>Measurements and operator requests travelling up</span>
+      <span><i style="border-color:var(--test)"></i>Commands, gate and diagnoses travelling down</span>
+      <span><i style="border-color:var(--ai)"></i>Claude call</span>
+      <span><i style="border-color:var(--ink2)"></i>Files and offline data</span>
+      <span><i style="border-color:var(--mute);border-top-style:dashed"></i>In build</span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>One active-test episode</h2>
+      <ol class="steps">
+        <li><b>Monitor.</b> The node publishes a telemetry window; the bridge validates it against <code>pdm.telemetry.v1.1</code>.</li>
+        <li><b>Gate.</b> Three windows in a row more than 3σ outside the healthy band for that operating point open an episode.</li>
+        <li><b>Ask.</b> The bridge sends Claude the evidence (features, z-scores, signature ratios), never the injected label.</li>
+        <li><b>Test.</b> Claude ranks causes and, if unsure, orders a test such as 1500 rpm; the bridge sends it on <code>cmd</code> and the TEST LED lights.</li>
+        <li><b>Re-ask.</b> The windows at the new operating point come back as fresh evidence.</li>
+        <li><b>Commit.</b> Claude names the cause with a probability; <code>rca</code> and <code>alert</code> go out, the ALARM LED latches, the dashboard scores it.</li>
+      </ol>
+    </section>
+    <section class="card">
+      <h2>MQTT topics</h2>
+      <table>
+        <thead><tr><th>Topic</th><th>From → to</th><th>Carries</th></tr></thead>
+        <tbody>
+          <tr><td>telemetry</td><td>node → bridge, dashboard</td><td>one 2 s window, 18 features</td></tr>
+          <tr><td>status</td><td>node → all</td><td>online, source, test state (retained)</td></tr>
+          <tr><td>cmd</td><td>bridge, dashboard → node</td><td>scenario, test, abort</td></tr>
+          <tr><td>gate</td><td>bridge → dashboard</td><td>per-feature z-scores, episode state</td></tr>
+          <tr><td>rca</td><td>bridge → dashboard</td><td>Claude's diagnosis and reasoning</td></tr>
+          <tr><td>alert</td><td>bridge → node, dashboard</td><td>current diagnosis (retained)</td></tr>
+          <tr><td>ctl</td><td>dashboard → bridge</td><td>diagnose now, reset</td></tr>
+          <tr><td>bridge</td><td>bridge → all</td><td>online and engine (retained)</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <footer>All topics sit under <code>pccoe/arca/add1f2/MOTOR-01/</code>. Mehul Rawat, Atharva Palande · Guide: Prof. Kalpana Patil · PCCoE E&amp;TC.</footer>
+</main>
+</body>
+</html>
